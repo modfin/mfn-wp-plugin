@@ -1,0 +1,26 @@
+/**
+ * All of the CSS for your admin-specific functionality should be
+ * included in this file.
+ */
+
+
+
+.mcol-1-2{
+    vertical-align: top;
+    display: inline-block;
+    padding: 0;
+    margin: 0;
+    width: 49%;
+}
+form{
+    padding: 0 20px 0 0;
+}
+input.wide {
+    width: 100%;
+}
+
+#sync-status{
+    font-family: monospace;
+    padding-top: 5px;
+    display: inline-block;
+}
