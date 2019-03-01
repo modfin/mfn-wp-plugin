@@ -1,8 +1,10 @@
 <?php // Silence is golden
 
-require_once(  dirname(__FILE__) . '/../../../wp-load.php');
-require_once(  dirname(__FILE__) . '/lib.php' );
 require_once(  dirname(__FILE__) . '/config.php');
+
+require_once(  dirname(__FILE__) . '/lib.php' );
+
+
 
 $is_admin = current_user_can( 'manage_options');
 
@@ -96,8 +98,6 @@ function pingHub(){
     echo "fail, not a valid url";
     return;
 }
-
-
 
 
 

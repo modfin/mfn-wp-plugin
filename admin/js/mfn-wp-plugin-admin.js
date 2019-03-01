@@ -96,7 +96,7 @@
                 el.text("Valid");
                 return
             }
-            el.text("Invalid, server does not return pong \n\n (make sure php function file_get_contents is allowed to make http requests)");
+            el.text("Invalid, server does not return pong \n\n (make sure php function file_get_contents is allowed to make http requests) \n\n " + data );
         }).fail(function(err) {
             console.log(err);
             el.text("Invalid, address does not seem to be responding with anything, " + err.status);

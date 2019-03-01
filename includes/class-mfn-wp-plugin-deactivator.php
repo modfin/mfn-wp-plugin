@@ -1,7 +1,6 @@
 <?php
 
-
-require_once( ABSPATH . '/wp-content/plugins/mfn-wp-plugin/lib.php');
+require_once( WP_PLUGIN_DIR . '/mfn-wp-plugin/lib.php');
 
 /**
  * Fired during plugin deactivation

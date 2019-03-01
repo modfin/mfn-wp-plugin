@@ -6,9 +6,8 @@
  * Time: 15:40
  */
 
-require_once( '../../../wp-load.php');
-require_once( './lib.php');
 require_once('./config.php');
+require_once( './lib.php');
 
 
 $queries = array();

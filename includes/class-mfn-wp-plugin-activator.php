@@ -1,6 +1,7 @@
 <?php
 
-require_once( ABSPATH . '/wp-content/plugins/mfn-wp-plugin/config.php');
+require_once( WP_PLUGIN_DIR . '/mfn-wp-plugin/config.php');
+
 
 
 /**

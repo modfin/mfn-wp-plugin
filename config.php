@@ -1,21 +1,35 @@
 <?php
 
-
-$path = '../../..';
-if ( defined('ABSPATH') ){
-    $path = ABSPATH;
-}
-require_once ($path .  '/wp-settings.php');
-require_once ($path .  '/wp-config.php');
-require_once ($path .  '/wp-load.php');
-require_once( $path .  '/wp-admin/includes/taxonomy.php' );
-require_once ($path .  '/wp-includes/taxonomy.php');
-
 const MFN_PLUGIN_NAME = 'mfn-wp-plugin';
-const MFN_PLUGIN_NAME_VERSION = '0.0.3';
+const MFN_PLUGIN_NAME_VERSION = '0.0.5';
 const MFN_TAXONOMY_NAME = 'mfn-news-tag';
 const MFN_TAG_PREFIX = 'mfn';
 const MFN_POST_TYPE = 'mfn_news';
+
+
+// If ABSPATH not defined, php app is initiated from plugin folder.
+// Lets try to find and run wp-config.php
+if ( !defined('ABSPATH') ) {
+    $dir = __DIR__;
+    for($i = 0; $i < 3; $i++){
+        if(file_exists($dir . "/wp-config.php")){
+            break;
+        }
+        $dir = dirname($dir);
+    }
+    if(!file_exists($dir . "/wp-config.php")){
+        echo "could not find wp-config.php";
+        die();
+    }
+    require_once ($dir.  '/wp-config.php');
+}
+
+
+
+require_once (ABSPATH . 'wp-settings.php');
+require_once (ABSPATH . 'wp-load.php');
+require_once (ABSPATH . 'wp-admin/includes/taxonomy.php' );
+require_once (ABSPATH . 'wp-includes/taxonomy.php');
 
 
 

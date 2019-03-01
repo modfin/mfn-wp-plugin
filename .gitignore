@@ -1,4 +1,5 @@
 www-data
+www-bedrock
 .idea
 install.sh
 docker-compose.yml
