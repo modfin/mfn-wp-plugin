@@ -50,11 +50,22 @@ function upsertAttachments($post_id, $attachments){
 }
 
 
+function upsertLanguage($post_id, $groupId, $lang){
+
+    $meta = get_post_meta($post_id, MFN_POST_TYPE . "_group_id", true);
+    if(!$meta){
+        update_post_meta($post_id, MFN_POST_TYPE . "_group_id", $groupId);
+    }
+    update_post_meta($post_id, MFN_POST_TYPE . "_lang", $lang);
+}
+
 function upsertItem($item, $signature = '', $raw_data = '')
 {
     global $wpdb;
 
     $newsid = $item->news_id;
+    $groupId = $item->group_id;
+    $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
     $entity_id = $item->author->entity_id;
 
     $title = $item->content->title;
@@ -81,6 +92,7 @@ LIMIT 1
 
     if ($post_id) {
         wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
+        upsertLanguage($post_id, $groupId, $lang);
         upsertAttachments($post_id, $attachments);
         return 0;
     }
@@ -106,13 +118,9 @@ LIMIT 1
         if($raw_data != ''){
             add_post_meta($post_id, MFN_POST_TYPE . "_data_" . $newsid, $raw_data);
         }
-
+        upsertLanguage($post_id, $groupId, $lang);
         upsertAttachments($post_id, $attachments);
-
     }
-
-
-
 
 
     return 1;

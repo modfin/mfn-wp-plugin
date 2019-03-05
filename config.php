@@ -21,11 +21,25 @@ if ( !defined('ABSPATH') ) {
         echo "could not find wp-config.php";
         die();
     }
-    require_once ($dir.  '/wp-config.php');
+
+    // Found wp-config, lets find wp-load
+    if(!file_exists($dir . "/wp-load.php")){
+        // checking parent child dirs for load file
+        foreach (scandir($dir) as $file) {
+            if (is_dir($dir . "/" . $file) && file_exists($dir . "/" . $file . "/wp-load.php") ){
+                $dir = $dir . "/" . $file;
+                break;
+            }
+        }
+    }
+
+    if(!file_exists($dir . "/wp-load.php")) {
+        echo "could not find wp-load.php";
+        die();
+    }
+    require_once ($dir . '/wp-load.php');
 }
 
-require_once (ABSPATH . 'wp-settings.php');
-require_once (ABSPATH . 'wp-load.php');
 require_once (ABSPATH . 'wp-admin/includes/taxonomy.php' );
 require_once (ABSPATH . 'wp-includes/taxonomy.php');
 
