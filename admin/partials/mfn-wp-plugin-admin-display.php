@@ -26,6 +26,9 @@
 
         <?php
 
+        // Check if WPML plugin exists
+        $hasWPML = defined('WPML_PLUGIN_BASENAME');
+
         //Grab all options
         $options = get_option($this->plugin_name);
 
@@ -40,6 +43,7 @@
 
 
         $verify_signature =  isset($options['verify_signature']) ? $options['verify_signature'] : 'off';
+        $use_wpml =  isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
 
         $subscription_id = isset($options['subscription_id']) ? $options['subscription_id'] : "N/A";
         $posthook_secret = isset($options['posthook_secret']) ? $options['posthook_secret'] : "N/A";
@@ -90,10 +94,23 @@
 
         <fieldset>
             <fieldset>
-                <p>Verify Signature</p>
-                <input type="checkbox" id="<?php echo $this->plugin_name; ?>-verify_signature" name="<?php echo $this->plugin_name; ?>[verify_signature]" <?php checked($verify_signature, "on"); ?> value="on" <?php echo $is_subscribed == true ? 'disabled' : ''?>/>
+                <p>
+                    <input type="checkbox" id="<?php echo $this->plugin_name; ?>-verify_signature" name="<?php echo $this->plugin_name; ?>[verify_signature]" <?php checked($verify_signature, "on"); ?> value="on" <?php echo $is_subscribed == true ? 'disabled' : ''?>/>
+                    Verify Signature <br/><small>(cryptographically ensures that mfn.se is indeed the sender of the story)</small>
+                </p>
             </fieldset>
         </fieldset>
+
+
+        <fieldset>
+            <fieldset>
+                <p>
+                    <input type="checkbox" id="<?php echo $this->plugin_name; ?>-use_wpml" name="<?php echo $this->plugin_name; ?>[use_wpml]" <?php checked($use_wpml, "on"); ?> value="on" <?php echo $is_subscribed == true || $hasWPML == false  ? 'disabled' : ''?>/>
+                    Use WPML <br/><small>(Make plugin compliant with https://wpml.org locale management. Mapping story content only works with stories sent by mfn.se)</small>
+                </p>
+            </fieldset>
+        </fieldset>
+
 
         <div style="display: inline-block">
             <?php submit_button('Save', 'primary','submit', TRUE, $is_subscribed ? 'disabled' : ''); ?>

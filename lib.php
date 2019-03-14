@@ -57,6 +57,27 @@ function upsertLanguage($post_id, $groupId, $lang){
         update_post_meta($post_id, MFN_POST_TYPE . "_group_id", $groupId);
     }
     update_post_meta($post_id, MFN_POST_TYPE . "_lang", $lang);
+
+    $options = get_option(MFN_PLUGIN_NAME);
+    $use_wpml =  isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
+
+    if ($use_wpml == 'on') {
+        global $wpdb;
+        $tableName = $wpdb->prefix . 'icl_translations';
+
+       $q = $wpdb->prepare("
+            SELECT min(t.trid)
+            FROM $wpdb->postmeta m
+            INNER JOIN $tableName t
+            ON m.post_id = t.element_id AND t.element_type = 'post_mfn_news'
+            WHERE m.meta_key = 'mfn_news_group_id'
+              AND m.meta_value = %s
+      ", $groupId);
+        $trid = $wpdb->get_var($q);
+
+        $wpdb->update($tableName, array('language_code' => $lang, 'trid' => $trid), array('element_id' => $post_id));
+    }
+
 }
 
 function upsertItem($item, $signature = '', $raw_data = '')
