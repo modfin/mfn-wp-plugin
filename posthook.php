@@ -85,9 +85,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 {
     $signature = $_SERVER['HTTP_X_HUB_SIGNATURE'];
     $content = file_get_contents("php://input");
-    //TODO verify against headers...
 
     $verify_signature =  isset($ops['verify_signature']) ? $ops['verify_signature'] : 'off';
+    $reset_cache =  isset($ops['reset_cache']) ? ($ops['reset_cache'] == 'on') : false;
 
     if($verify_signature == 'on'){
         $parts = explode('=', $signature);
@@ -98,10 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
         $res = hash_hmac($alg, $content, $key);
         if($hmac != $res){
             error_log("[MFN Post hook]: hmac: " . $hmac . " that was provided but does not match expected value");
-            return;
+            http_response_code(400);
+            echo "could not verify hmac as correct";
+            die();
         }
     }
 
     $news_item = json_decode($content);
-    upsertItem($news_item, $signature, $content);
+    upsertItem($news_item, $signature, $content, $reset_cache);
 }

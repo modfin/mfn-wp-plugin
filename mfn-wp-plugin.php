@@ -25,13 +25,12 @@
  * Domain Path:       /languages
  */
 
-require_once( dirname(__FILE__) . '/config.php');
-
+require_once(dirname(__FILE__) . '/config.php');
 
 
 // If this file is called directly, abort.
-if ( ! defined( 'WPINC' ) ) {
-	die;
+if (!defined('WPINC')) {
+    die;
 }
 
 /**
@@ -44,9 +43,10 @@ if ( ! defined( 'WPINC' ) ) {
  * The code that runs during plugin activation.
  * This action is documented in includes/class-mfn-wp-plugin-activator.php
  */
-function activate_mfn_wp_plugin() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-mfn-wp-plugin-activator.php';
-	Mfn_Wp_Plugin_Activator::activate();
+function activate_mfn_wp_plugin()
+{
+    require_once plugin_dir_path(__FILE__) . 'includes/class-mfn-wp-plugin-activator.php';
+    Mfn_Wp_Plugin_Activator::activate();
 
 
 }
@@ -55,19 +55,20 @@ function activate_mfn_wp_plugin() {
  * The code that runs during plugin deactivation.
  * This action is documented in includes/class-mfn-wp-plugin-deactivator.php
  */
-function deactivate_mfn_wp_plugin() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-mfn-wp-plugin-deactivator.php';
-	Mfn_Wp_Plugin_Deactivator::deactivate();
+function deactivate_mfn_wp_plugin()
+{
+    require_once plugin_dir_path(__FILE__) . 'includes/class-mfn-wp-plugin-deactivator.php';
+    Mfn_Wp_Plugin_Deactivator::deactivate();
 }
 
-register_activation_hook( __FILE__, 'activate_mfn_wp_plugin' );
-register_deactivation_hook( __FILE__, 'deactivate_mfn_wp_plugin' );
+register_activation_hook(__FILE__, 'activate_mfn_wp_plugin');
+register_deactivation_hook(__FILE__, 'deactivate_mfn_wp_plugin');
 
 /**
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */
-require plugin_dir_path( __FILE__ ) . 'includes/class-mfn-wp-plugin.php';
+require plugin_dir_path(__FILE__) . 'includes/class-mfn-wp-plugin.php';
 
 /**
  * Begins execution of the plugin.
@@ -83,12 +84,15 @@ function mfn_news_post_type()
 {
     register_mfn_types();
 }
+
 add_action('init', 'mfn_news_post_type');
 
 
-function run_mfn_wp_plugin() {
-	$plugin = new Mfn_Wp_Plugin();
-	$plugin->run();
+function run_mfn_wp_plugin()
+{
+    $plugin = new Mfn_Wp_Plugin();
+    $plugin->run();
 
 }
+
 run_mfn_wp_plugin();

@@ -56,6 +56,17 @@
     }
 
 
+    function syncTax() {
+
+
+        $.get(window.PLUGIN_URL + '/cc.php?mode=sync-tax', function (data) {
+
+            console.log(data)
+
+        });
+    }
+
+
 
     function pluginUrlTest(){
         var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
@@ -139,6 +150,10 @@
         });
         $("#sync-latest").click(function () {
             sync(false)
+        });
+
+        $("#sync-tax").click(function () {
+            syncTax()
         });
 
 

@@ -1,5 +1,5 @@
 <?php
-require_once( dirname(__FILE__) . '/config.php');
+require_once(dirname(__FILE__) . '/config.php');
 
 
 function startsWith($haystack, $needle)
@@ -8,7 +8,9 @@ function startsWith($haystack, $needle)
     return (substr($haystack, 0, $length) === $needle);
 }
 
-function createTags($item){
+function createTags($item)
+{
+
 
     $tags = isset($item->properties->tags) ? $item->properties->tags : array();
     $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
@@ -17,28 +19,38 @@ function createTags($item){
     $newtag = array();
 
     array_push($newtag, MFN_TAG_PREFIX);
-    array_push($newtag, MFN_TAG_PREFIX.'-lang-'.$lang);
-    array_push($newtag, MFN_TAG_PREFIX.'-type-'.$type);
+    array_push($newtag, MFN_TAG_PREFIX . '-lang-' . $lang);
+    array_push($newtag, MFN_TAG_PREFIX . '-type-' . $type);
 
-    foreach ($tags as $i => $tag){
-        if(startsWith($tag, ':correction')){
-            array_push($newtag, MFN_TAG_PREFIX.'-correction');
+    foreach ($tags as $i => $tag) {
+        if (startsWith($tag, ':correction')) {
+            array_push($newtag, MFN_TAG_PREFIX . '-correction');
             continue;
         }
 
         $tag = str_replace('sub:', '', $tag);
         $tag = trim($tag, ' :');
         $tag = str_replace(':', '-', $tag);
-        $tag = MFN_TAG_PREFIX.'-' . $tag;
+        $tag = MFN_TAG_PREFIX . '-' . $tag;
         array_push($newtag, $tag);
+    }
+
+    $options = get_option(MFN_PLUGIN_NAME);
+    $use_wpml = isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
+
+    if ($use_wpml == 'on' && $lang != 'en') {
+        foreach ($newtag as $i => $t) {
+            $newtag[$i] = $t . "_" . $lang;
+        }
     }
 
     return $newtag;
 }
 
 
-function upsertAttachments($post_id, $attachments){
-    foreach ($attachments as $i => $attachment){
+function upsertAttachments($post_id, $attachments)
+{
+    foreach ($attachments as $i => $attachment) {
         $title = $attachment->file_title;
         $content_type = $attachment->content_type;
         $url = $attachment->url;
@@ -50,22 +62,23 @@ function upsertAttachments($post_id, $attachments){
 }
 
 
-function upsertLanguage($post_id, $groupId, $lang){
+function upsertLanguage($post_id, $groupId, $lang)
+{
 
     $meta = get_post_meta($post_id, MFN_POST_TYPE . "_group_id", true);
-    if(!$meta){
+    if (!$meta) {
         update_post_meta($post_id, MFN_POST_TYPE . "_group_id", $groupId);
     }
     update_post_meta($post_id, MFN_POST_TYPE . "_lang", $lang);
 
     $options = get_option(MFN_PLUGIN_NAME);
-    $use_wpml =  isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
+    $use_wpml = isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
 
     if ($use_wpml == 'on') {
         global $wpdb;
         $tableName = $wpdb->prefix . 'icl_translations';
 
-       $q = $wpdb->prepare("
+        $q = $wpdb->prepare("
             SELECT min(t.trid)
             FROM $wpdb->postmeta m
             INNER JOIN $tableName t
@@ -76,11 +89,16 @@ function upsertLanguage($post_id, $groupId, $lang){
         $trid = $wpdb->get_var($q);
 
         $wpdb->update($tableName, array('language_code' => $lang, 'trid' => $trid), array('element_id' => $post_id));
+
+
+        do_action( 'wpml_sync_all_custom_fields', $post_id);
+
     }
 
 }
 
-function upsertItem($item, $signature = '', $raw_data = '')
+
+function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false)
 {
     global $wpdb;
 
@@ -107,49 +125,57 @@ LIMIT 1
     ));
 
 
-
     $tags = createTags($item);
 
 
-    if ($post_id) {
+    $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags) {
+        if ($reset_cache) {
+            wp_cache_flush();
+        }
+
         wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
         upsertLanguage($post_id, $groupId, $lang);
         upsertAttachments($post_id, $attachments);
+
+        if ($reset_cache) {
+            wp_cache_flush();
+        }
+
+    };
+
+    if ($post_id) {
+        $outro($post_id);
         return 0;
     }
-
 
     $post_id = wp_insert_post(array(
         'post_content' => $html,
         'post_title' => $title,
         'post_excerpt' => $preamble,
         'post_status' => 'publish',
-        'post_type' => MFN_POST_TYPE ,
+        'post_type' => MFN_POST_TYPE,
         'post_date' => $publish_date,
     ));
 
 
     if ($post_id != 0) {
-        wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
         add_post_meta($post_id, MFN_POST_TYPE . "_" . $newsid, $publish_date);
 
-        if($signature != ''){
+        if ($signature != '') {
             add_post_meta($post_id, MFN_POST_TYPE . "_signature_" . $newsid, $signature);
         }
-        if($raw_data != ''){
+        if ($raw_data != '') {
             add_post_meta($post_id, MFN_POST_TYPE . "_data_" . $newsid, $raw_data);
         }
-        upsertLanguage($post_id, $groupId, $lang);
-        upsertAttachments($post_id, $attachments);
+        $outro($post_id);
     }
-
 
     return 1;
 }
 
 
-
-function subscribe(){
+function subscribe()
+{
 
     $ops = get_option('mfn-wp-plugin');
 
@@ -160,9 +186,9 @@ function subscribe(){
         return "a subscription is already active";
     }
 
-    $hub_url =  isset($ops['hub_url']) ? $ops['hub_url'] : "";
-    $entity_id =  isset($ops['entity_id']) ? $ops['entity_id'] : "";
-    $plugin_url =  isset($ops['plugin_url']) ? $ops['plugin_url'] : "";
+    $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
+    $entity_id = isset($ops['entity_id']) ? $ops['entity_id'] : "";
+    $plugin_url = isset($ops['plugin_url']) ? $ops['plugin_url'] : "";
 
 
     $ops['posthook_name'] = isset($ops['posthook_name']) ? $ops['posthook_name'] : generateRandomString();
@@ -175,27 +201,22 @@ function subscribe(){
     update_option(MFN_PLUGIN_NAME, $ops);
 
 
-
-    //doing request
-
-    $data = array(
-        'hub.mode' => 'subscribe',
-        'hub.topic' => '/mfn/s.json?type=all&.author.entity_id=' . $entity_id,
-        'hub.callback' => $plugin_url . '/posthook.php?wp-name=' . $posthook_name,
-        'hub.secret' => $posthook_secret
-    );
-
-    $options = array(
-        'http' => array(
-            'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-            'method'  => 'POST',
-            'content' => http_build_query($data)
+    $args = array(
+        'method' => 'POST',
+        'headers' => array("content-type" => "application/x-www-form-urlencoded"),
+        'body' => array(
+            'hub.mode' => 'subscribe',
+            'hub.topic' => '/mfn/s.json?type=all&.author.entity_id=' . $entity_id,
+            'hub.callback' => $plugin_url . '/posthook.php?wp-name=' . $posthook_name,
+            'hub.secret' => $posthook_secret
         )
     );
-    $context  = stream_context_create($options);
 
-    $result = file_get_contents($hub_url, false, $context);
-    if ($result === FALSE){
+
+    $response = wp_remote_post($hub_url, $args);
+    $result = wp_remote_retrieve_body($response);
+
+    if ($result === FALSE) {
         return "did not work...";
     }
 
@@ -204,8 +225,8 @@ function subscribe(){
 }
 
 
-
-function unsubscribe(){
+function unsubscribe()
+{
     $ops = get_option('mfn-wp-plugin');
 
     $subscription_id = isset($ops['subscription_id']) ? $ops['subscription_id'] : "N/A";
@@ -215,15 +236,15 @@ function unsubscribe(){
     }
 
 
-    $hub_url =  isset($ops['hub_url']) ? $ops['hub_url'] : "";
+    $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
 
 
-    $request =  $hub_url . '/verify/' . $subscription_id . "?hub.mode=unsubscribe";
+    $request = $hub_url . '/verify/' . $subscription_id . "?hub.mode=unsubscribe";
+    $response = wp_remote_get($request);
+    $result = wp_remote_retrieve_body($response);
 
-    $result = file_get_contents($request);
-
-    if ($result === FALSE){
-        return  "did not work...";
+    if ($result === FALSE) {
+        return "did not work...";
     }
 
     unset($ops['subscription_id']);

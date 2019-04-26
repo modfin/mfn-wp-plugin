@@ -1,31 +1,29 @@
 <?php // Silence is golden
 
-require_once(  dirname(__FILE__) . '/config.php');
-require_once(  dirname(__FILE__) . '/lib.php' );
+require_once(dirname(__FILE__) . '/config.php');
+require_once(dirname(__FILE__) . '/lib.php');
 
 
+$is_admin = current_user_can('manage_options');
 
-$is_admin = current_user_can( 'manage_options');
-
-if (!$is_admin){
+if (!$is_admin) {
     echo "you are not admin";
     die();
 }
 
 
-
 $queries = array();
 parse_str($_SERVER['QUERY_STRING'], $queries);
 
-if (!isset($queries["mode"])){
+if (!isset($queries["mode"])) {
     echo "a mode must be provided [poll, longpoll or sync]";
     die();
 }
 $mode = $queries["mode"];
 
 
-
-function generateRandomString($length = 32) {
+function generateRandomString($length = 32)
+{
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $charactersLength = strlen($characters);
     $randomString = '';
@@ -36,8 +34,8 @@ function generateRandomString($length = 32) {
 }
 
 
-
-function sync(){
+function sync()
+{
     $ops = get_option('mfn-wp-plugin');
     $queries = array();
     parse_str($_SERVER['QUERY_STRING'], $queries);
@@ -46,47 +44,52 @@ function sync(){
     $limit = isset($queries["limit"]) ? $queries["limit"] : 48;
 
     $entity_id = isset($ops['entity_id']) ? $ops['entity_id'] : "bad-entity-id";
-    $sync_url =  isset($ops['sync_url']) ? $ops['sync_url'] : "";
-    if ($entity_id == ""){
+    $sync_url = isset($ops['sync_url']) ? $ops['sync_url'] : "";
+    $reset_cache = isset($ops['reset_cache']) ? ($ops['reset_cache'] == 'on') : false;
+
+    if ($entity_id == "") {
         echo -1;
         return;
     }
 
-    if ($sync_url == ""){
+    if ($sync_url == "") {
         echo $sync_url;
         echo print_r($ops);
         echo -2;
         return;
     }
 
-
-    $json = file_get_contents($sync_url . '/all/s.json?.author.entity_id=' . $ops['entity_id'] . '&limit='. $limit . "&offset=" . $offset);
+    $url = $sync_url . '/all/s.json?.author.entity_id=' . $ops['entity_id'] . '&limit=' . $limit . "&offset=" . $offset;
+    $response = wp_remote_get($url);
+    $json = wp_remote_retrieve_body($response);
     $obj = json_decode($json);
 
     $acc = 0;
 
-    if (is_array($obj->items)){
-        foreach($obj->items as $i => $item) {
-            $acc += upsertItem($item);
+    if (is_array($obj->items)) {
+        foreach ($obj->items as $i => $item) {
+            $acc += upsertItem($item, '', '', $reset_cache);
         }
-        echo  sizeof($obj->items) . ' ' . $acc;
+        echo sizeof($obj->items) . ' ' . $acc;
         return;
     }
 
-    echo  0 . ' ' . $acc;
+    echo 0 . ' ' . $acc;
 }
 
 
-
-function pingHub(){
+function pingHub()
+{
 
     $ops = get_option('mfn-wp-plugin');
-    $hub_url =  isset($ops['hub_url']) ? $ops['hub_url'] : "";
+    $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
 
-    if(startsWith($hub_url, "http")){
-        $content = file_get_contents($hub_url);
+    if (startsWith($hub_url, "http")) {
 
-        if(strstr($content, 'https://www.w3.org/TR/websub')){
+        $response = wp_remote_get($hub_url);
+        $content = wp_remote_retrieve_body($response);
+
+        if (strstr($content, 'https://www.w3.org/TR/websub')) {
             echo "ponghub";
             return;
         }
@@ -99,14 +102,19 @@ function pingHub(){
 }
 
 
+switch ($mode) {
+    case "sync-tax":
+        sync_mfn_taxonomy();
+        die();
 
-switch ($mode){
     case "sync":
         sync();
-        break;
+        die();
+
     case "ping";
         echo "pong";
         die();
+
     case "pinghub";
         pingHub();
         die();
@@ -118,6 +126,7 @@ switch ($mode){
     case "unsubscribe":
         echo unsubscribe();
         die();
+
     default:
         echo "a mode must be provided [sync]";
         die();

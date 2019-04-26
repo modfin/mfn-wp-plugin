@@ -27,7 +27,7 @@
         <?php
 
         // Check if WPML plugin exists
-        $hasWPML = defined('WPML_PLUGIN_BASENAME');
+        $has_wpml = defined('WPML_PLUGIN_BASENAME');
 
         //Grab all options
         $options = get_option($this->plugin_name);
@@ -44,6 +44,9 @@
 
         $verify_signature =  isset($options['verify_signature']) ? $options['verify_signature'] : 'off';
         $use_wpml =  isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
+
+        $reset_cache =  isset($options['reset_cache']) ? $options['reset_cache'] : 'off';
+
 
         $subscription_id = isset($options['subscription_id']) ? $options['subscription_id'] : "N/A";
         $posthook_secret = isset($options['posthook_secret']) ? $options['posthook_secret'] : "N/A";
@@ -105,11 +108,22 @@
         <fieldset>
             <fieldset>
                 <p>
-                    <input type="checkbox" id="<?php echo $this->plugin_name; ?>-use_wpml" name="<?php echo $this->plugin_name; ?>[use_wpml]" <?php checked($use_wpml, "on"); ?> value="on" <?php echo $is_subscribed == true || $hasWPML == false  ? 'disabled' : ''?>/>
+                    <input type="checkbox" id="<?php echo $this->plugin_name; ?>-use_wpml" name="<?php echo $this->plugin_name; ?>[use_wpml]" <?php checked($use_wpml, "on"); ?> value="on" <?php echo $is_subscribed == true || $has_wpml == false  ? 'disabled' : ''?>/>
                     Use WPML <br/><small>(Make plugin compliant with https://wpml.org locale management. Mapping story content only works with stories sent by mfn.se)</small>
                 </p>
             </fieldset>
         </fieldset>
+
+
+        <fieldset>
+            <fieldset>
+                <p>
+                    <input type="checkbox" id="<?php echo $this->plugin_name; ?>-reset_cache" name="<?php echo $this->plugin_name; ?>[reset_cache]" <?php checked($reset_cache, "on"); ?> value="on" <?php echo $is_subscribed == true ? 'disabled' : ''?>/>
+                    Reset Cache <br/><small>(On every new item insert, if checked, this will reset the db cache)</small>
+                </p>
+            </fieldset>
+        </fieldset>
+
 
 
         <div style="display: inline-block">
@@ -150,6 +164,12 @@ Posthook Secret: <?php echo $posthook_secret; ?>
             <button class="button" id="sync-all">Sync All</button>
             <span id="sync-status"></span>
         </div>
+        <h4>Sync Taxonomy</h4>
+        <div>
+            <button class="button" id="sync-tax">Sync Taxonomy</button>
+            <span id="sync-tax-status"></span>
+        </div>
+
 
         <h4>Subscription</h4>
         <div >
@@ -161,8 +181,6 @@ Posthook Secret: <?php echo $posthook_secret; ?>
 <!--        <pre>-->
 <!--            --><?php //echo print_r($options); ?>
 <!--        </pre>-->
-
-
     </div>
 
 </div>
