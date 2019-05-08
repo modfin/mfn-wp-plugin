@@ -192,6 +192,9 @@ Posthook Secret: <?php echo $posthook_secret; ?>
 </script>
 
 <!---->
-<!--http://192.168.2.90:9090/api/dogmatix-->
-<!--http://192.168.2.90:2020/wp-content/plugins/mfn-wp-plugin/posthook.php-->
+<!--http://192.168.1.90:9090/api/dogmatix-->
+<!--http://192.168.1.90:2020/wp-content/plugins/mfn-wp-plugin/posthook.php-->
 <!--69f289ed-e8de-4b73-80fe-76a86380d417-->
+
+<!--Elux-->
+<!--e9098a26-0cec-4c4b-9097-ebbfda8fff08-->

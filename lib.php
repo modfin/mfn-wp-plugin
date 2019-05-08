@@ -75,6 +75,16 @@ function upsertLanguage($post_id, $groupId, $lang)
     $use_wpml = isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
 
     if ($use_wpml == 'on') {
+
+        // This since WPML has some sort of rais condition when creating a mutiple posts at once
+        // It should really be done in the call wp_insert_post
+        do_action( 'wpml_set_element_language_details', array(
+            'element_id'    => $post_id,
+            'element_type'  => 'post_' . MFN_POST_TYPE,
+            'trid'   => false,
+            'language_code'   => $lang
+        ));
+
         global $wpdb;
         $tableName = $wpdb->prefix . 'icl_translations';
 
@@ -88,13 +98,15 @@ function upsertLanguage($post_id, $groupId, $lang)
       ", $groupId);
         $trid = $wpdb->get_var($q);
 
-        $wpdb->update($tableName, array('language_code' => $lang, 'trid' => $trid), array('element_id' => $post_id));
-
-
-        do_action( 'wpml_sync_all_custom_fields', $post_id);
+//        $wpdb->update($tableName, array('language_code' => $lang, 'trid' => $trid), array('element_id' => $post_id));
+        do_action( 'wpml_set_element_language_details', array(
+            'element_id'    => $post_id,
+            'element_type'  => 'post_' . MFN_POST_TYPE,
+            'trid'   => $trid,
+            'language_code'   => $lang
+        ));
 
     }
-
 }
 
 
@@ -208,7 +220,8 @@ function subscribe()
             'hub.mode' => 'subscribe',
             'hub.topic' => '/mfn/s.json?type=all&.author.entity_id=' . $entity_id,
             'hub.callback' => $plugin_url . '/posthook.php?wp-name=' . $posthook_name,
-            'hub.secret' => $posthook_secret
+            'hub.secret' => $posthook_secret,
+            'hub.metadata' => '{"synchronize": true}'
         )
     );
 
