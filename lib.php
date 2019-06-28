@@ -37,12 +37,17 @@ function createTags($item)
 
     $options = get_option(MFN_PLUGIN_NAME);
     $use_wpml = isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
-
+//    $use_pll = isset($options['use_pll']) ? $options['use_pll'] : 'off';
     if ($use_wpml == 'on' && $lang != 'en') {
         foreach ($newtag as $i => $t) {
             $newtag[$i] = $t . "_" . $lang;
         }
     }
+//    if ($use_pll == 'on' && $lang != 'en') {
+//        foreach ($newtag as $i => $t) {
+//            $newtag[$i] = $t . "_" . $lang;
+//        }
+//    }
 
     return $newtag;
 }
@@ -73,6 +78,32 @@ function upsertLanguage($post_id, $groupId, $lang)
 
     $options = get_option(MFN_PLUGIN_NAME);
     $use_wpml = isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
+    $use_pll = isset($options['use_pll']) ? $options['use_pll'] : 'off';
+
+    if ($use_pll == 'on') {
+        pll_set_post_language($post_id, $lang);
+
+        global $wpdb;
+        $q = $wpdb->prepare("
+        SELECT lang.post_id, lang.meta_value as lang
+        FROM  $wpdb->postmeta grp
+        INNER JOIN  $wpdb->postmeta lang
+        ON grp.post_id = lang.post_id AND lang.meta_key = 'mfn_news_lang'
+        WHERE grp.meta_value = %s
+          AND grp.meta_key = 'mfn_news_group_id';
+        ", $groupId);
+
+        $res = $wpdb->get_results($q);
+
+        $translations = array();
+        foreach ($res as $i => $post){
+            $_post_id= $post->post_id;
+            $_lang = $post->lang;
+            $translations[$_lang] = $_post_id;
+        }
+        pll_save_post_translations( $translations );
+    }
+
 
     if ($use_wpml == 'on') {
 
@@ -159,7 +190,6 @@ LIMIT 1
         $outro($post_id);
         return 0;
     }
-
     $post_id = wp_insert_post(array(
         'post_content' => $html,
         'post_title' => $title,

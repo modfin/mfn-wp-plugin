@@ -307,6 +307,9 @@ function sync_mfn_taxonomy()
     $has_wpml = defined('WPML_PLUGIN_BASENAME');
 
 
+    $use_pll = isset($options['use_pll']) ? $options['use_pll'] : 'off';
+    $has_pll = defined('POLYLANG_BASENAME');
+
     $upsert_wpml = function ($enItem, $enTerm, $prefix = '') {
         global $wpdb;
         $tbmlTranslations = $wpdb->prefix . 'icl_translations';
@@ -395,10 +398,60 @@ function sync_mfn_taxonomy()
     };
 
 
-    $upsert = function ($item, $prefix = '', $parent_id = null) use (&$upsert, $use_wpml, $has_wpml, $upsert_wpml) {
+
+    $upsert_pll = function ($enItem, $enTerm, $prefix = ''){
+
+        $enParentTerm = null;
+        if ($enTerm->parent > 0) {
+            $enParentTerm = get_term($enTerm->parent, MFN_TAXONOMY_NAME);
+        }
+
+
+        $translations = array();
+        $translations['en'] = $enTerm->term_id;
+
+
+        foreach ($enItem['i10n'] as $lang => $name) {
+            $slug = $enTerm->slug . "_" . $lang;
+
+            $l_parent_term_id = 0;
+            if ($enParentTerm != null) {
+                $p_slug = $enParentTerm->slug . '_' . $lang;
+                $term = get_term_by('slug', $p_slug, MFN_TAXONOMY_NAME);
+                if(is_object($term) ){
+                    $l_parent_term_id =  $term->term_id;
+                }
+            }
+
+
+
+            $term = get_term_by('slug', $slug, MFN_TAXONOMY_NAME);
+            if (is_object($term)) {
+                wp_update_term($term->term_id, MFN_TAXONOMY_NAME, array(
+                    'name' => $name,
+                    'slug' => $slug,
+                    'parent' => $l_parent_term_id,
+                ));
+            }
+            if ($term == false) {
+                wp_insert_term($name, MFN_TAXONOMY_NAME, array(
+                    'slug' => $slug,
+                    'parent' => $l_parent_term_id,
+                ));
+
+                $term = get_term_by('slug', $slug, MFN_TAXONOMY_NAME);
+            }
+
+            pll_set_term_language($term->term_id, $lang);
+            $translations[$lang] = $term->term_id;
+        }
+        pll_save_term_translations($translations);
+    };
+
+
+    $upsert = function ($item, $prefix = '', $parent_id = null) use (&$upsert, $use_wpml, $has_wpml, $upsert_wpml, $has_pll, $use_pll, $upsert_pll) {
 
         $slug = $prefix . $item['slug'];
-//        echo $slug . "\n";
 
         $term = get_term_by('slug', $slug, MFN_TAXONOMY_NAME);
         if (is_object($term)) {
@@ -421,6 +474,14 @@ function sync_mfn_taxonomy()
             $upsert_wpml($item, $term, $prefix);
         }
 
+        // TODO for some reason, the
+//        if ($has_pll && $use_pll == 'on') {
+//            if (is_object($term)) {
+//                pll_set_term_language($term->term_id, 'en');
+//            }
+////            $upsert_pll($item, $term, $prefix);
+////            print_r(array($item, $term, $prefix));
+//        }
         if (isset($item['children'])) {
             foreach ($item['children'] as $val) {
                 $upsert($val, $slug . '-', $term->term_id);

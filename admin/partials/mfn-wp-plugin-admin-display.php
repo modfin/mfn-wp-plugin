@@ -28,6 +28,7 @@
 
         // Check if WPML plugin exists
         $has_wpml = defined('WPML_PLUGIN_BASENAME');
+        $has_pll = defined('POLYLANG_BASENAME');
 
         //Grab all options
         $options = get_option($this->plugin_name);
@@ -44,6 +45,7 @@
 
         $verify_signature =  isset($options['verify_signature']) ? $options['verify_signature'] : 'off';
         $use_wpml =  isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
+        $use_pll =  isset($options['use_pll']) ? $options['use_pll'] : 'off';
 
         $reset_cache =  isset($options['reset_cache']) ? $options['reset_cache'] : 'off';
 
@@ -110,6 +112,15 @@
                 <p>
                     <input type="checkbox" id="<?php echo $this->plugin_name; ?>-use_wpml" name="<?php echo $this->plugin_name; ?>[use_wpml]" <?php checked($use_wpml, "on"); ?> value="on" <?php echo $is_subscribed == true || $has_wpml == false  ? 'disabled' : ''?>/>
                     Use WPML <br/><small>(Make plugin compliant with https://wpml.org locale management. Mapping story content only works with stories sent by mfn.se)</small>
+                </p>
+            </fieldset>
+        </fieldset>
+
+        <fieldset>
+            <fieldset>
+                <p>
+                    <input type="checkbox" id="<?php echo $this->plugin_name; ?>-use_pll" name="<?php echo $this->plugin_name; ?>[use_pll]" <?php checked($use_pll, "on"); ?> value="on" <?php echo $is_subscribed == true || $has_pll == false  ? 'disabled' : ''?>/>
+                    Use Polylang <br/><small>(Make plugin compliant with https://polylang.pro locale management. Mapping story content only works with stories sent by mfn.se)</small>
                 </p>
             </fieldset>
         </fieldset>
