@@ -102,6 +102,33 @@ function pingHub()
 }
 
 
+
+function clearSettings()
+{
+    update_option('mfn-wp-plugin', array());
+    return "done";
+}
+
+function deleteAllPosts()
+{
+    $queries = array();
+    parse_str($_SERVER['QUERY_STRING'], $queries);
+    $limit = isset($queries["limit"]) ? $queries["limit"] : -1;
+
+
+    $i = 0;
+    $allposts = get_posts( array('post_type'=>'mfn_news','numberposts'=> $limit) );
+    foreach ($allposts as $eachpost) {
+
+        if ($eachpost->post_type == 'mfn_news'){
+            $i++;
+            wp_delete_post( $eachpost->ID, true );
+        }
+    }
+    return $i;
+}
+
+
 switch ($mode) {
     case "sync-tax":
         sync_mfn_taxonomy();
@@ -125,6 +152,13 @@ switch ($mode) {
 
     case "unsubscribe":
         echo unsubscribe();
+        die();
+
+    case "clear-settings":
+        echo clearSettings();
+        die();
+    case "delete-all-posts":
+        echo deleteAllPosts();
         die();
 
     default:

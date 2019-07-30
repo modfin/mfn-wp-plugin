@@ -144,6 +144,74 @@
 
 
 
+    function clearSettings(){
+
+        var command = $('#clear-settings-input').val().trim().toLowerCase();
+
+        if (command !== 'clear'){
+            alert("You must write the word \"clear\" in the input field next to the button to show intent for this action")
+            return
+        }
+
+        var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
+
+        if(pluginUrl.length < 3){
+            pluginUrl = "/wp-content/plugins/mfn-wp-plugin";
+        }
+
+        $.get(pluginUrl + '/cc.php?mode=clear-settings', function (data) {
+            setTimeout(function (){
+                location.reload()
+            }, 100);
+        })
+
+    }
+
+
+    function deletePosts(total){
+
+
+
+
+        total = total || 0;
+
+        var command = $('#delete-posts-input').val().trim().toLowerCase();
+
+        if (command !== 'delete'){
+            alert("You must write the word \"delete\" in the input field next to the button to show intent for this action");
+            return
+        }
+
+        $('#delete-posts-btn').prop('disabled', true);
+        $('#delete-posts-input').prop('disabled', true);
+
+        var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
+
+        if(pluginUrl.length < 3){
+            pluginUrl = "/wp-content/plugins/mfn-wp-plugin";
+        }
+
+        $.get(pluginUrl + '/cc.php?mode=delete-all-posts&limit=10', function (data) {
+
+            var deleted = parseInt(data);
+            total += deleted;
+            if (deleted === 10){
+                $('#delete-posts-nfo').text(total + " deleted");
+                deletePosts(total);
+                return
+            }
+
+            $('#delete-posts-nfo').text(total + " deleted, done");
+            $('#delete-posts-btn').prop('disabled', false);
+            $('#delete-posts-input').prop('disabled', false);
+            $('#delete-posts-input').val('')
+
+        })
+
+    }
+
+
+
     function init() {
         $("#sync-all").click(function () {
             sync(true)
@@ -164,6 +232,14 @@
             unsubscribe()
         });
 
+
+        $("#clear-settings-btn").click(function () {
+            clearSettings()
+        });
+
+        $("#delete-posts-btn").click(function () {
+            deletePosts()
+        });
 
         tests()
 

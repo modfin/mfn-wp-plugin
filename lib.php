@@ -55,14 +55,18 @@ function createTags($item)
 
 function upsertAttachments($post_id, $attachments)
 {
+    delete_post_meta($post_id,  MFN_POST_TYPE . "_attachment_link");
+    delete_post_meta($post_id,  MFN_POST_TYPE . "_attachment_data");
+
     foreach ($attachments as $i => $attachment) {
         $title = $attachment->file_title;
         $content_type = $attachment->content_type;
         $url = $attachment->url;
 
         $a = "<a href='$url' content='$content_type' target='_blank' rel='noopener'>$title</a>";
-        update_post_meta($post_id, MFN_POST_TYPE . "_attachment_link", $a);
-        update_post_meta($post_id, MFN_POST_TYPE . "_attachment_data", json_encode($attachment));
+
+        add_post_meta($post_id, MFN_POST_TYPE . "_attachment_link", $a);
+        add_post_meta($post_id, MFN_POST_TYPE . "_attachment_data", json_encode($attachment));
     }
 }
 

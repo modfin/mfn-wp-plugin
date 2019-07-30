@@ -17,7 +17,8 @@
 
 <div class="wrap" style="margin-top: 60px">
 
-    <h2 ><?php echo esc_html( get_admin_page_title() ); ?></h2>
+    <h2 ><?php echo esc_html( get_admin_page_title() ); ?>   <span style=" font-size:12px">v<?php
+            echo file_get_contents(dirname(__FILE__) . "/../../version") ?> </span></h2>
 
     <div class="mcol-1-2">
         <h2>Settings</h2>
@@ -141,11 +142,39 @@
             <?php submit_button('Save', 'primary','submit', TRUE, $is_subscribed ? 'disabled' : ''); ?>
         </div>
 
-<!--        <div style="display: inline-block">-->
-<!--            --><?php //submit_button('Unsubscribe', 'warning','submit', TRUE); ?>
-<!--        </div>-->
+
+
+
+
+
+
+
 
     </form>
+
+        <div>
+            <h3 style="color: #a80a00; margin-bottom: 0">Danger Zone</h3>
+
+            <fieldset>
+                <fieldset>
+                    <p>
+                        <button class="button" id="clear-settings-btn" style="width: 160px">Clear all MFN settings</button>
+                        <input type="text" placeholder="write 'clear' to confirm'" id="clear-settings-input">
+                    </p>
+                </fieldset>
+            </fieldset>
+            <fieldset>
+                <fieldset>
+                    <p>
+                        <button class="button" id="delete-posts-btn" style="width: 160px">Delete all MFN posts</button>
+                        <input type="text" placeholder="write 'delete' to confirm'" id="delete-posts-input">
+                        <span id="delete-posts-nfo"></span>
+                    </p>
+                </fieldset>
+            </fieldset>
+        </div>
+
+
 
 
     </div>
