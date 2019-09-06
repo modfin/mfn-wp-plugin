@@ -159,7 +159,7 @@
                 <fieldset>
                     <p>
                         <button class="button" id="clear-settings-btn" style="width: 160px">Clear all MFN settings</button>
-                        <input type="text" placeholder="write 'clear' to confirm'" id="clear-settings-input">
+                        <input type="text" placeholder="write 'clear' to confirm" id="clear-settings-input">
                     </p>
                 </fieldset>
             </fieldset>
@@ -167,7 +167,7 @@
                 <fieldset>
                     <p>
                         <button class="button" id="delete-posts-btn" style="width: 160px">Delete all MFN posts</button>
-                        <input type="text" placeholder="write 'delete' to confirm'" id="delete-posts-input">
+                        <input type="text" placeholder="write 'delete' to confirm" id="delete-posts-input">
                         <span id="delete-posts-nfo"></span>
                     </p>
                 </fieldset>

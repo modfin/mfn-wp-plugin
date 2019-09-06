@@ -26,6 +26,7 @@
  */
 
 require_once(dirname(__FILE__) . '/config.php');
+require_once(dirname(__FILE__) . '/widgets.php');
 
 
 // If this file is called directly, abort.

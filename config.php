@@ -1,10 +1,9 @@
 <?php
 
-const MFN_PLUGIN_NAME_VERSION = '0.0.7';
-const MFN_PLUGIN_NAME = 'mfn-wp-plugin';
-const MFN_TAXONOMY_NAME = 'mfn-news-tag';
-const MFN_TAG_PREFIX = 'mfn';
-const MFN_POST_TYPE = 'mfn_news';
+require_once('consts.php');
+require_once('api.php');
+
+
 
 
 // If ABSPATH not defined, php app is initiated from plugin folder.
@@ -474,14 +473,6 @@ function sync_mfn_taxonomy()
             $upsert_wpml($item, $term, $prefix);
         }
 
-        // TODO for some reason, the
-//        if ($has_pll && $use_pll == 'on') {
-//            if (is_object($term)) {
-//                pll_set_term_language($term->term_id, 'en');
-//            }
-////            $upsert_pll($item, $term, $prefix);
-////            print_r(array($item, $term, $prefix));
-//        }
         if (isset($item['children'])) {
             foreach ($item['children'] as $val) {
                 $upsert($val, $slug . '-', $term->term_id);
