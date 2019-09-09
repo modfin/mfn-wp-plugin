@@ -258,6 +258,11 @@ function sync_mfn_taxonomy()
                         ]
                     ],
                     [
+                        "slug" => "other",
+                        "name" => "Other Corporate Information",
+                        "i10n" => ["sv" => "Övrig bolagsinformation"]
+                    ],
+                    [
                         "slug" => "calendar",
                         "name" => "Financial calendar",
                         "i10n" => ["sv" => "Finansiell kalender"]

@@ -40,7 +40,12 @@ FROM $wpdb->terms t
                   ON posts.ID = r.object_id
       INNER JOIN $wpdb->postmeta lang
         ON posts.ID = lang.post_id AND lang.meta_key = 'mfn_news_lang'
-WHERE (t.slug = 'mfn-report-annual' OR t.slug = 'mfn-report-interim')
+WHERE (
+        t.slug = 'mfn-report-annual' 
+        OR t.slug = 'mfn-report-interim' 
+        OR t.slug like 'mfn-report-annual_%' 
+        OR t.slug like 'mfn-report-interim_%'
+      )
   AND tax.taxonomy = 'mfn-news-tag'
 ";
 

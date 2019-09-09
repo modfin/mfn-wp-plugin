@@ -96,6 +96,8 @@ class mfn_archive_widget extends WP_Widget
         }
 
 
+
+
         echo "
         <style>
             .mfn-filter ul{
