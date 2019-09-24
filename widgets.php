@@ -684,7 +684,7 @@ class mfn_news_feed_widget extends WP_Widget
                     $tag = 'mfn-' . $tag;
                 }
 
-                array_push($hasNotTags, "mfn-" . $tag);
+                array_push($hasNotTags, $tag);
                 continue;
             }
 
@@ -694,6 +694,8 @@ class mfn_news_feed_widget extends WP_Widget
             array_push($hasTags, $tag);
         }
 
+        print_r($hasTags);
+        print_r($hasNotTags);
 
         $year = $qury_param('m-year', "");
 
