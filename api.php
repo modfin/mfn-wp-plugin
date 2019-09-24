@@ -88,3 +88,90 @@ WHERE (
     return $reports;
 
 }
+
+function MFN_get_feed_min_max_years(){
+    global $wpdb;
+    $params = array();
+    $query = "
+    SELECT max(YEAR(post_date_gmt)) max_year, min(YEAR(post_date_gmt)) min_year 
+    FROM wp_posts WHERE post_type = 'mfn_news'
+    ";
+    $res = $wpdb->get_results($query);
+    if (sizeof($res) > 0) {
+        return $res[0];
+    }
+    return $res;
+}
+
+
+function MFN_get_feed($lang = 'all', $year = "", $hasTags = array(), $hasNotTags = array(), $offset = 0, $limit = 30)
+{
+
+    global $wpdb;
+    $params = array();
+
+    $query = "
+SELECT post_date_gmt, p.post_title, tags, lang.meta_value lang, post_name
+FROM wp_posts p
+INNER JOIN wp_postmeta lang
+ON p.ID = lang.post_id
+INNER JOIN (
+  SELECT po.ID, group_concat(CONCAT(ter.name, ':', ter.slug)) AS tags, group_concat(ter.slug) AS tag_slugs
+  FROM wp_posts po
+         INNER JOIN wp_term_relationships r
+                    ON r.object_id = po.ID
+         INNER JOIN wp_term_taxonomy tax
+                    USING (term_taxonomy_id)
+         INNER JOIN wp_terms ter
+                    USING (term_id)
+  WHERE po.post_type = 'mfn_news'
+    AND po.post_status = 'publish'
+  GROUP BY po.ID
+) t  ON t.ID = p.ID
+
+WHERE p.post_type = 'mfn_news'
+  AND lang.meta_key = 'mfn_news_lang'
+  AND p.post_status = 'publish'
+ ";
+
+
+    if($lang != "all"){
+        $query .= " AND lang.meta_value = %s ";
+        array_push($params, $lang);
+    }
+
+    foreach ($hasTags as $tag) {
+        $query .= " AND FIND_IN_SET(%s, t.tag_slugs) > 0 ";
+        array_push($params, $tag);
+    }
+    foreach ($hasNotTags as $tag) {
+        $query .= " AND FIND_IN_SET(%s, t.tag_slugs) = 0 ";
+        array_push($params, $tag);
+    }
+    foreach ($hasNotTags as $tag) {
+        $query .= " AND FIND_IN_SET(%s, t.tag_slugs) = 0 ";
+        array_push($params, $tag);
+    }
+    if($year != ""){
+        $query .= " AND YEAR(p.post_date_gmt) = %s ";
+        array_push($params, $year);
+    }
+
+
+
+    $query .= " ORDER BY p.post_date_gmt DESC ";
+
+    $query .= " LIMIT %d ";
+    array_push($params, $limit);
+    $query .= " OFFSET %d ";
+    array_push($params, $offset);
+
+    $q = $wpdb->prepare($query, $params);
+    $res = $wpdb->get_results($q);
+
+    foreach ($res as $r){
+        $r->tags = explode(",", $r->tags);
+    }
+
+    return $res;
+}
