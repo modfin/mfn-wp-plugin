@@ -694,9 +694,6 @@ class mfn_news_feed_widget extends WP_Widget
             array_push($hasTags, $tag);
         }
 
-        print_r($hasTags);
-        print_r($hasNotTags);
-
         $year = $qury_param('m-year', "");
 
         $min_max_years = MFN_get_feed_min_max_years();
