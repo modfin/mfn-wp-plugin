@@ -94,7 +94,7 @@ function MFN_get_feed_min_max_years(){
     $params = array();
     $query = "
     SELECT max(YEAR(post_date_gmt)) max_year, min(YEAR(post_date_gmt)) min_year 
-    FROM wp_posts WHERE post_type = 'mfn_news'
+    FROM $wpdb->posts WHERE post_type = 'mfn_news'
     ";
     $res = $wpdb->get_results($query);
     if (sizeof($res) > 0) {
@@ -112,17 +112,17 @@ function MFN_get_feed($lang = 'all', $year = "", $hasTags = array(), $hasNotTags
 
     $query = "
 SELECT post_date_gmt, p.post_title, tags, lang.meta_value lang, post_name
-FROM wp_posts p
-INNER JOIN wp_postmeta lang
+FROM $wpdb->posts p
+INNER JOIN $wpdb->postmeta lang
 ON p.ID = lang.post_id
 INNER JOIN (
   SELECT po.ID, group_concat(CONCAT(ter.name, ':', ter.slug)) AS tags, group_concat(ter.slug) AS tag_slugs
-  FROM wp_posts po
-         INNER JOIN wp_term_relationships r
+  FROM $wpdb->posts po
+         INNER JOIN $wpdb->term_relationships r
                     ON r.object_id = po.ID
-         INNER JOIN wp_term_taxonomy tax
+         INNER JOIN $wpdb->term_taxonomy tax
                     USING (term_taxonomy_id)
-         INNER JOIN wp_terms ter
+         INNER JOIN $wpdb->terms ter
                     USING (term_id)
   WHERE po.post_type = 'mfn_news'
     AND po.post_status = 'publish'
