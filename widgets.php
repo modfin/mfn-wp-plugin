@@ -644,7 +644,10 @@ class mfn_news_feed_widget extends WP_Widget
 
         echo $args['before_widget'];
 
-        $baseurl = "//{$_SERVER['HTTP_HOST']}{$_SERVER['REDIRECT_URL']}";
+        global $wp;
+        $baseurl = explode('?', home_url( add_query_arg( array(), $wp->request ) ))[0];
+
+
 
         $tzLocation = empty($instance['tzLocation']) ? 'Europe/Stockholm' : $instance['tzLocation'];
         $timestampFormat = empty($instance['timestampFormat']) ? 'Y-m-d H:i' : $instance['timestampFormat'];
