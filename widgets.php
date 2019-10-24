@@ -722,7 +722,6 @@ class mfn_news_feed_widget extends WP_Widget
             $onlytagsallowed = explode(",", $onlytagsallowedstr);
         }
 
-
         echo "
 <style>
     .mfn-tags{float: right}
@@ -752,21 +751,26 @@ class mfn_news_feed_widget extends WP_Widget
 //            echo "<a href='$url3'>Reports</a>";
 //        echo "</div>";
 
+        if(is_object($min_max_years) &&
+            isset($min_max_years->max_year) &&
+            isset($min_max_years->min_year) &&
+            is_numeric($min_max_years->max_year) &&
+            is_numeric($min_max_years->min_year)){
 
-        echo "<div class='mfn-newsfeed-year-selector'>";
-        for ($i = $min_max_years->max_year; $i >= $min_max_years->min_year; $i--) {
-            $params = http_build_query(array_merge($_GET, array('m-year' => $i)));
-            $url = $baseurl . "?" . $params;
-            $html = $yeartemplate;
-            $html = str_replace("[url]", $url, $html);
-            $html = str_replace("[year]", $i, $html);
-            $html = str_replace("[mfn-year-selected]", $i == $year ? 'mfn-year-selected' : '', $html);
+            echo "<div class='mfn-newsfeed-year-selector'>";
+            for ($i = $min_max_years->max_year; $i >= $min_max_years->min_year; $i--) {
+                $params = http_build_query(array_merge($_GET, array('m-year' => $i)));
+                $url = $baseurl . "?" . $params;
+                $html = $yeartemplate;
+                $html = str_replace("[url]", $url, $html);
+                $html = str_replace("[year]", $i, $html);
+                $html = str_replace("[mfn-year-selected]", $i == $year ? 'mfn-year-selected' : '', $html);
 
 
-            echo $html;
+                echo $html;
+            }
+            echo "</div>";
         }
-        echo "</div>";
-
 
         echo "<div class=\"mfn-list\">";
 
@@ -805,7 +809,6 @@ class mfn_news_feed_widget extends WP_Widget
             echo $html;
 
         }
-
         echo "<div class='mfn-newsfeed-pagination'>";
 
         if ($page > 0) {
