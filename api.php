@@ -53,7 +53,6 @@ WHERE (
     if($lang != "all"){
         $query .= " AND lang.meta_value = %s ";
         array_push($params, $lang);
-
     }
 
     if($order != "DESC"){
@@ -94,7 +93,10 @@ function MFN_get_feed_min_max_years(){
     $params = array();
     $query = "
     SELECT max(YEAR(post_date_gmt)) max_year, min(YEAR(post_date_gmt)) min_year 
-    FROM $wpdb->posts WHERE post_type = 'mfn_news'
+    FROM $wpdb->posts
+    WHERE post_type = 'mfn_news'
+      AND post_date_gmt IS NOT NULL
+      AND post_date_gmt <> 0
     ";
     $res = $wpdb->get_results($query);
     if (sizeof($res) > 0) {
