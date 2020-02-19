@@ -1027,3 +1027,32 @@ class mfn_news_feed_widget extends WP_Widget
         return $instance;
     }
 } //
+
+function load_shortcode_mfn_archive_widget($atts) {
+    ob_start();
+    the_widget( 'mfn_archive_widget', $atts);
+    $contents = ob_get_clean();
+
+    return $contents;
+}
+add_shortcode( 'mfn_archive_widget', 'load_shortcode_mfn_archive_widget' );
+
+
+function load_shortcode_mfn_news_feed_widget($atts) {
+    ob_start();
+    the_widget( 'mfn_news_feed_widget', $atts);
+    $contents = ob_get_clean();
+
+    return $contents;
+}
+add_shortcode( 'mfn_news_feed_widget', 'load_shortcode_mfn_news_feed_widget' );
+
+
+function load_shortcode_mfn_subscription_widget($atts) {
+    ob_start();
+    the_widget( 'mfn_subscription_widget', $atts);
+    $contents = ob_get_clean();
+
+    return $contents;
+}
+add_shortcode( 'mfn_subscription_widget', 'load_shortcode_mfn_subscription_widget' );
