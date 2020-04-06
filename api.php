@@ -70,6 +70,7 @@ WHERE (
     $res = $wpdb->get_results($q);
 
     $reports = array();
+    $exists = array();
     foreach ($res as $r){
         if(strlen($r->url) < 5){
             continue;
@@ -81,7 +82,11 @@ WHERE (
         $rr->url = $r->url;
         $rr->lang = $r->lang;
         $rr->type = $r->report_type;
-        array_push($reports, $rr);
+
+        if(!$exists[$r->url]){
+            array_push($reports, $rr);
+        }
+        $exists[$r->url] = 1;
     }
 
     return $reports;

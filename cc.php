@@ -59,7 +59,7 @@ function sync()
         return;
     }
 
-    $url = $sync_url . '/all/s.json?.author.entity_id=' . $ops['entity_id'] . '&limit=' . $limit . "&offset=" . $offset;
+    $url = $sync_url . '/all/s.json?type=all&.author.entity_id=' . $ops['entity_id'] . '&limit=' . $limit . "&offset=" . $offset;
     $response = wp_remote_get($url);
     $json = wp_remote_retrieve_body($response);
     $obj = json_decode($json);
