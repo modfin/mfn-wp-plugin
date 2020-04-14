@@ -651,6 +651,12 @@ class mfn_news_feed_widget extends WP_Widget
 
         $tzLocation = empty($instance['tzLocation']) ? 'Europe/Stockholm' : $instance['tzLocation'];
         $timestampFormat = empty($instance['timestampFormat']) ? 'Y-m-d H:i' : $instance['timestampFormat'];
+        if(isset($instance['tzlocation'])) {
+            $tzLocation = normalize_whitespace($instance['tzlocation']);
+        }
+        if(isset($instance['timestampformat'])) {
+            $timestampFormat = normalize_whitespace($instance['timestampformat']);
+        }
         $pagelen = empty($instance['pagelen']) ? 20 : $instance['pagelen'];
         $showyears = empty($instance['showyears']) ? false : $instance['showyears'];
         $showpagination = empty($instance['showpagination']) ? false : $instance['showpagination'];
@@ -675,6 +681,9 @@ class mfn_news_feed_widget extends WP_Widget
         }
 
         $tagsstr = $qury_param('m-tags', "");
+        if(isset($instance['tags'])) {
+            $tagsstr = normalize_whitespace($instance['tags']);
+        }
         $hasTags = array();
         $hasNotTags = array();
         foreach (explode(",", $tagsstr) as $tag) {
@@ -699,6 +708,10 @@ class mfn_news_feed_widget extends WP_Widget
 
         $year = $qury_param('m-year', "");
 
+        $year = $qury_param('m-year', "");
+        if(isset($instance['year'])) {
+             $year = normalize_whitespace($instance['year']);
+        }
         $min_max_years = MFN_get_feed_min_max_years();
         $res = MFN_get_feed($pmlang, $year, $hasTags, $hasNotTags, $page * $pagelen, $pagelen);
 
