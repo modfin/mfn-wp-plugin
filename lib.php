@@ -235,6 +235,7 @@ function subscribe()
     $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
     $entity_id = isset($ops['entity_id']) ? $ops['entity_id'] : "";
     $plugin_url = isset($ops['plugin_url']) ? $ops['plugin_url'] : "";
+    $cus_query = isset($ops['cus_query']) ? $ops['cus_query'] : "";
 
 
     $ops['posthook_name'] = isset($ops['posthook_name']) ? $ops['posthook_name'] : generateRandomString();
@@ -252,7 +253,7 @@ function subscribe()
         'headers' => array("content-type" => "application/x-www-form-urlencoded"),
         'body' => array(
             'hub.mode' => 'subscribe',
-            'hub.topic' => '/mfn/s.json?type=all&.author.entity_id=' . $entity_id,
+            'hub.topic' => '/mfn/s.json?type=all&.author.entity_id=' . $entity_id .  "&" . $cus_query,
             'hub.callback' => $plugin_url . '/posthook.php?wp-name=' . $posthook_name,
             'hub.secret' => $posthook_secret,
             'hub.metadata' => '{"synchronize": true}'

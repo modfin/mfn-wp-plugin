@@ -42,6 +42,8 @@
         $plugin_url = isset($options['plugin_url']) ? $options['plugin_url'] : "";
         $entity_id = isset($options['entity_id']) ? $options['entity_id'] : "";
 
+        $cus_query = isset($options['cus_query']) ? $options['cus_query'] : "";
+
 
 
         $verify_signature =  isset($options['verify_signature']) ? $options['verify_signature'] : 'off';
@@ -94,6 +96,26 @@
                 <p>Entity Id</p>
                 <legend class="screen-reader-text"><span><?php _e('input the api URL', $this->plugin_name); ?></span></legend>
                 <input class="regular-text wide" id="<?php echo $this->plugin_name; ?>-entity_id" name="<?php echo $this->plugin_name; ?>[entity_id]" value="<?php echo $entity_id; ?>" <?php echo $is_subscribed == true ? 'disabled' : ''?>/>
+            </fieldset>
+        </fieldset>
+
+        <script>
+            function toggleQueryInput(e){
+                var el = document.getElementById("<?php echo $this->plugin_name; ?>-cus_query")
+                el.setAttribute("disabled", "")
+                if (e.checked){
+                    el.removeAttribute("disabled")
+                }
+            }
+        </script>
+
+        <fieldset>
+            <fieldset>
+                <p>Custom Query
+                    <small>(i know what im doing <input type="checkbox" onchange="toggleQueryInput(this)" <?php echo $is_subscribed == true ? 'disabled' : ''?>/> ) </small>
+                </p>
+                <legend class="screen-reader-text"><span><?php _e('input the api URL', $this->plugin_name); ?></span></legend>
+                <input class="regular-text wide" id="<?php echo $this->plugin_name; ?>-cus_query" name="<?php echo $this->plugin_name; ?>[cus_query]" value="<?php echo $cus_query; ?>" <?php echo $is_subscribed == true ? 'disabled' : ''?> disabled/>
             </fieldset>
         </fieldset>
 

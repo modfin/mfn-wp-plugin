@@ -47,6 +47,8 @@ function sync()
     $sync_url = isset($ops['sync_url']) ? $ops['sync_url'] : "";
     $reset_cache = isset($ops['reset_cache']) ? ($ops['reset_cache'] == 'on') : false;
 
+    $cus_query = isset($ops['cus_query']) ? $ops['cus_query'] : "";
+
     if ($entity_id == "") {
         echo -1;
         return;
@@ -59,7 +61,13 @@ function sync()
         return;
     }
 
-    $url = $sync_url . '/all/s.json?type=all&.author.entity_id=' . $ops['entity_id'] . '&limit=' . $limit . "&offset=" . $offset;
+
+
+    $url = $sync_url . '/all/s.json?type=all&.author.entity_id=' . $ops['entity_id'] .
+        '&limit=' . $limit .
+        "&offset=" . $offset .
+        "&" . $cus_query;
+
     $response = wp_remote_get($url);
     $json = wp_remote_retrieve_body($response);
     $obj = json_decode($json);
