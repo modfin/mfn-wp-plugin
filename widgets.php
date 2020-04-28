@@ -50,6 +50,9 @@ class mfn_archive_widget extends WP_Widget
     public function widget($args, $instance)
     {
 
+        $sc = array(
+           'showfilter' => $instance['showfilter']
+        );
 
         $me = $this;
         $l = function ($word, $lang) use ($me) {
@@ -97,53 +100,53 @@ class mfn_archive_widget extends WP_Widget
             echo "<style>.mfn-report-date{display:none}</style>";
         }
 
-
-        echo "
-        <style>
-            .mfn-filter ul{
-                list-style: none;
-                display: inline-block;  
-            }
-            .mfn-filter li{
-                cursor: pointer;
-                display: inline-block;
-                padding-right: 1em;
-            }
-            ul.mfn-report-items{
-                list-style: none;
-                padding-left: 0;
-            }
-            .mfn-report-container.annual .mfn-report-interim{
-                display: none; 
-            }
-            .mfn-report-container.interim .mfn-report-annual{
-                display: none; 
-            }
-            .mfn-report-container.all .mfn-filter .all, 
-            .mfn-report-container.annual .mfn-filter .annual, 
-            .mfn-report-container.interim .mfn-filter .interim{
-                text-decoration: underline;
-            }
-        </style>
-        <script>
-            function MFN_SET_FILTER(type){
-                var list = document.querySelector('.mfn-report-container')
-                list.classList.remove('all');
-                list.classList.remove('annual');
-                list.classList.remove('interim');
-                list.classList.add(type);
-            }
-        </script>
-        <div class=\"mfn-filter\">
-        Filter:
-            <ul>
-                <li class=\"all\" onclick=\"MFN_SET_FILTER('all')\">" . $l('All', $lang) . "</li>
-                <li class=\"interim\" onclick=\"MFN_SET_FILTER('interim')\">" . $l('Interim reports', $lang) . "</li>
-                <li class=\"annual\" onclick=\"MFN_SET_FILTER('annual')\">" . $l('Annual Reports', $lang) . "</li>
-            </ul>
-        </div>
-
-        ";
+        if($sc['showfilter']) {
+            echo "
+            <style>
+                .mfn-filter ul{
+                    list-style: none;
+                    display: inline-block;
+                }
+                .mfn-filter li{
+                    cursor: pointer;
+                    display: inline-block;
+                    padding-right: 1em;
+                }
+                ul.mfn-report-items{
+                    list-style: none;
+                    padding-left: 0;
+                }
+                .mfn-report-container.annual .mfn-report-interim{
+                    display: none;
+                }
+                .mfn-report-container.interim .mfn-report-annual{
+                    display: none;
+                }
+                .mfn-report-container.all .mfn-filter .all,
+                .mfn-report-container.annual .mfn-filter .annual,
+                .mfn-report-container.interim .mfn-filter .interim{
+                    text-decoration: underline;
+                }
+            </style>
+            <script>
+                function MFN_SET_FILTER(type){
+                    var list = document.querySelector('.mfn-report-container')
+                    list.classList.remove('all');
+                    list.classList.remove('annual');
+                    list.classList.remove('interim');
+                    list.classList.add(type);
+                }
+            </script>
+            <div class=\"mfn-filter\">
+            Filter:
+                <ul>
+                    <li class=\"all\" onclick=\"MFN_SET_FILTER('all')\">" . $l('All', $lang) . "</li>
+                    <li class=\"interim\" onclick=\"MFN_SET_FILTER('interim')\">" . $l('Interim reports', $lang) . "</li>
+                    <li class=\"annual\" onclick=\"MFN_SET_FILTER('annual')\">" . $l('Annual Reports', $lang) . "</li>
+                </ul>
+            </div>
+            ";
+        }
 
         $year = "";
         foreach ($reports as $r) {
