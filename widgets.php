@@ -76,7 +76,7 @@ class mfn_archive_widget extends WP_Widget
             $pmlang = $lang;
         }
 
-        echo "<div class=\"mfn-report-container all\" id=\"mfn-report-archive-id-" . $instance['id'] . "\">";
+        echo "<div class=\"mfn-report-container all\">";
 
         if (!empty($instance['showtitle'])) {
             echo "<h2>" . $l("Financial reports", $lang) . "</h2>";
@@ -101,7 +101,6 @@ class mfn_archive_widget extends WP_Widget
         }
 
         if($sc['showfilter']) {
-
             echo "
             <style>
                 .mfn-filter ul{
@@ -130,8 +129,8 @@ class mfn_archive_widget extends WP_Widget
                 }
             </style>
             <script>
-                function MFN_SET_FILTER(type, instance_id){
-                    var list = document.querySelector('#mfn-report-archive-id-' + instance_id);
+                function MFN_SET_FILTER(type){
+                    var list = document.querySelector('.mfn-report-container')
                     list.classList.remove('all');
                     list.classList.remove('annual');
                     list.classList.remove('interim');
@@ -141,9 +140,9 @@ class mfn_archive_widget extends WP_Widget
             <div class=\"mfn-filter\">
             Filter:
                 <ul>
-                    <li class=\"all\" onclick=\"MFN_SET_FILTER('all', '" . $instance['id'] . "')\">" . $l('All', $lang) . "</li>
-                    <li class=\"interim\" onclick=\"MFN_SET_FILTER('interim', '" . $instance['id'] . "')\">" . $l('Interim reports', $lang) . "</li>
-                    <li class=\"annual\" onclick=\"MFN_SET_FILTER('annual', '" . $instance['id'] . "')\">" . $l('Annual Reports', $lang) . "</li>
+                    <li class=\"all\" onclick=\"MFN_SET_FILTER('all')\">" . $l('All', $lang) . "</li>
+                    <li class=\"interim\" onclick=\"MFN_SET_FILTER('interim')\">" . $l('Interim reports', $lang) . "</li>
+                    <li class=\"annual\" onclick=\"MFN_SET_FILTER('annual')\">" . $l('Annual Reports', $lang) . "</li>
                 </ul>
             </div>
             ";
@@ -169,7 +168,7 @@ class mfn_archive_widget extends WP_Widget
 
         }
         echo "</ul>";
-        echo "</div>";
+        echo "<div>";
 
         echo $args['after_widget'];
     }
@@ -1047,9 +1046,6 @@ class mfn_news_feed_widget extends WP_Widget
 
 function load_shortcode_mfn_archive_widget($atts) {
     ob_start();
-
-    $atts['id'] = mt_rand(1, time());
-
     the_widget( 'mfn_archive_widget', $atts);
     $contents = ob_get_clean();
 
