@@ -77,7 +77,7 @@ class mfn_archive_widget extends WP_Widget
             $pmlang = $lang;
         }
 
-        echo "<div class=\"mfn-report-container all\" id=\"mfn-report-archive-id-" . $sc['instance_id'] . "\">";
+        echo "<div class=\"mfn-report-container all\" id=\"mfn-report-archive-id-" . $w['instance_id'] . "\">";
 
         if (!empty($instance['showtitle'])) {
             echo "<h2>" . $l("Financial reports", $lang) . "</h2>";
@@ -89,19 +89,15 @@ class mfn_archive_widget extends WP_Widget
             return;
         }
 
-        if (empty($instance['showtitle'])) {
-            echo "<style>.mfn-filter{display:none}</style>";
-        }
-
         if (empty($instance['showyear'])) {
-            echo "<style>.mfn-year-header{display:none}</style>";
+            echo "<style>#mfn-year-header-id-" . $w['instance_id'] . "{display:none}</style>";
         }
 
         if (empty($instance['showdate'])) {
-            echo "<style>.mfn-report-date{display:none}</style>";
+            echo "<style>#mfn-report-date-id-" . $w['instance_id'] . "{display:none}</style>";
         }
 
-        if($sc['showfilter']) {
+        if($w['showfilter']) {
             echo "
             <style>
                 .mfn-filter ul{
@@ -141,9 +137,9 @@ class mfn_archive_widget extends WP_Widget
             <div class=\"mfn-filter\">
             Filter:
                 <ul>
-                    <li class=\"all\" onclick=\"MFN_SET_FILTER('all', '" . $sc['instance_id'] . "')\">" . $l('All', $lang) . "</li>
-                    <li class=\"interim\" onclick=\"MFN_SET_FILTER('interim', '" . $sc['instance_id'] . "')\">" . $l('Interim reports', $lang) . "</li>
-                    <li class=\"annual\" onclick=\"MFN_SET_FILTER('annual', '" . $sc['instance_id'] . "')\">" . $l('Annual Reports', $lang) . "</li>
+                    <li class=\"all\" onclick=\"MFN_SET_FILTER('all', '" . $w['instance_id'] . "')\">" . $l('All', $lang) . "</li>
+                    <li class=\"interim\" onclick=\"MFN_SET_FILTER('interim', '" . $w['instance_id'] . "')\">" . $l('Interim reports', $lang) . "</li>
+                    <li class=\"annual\" onclick=\"MFN_SET_FILTER('annual', '" . $w['instance_id'] . "')\">" . $l('Annual Reports', $lang) . "</li>
                 </ul>
             </div>
             ";
@@ -159,13 +155,13 @@ class mfn_archive_widget extends WP_Widget
                 }
 
                 $year = $y;
-                echo "<h3 class='mfn-year-header'>$year</h3>";
+                echo "<h3 class='mfn-year-header' id='mfn-year-header-id-" . $w['instance_id'] . "'>$year</h3>";
                 echo "<ul class='mfn-report-items'>";
             }
 
             $date = substr($r->timestamp, 0, 10);
 
-            echo "<li class='$r->type'> <span class='mfn-report-date'>$date</span> <a href=\"$r->url\" target=\"_blank\" rel='noopener'>$r->title</a></li>";
+            echo "<li class='$r->type'> <span class='mfn-report-date' id='mfn-report-date-id-" . $w['instance_id'] . "'>$date</span> <a href=\"$r->url\" target=\"_blank\" rel='noopener'>$r->title</a></li>";
 
         }
         echo "</ul>";
