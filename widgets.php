@@ -50,7 +50,7 @@ class mfn_archive_widget extends WP_Widget
     public function widget($args, $instance)
     {
 
-        $sc = array(
+        $w = array(
            'showfilter' => $instance['showfilter'],
            'instance_id' => mt_rand(1, time())
         );
