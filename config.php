@@ -4,8 +4,6 @@ require_once('consts.php');
 require_once('api.php');
 
 
-
-
 // If ABSPATH not defined, php app is initiated from plugin folder.
 // Lets try to find and run wp-config.php
 if (!defined('ABSPATH')) {
@@ -95,37 +93,42 @@ function sync_mfn_taxonomy()
             [
                 "slug" => "type-ir",
                 "name" => "IR",
-                "i10n" => ["sv" => "IR"]
+                "i10n" => ["sv" => "IR", "fi" => "IR"]
             ],
             [
                 "slug" => "type-pr",
                 "name" => "PR",
-                "i10n" => ["sv" => "PR"]
+                "i10n" => ["sv" => "PR", "fi" => "PR"]
             ],
             [
                 "slug" => "lang-sv",
                 "name" => "Swedish",
-                "i10n" => ["sv" => "Svenska"]
+                "i10n" => ["sv" => "Svenska", "fi" => "Ruotsi"]
             ],
             [
                 "slug" => "lang-en",
                 "name" => "English",
-                "i10n" => ["sv" => "Engelska"]
+                "i10n" => ["sv" => "Engelska", 'fi' => "Englanti"]
+            ],
+            [
+                "slug" => "lang-en",
+                "name" => "Finnish",
+                "i10n" => ["sv" => "Finska", 'fi' => "Suomi"]
             ],
             [
                 "slug" => "correction",
                 "name" => "Correction",
-                "i10n" => ["sv" => "Korrektion"],
+                "i10n" => ["sv" => "Korrektion", 'fi' => "Korjaaminen"],
             ],
             [
                 "slug" => "regulatory",
                 "name" => "Regulatory",
-                "i10n" => ["sv" => "Regulatorisk"],
+                "i10n" => ["sv" => "Regulatorisk", 'fi' => "Sääntelyn"],
                 "children" => [
                     [
                         "slug" => "mar",
                         "name" => "MAR",
-                        "i10n" => ["sv" => "MAR"]
+                        "i10n" => ["sv" => "MAR", "fi" => "MAR"]
                     ],
                     [
                         "slug" => "vpml",
@@ -140,7 +143,7 @@ function sync_mfn_taxonomy()
                     [
                         "slug" => "listing",
                         "name" => "Listing Regulation",
-                        "i10n" => ["sv" => "Noteringskrav"]
+                        "i10n" => ["sv" => "Noteringskrav", 'fi' => "Listausvaatimukset"]
                     ],
 
                 ]
@@ -148,37 +151,37 @@ function sync_mfn_taxonomy()
             [
                 "slug" => "report",
                 "name" => "Report",
-                "i10n" => ["sv" => "Rapport"],
+                "i10n" => ["sv" => "Rapport", 'fi' => "Raportti"],
                 "children" => [
                     [
                         "slug" => "annual",
                         "name" => "Annual",
-                        "i10n" => ["sv" => "Årsredovisning"]
+                        "i10n" => ["sv" => "Årsredovisning", 'fi' => "Vuotuinen"]
                     ],
                     [
                         "slug" => "interim",
                         "name" => "Interim",
-                        "i10n" => ["sv" => "Delårsrapport"],
+                        "i10n" => ["sv" => "Delårsrapport", 'fi' => "Osavuosikatsaus"],
                         "children" => [
                             [
                                 "slug" => "q1",
                                 "name" => "Q1",
-                                "i10n" => ["sv" => "Q1"]
+                                "i10n" => ["sv" => "Q1", "fi" => "Q1"]
                             ],
                             [
                                 "slug" => "q2",
                                 "name" => "Q2",
-                                "i10n" => ["sv" => "Q2"]
+                                "i10n" => ["sv" => "Q2", "fi" => "Q2"]
                             ],
                             [
                                 "slug" => "q3",
                                 "name" => "Q3",
-                                "i10n" => ["sv" => "Q3"]
+                                "i10n" => ["sv" => "Q3", "fi" => "Q3"]
                             ],
                             [
                                 "slug" => "q4",
                                 "name" => "Yearend",
-                                "i10n" => ["sv" => "Bokslutskommuniké"]
+                                "i10n" => ["sv" => "Bokslutskommuniké", 'fi' => "Vuoden loppu"]
                             ],
 
                         ]
@@ -188,47 +191,47 @@ function sync_mfn_taxonomy()
             [
                 "slug" => "ca",
                 "name" => "Corporate Action",
-                "i10n" => ["sv" => "Bolagshändelse"],
+                "i10n" => ["sv" => "Bolagshändelse", 'fi' => "Vuosittainen tapahtuma"],
                 "children" => [
                     [
                         "slug" => "other",
                         "name" => "Other",
-                        "i10n" => ["sv" => "Other"]
+                        "i10n" => ["sv" => "Övrig", "fi" => "Muut"]
                     ],
                     [
                         "slug" => "ma",
                         "name" => "M&A",
-                        "i10n" => ["sv" => "M&A"]
+                        "i10n" => ["sv" => "M&A", "fi" => "M&A"]
                     ],
                     [
                         "slug" => "ipo",
                         "name" => "IPO",
-                        "i10n" => ["sv" => "IPO"]
+                        "i10n" => ["sv" => "IPO", "fi" => "IPO"]
                     ],
                     [
                         "slug" => "prospectus",
                         "name" => "Prospectus",
-                        "i10n" => ["sv" => "Prospekt"]
+                        "i10n" => ["sv" => "Prospekt", 'fi' => "Esite"]
                     ],
                     [
                         "slug" => "shares",
                         "name" => "Shares",
-                        "i10n" => ["sv" => "Aktie"],
+                        "i10n" => ["sv" => "Aktie", 'fi' => "Osakkeet"],
                         "children" => [
                             [
                                 "slug" => "issuance",
                                 "name" => "Issuance",
-                                "i10n" => ["sv" => "Emission"]
+                                "i10n" => ["sv" => "Emission", 'fi'=>"Osakeanti"]
                             ],
                             [
                                 "slug" => "repurchase",
                                 "name" => "Repurchase",
-                                "i10n" => ["sv" => "Återköp"]
+                                "i10n" => ["sv" => "Återköp", 'fi' => "Takaisinosto"]
                             ],
                             [
                                 "slug" => "rights",
                                 "name" => "Rights Change",
-                                "i10n" => ["sv" => "Rättighetsförändring"]
+                                "i10n" => ["sv" => "Rättighetsförändring", 'fi' => "Oikeuksien muutos"]
                             ]
 
                         ]
@@ -238,66 +241,66 @@ function sync_mfn_taxonomy()
             [
                 "slug" => "ci",
                 "name" => "Corporate Information",
-                "i10n" => ["sv" => "Bolagsinformation"],
+                "i10n" => ["sv" => "Bolagsinformation", 'fi' => "Yrityksen tiedot"],
                 "children" => [
                     [
                         "slug" => "gm",
                         "name" => "General meeting",
-                        "i10n" => ["sv" => "Bolagsstämman"],
+                        "i10n" => ["sv" => "Bolagsstämman", 'fi' => "Yhtiökokous"],
                         "children" => [
                             [
                                 "slug" => "notice",
                                 "name" => "Notice",
-                                "i10n" => ["sv" => "Kallelse"]
+                                "i10n" => ["sv" => "Kallelse", 'fi'=>"Kutsumus"]
                             ],
                             [
                                 "slug" => "info",
-                                "name" => "Raport bolagsstämman",
-                                "i10n" => ["sv" => "Kallelse"]
+                                "name" => "Report of the AGM",
+                                "i10n" => ["sv" => "Raport bolagsstämman", 'fi' => "Yhtiökokouksen raportti"]
                             ]
                         ]
                     ],
                     [
                         "slug" => "other",
                         "name" => "Other Corporate Information",
-                        "i10n" => ["sv" => "Övrig bolagsinformation"]
+                        "i10n" => ["sv" => "Övrig bolagsinformation", 'fi' => "Muut yritystiedot"]
                     ],
                     [
                         "slug" => "calendar",
                         "name" => "Financial calendar",
-                        "i10n" => ["sv" => "Finansiell kalender"]
+                        "i10n" => ["sv" => "Finansiell kalender", 'fi' => "Taloudellinen kalenteri"]
                     ],
                     [
                         "slug" => "presentation",
                         "name" => "Presentation",
-                        "i10n" => ["sv" => "Presentation"]
+                        "i10n" => ["sv" => "Presentation", 'fi' => "Esittely"]
                     ],
                     [
                         "slug" => "nomination",
                         "name" => "Nomination Committee",
-                        "i10n" => ["sv" => "Valberedning"]
+                        "i10n" => ["sv" => "Valberedning", "fi" => "Nimityskomitea"]
                     ],
                     [
                         "slug" => "sales",
                         "name" => "Sales",
-                        "i10n" => ["sv" => "Försäljning"],
+                        "i10n" => ["sv" => "Försäljning", "fi" => "Myynti"],
                         "children" => [
                             [
                                 "slug" => "order",
                                 "name" => "Order",
-                                "i10n" => ["sv" => "Order"],
+                                "i10n" => ["sv" => "Order", "fi" => "Tilaus"],
                             ]
                         ]
                     ],
                     [
                         "slug" => "staff",
                         "name" => "Staff change",
-                        "i10n" => ["sv" => "Personalförändring"],
+                        "i10n" => ["sv" => "Personalförändring", "fi" => "Henkilöstön muutokset"],
                         "children" => [
                             [
                                 "slug" => "xxo",
                                 "name" => "Executive staff changes",
-                                "i10n" => ["sv" => "Exekutiva personalförändring"],
+                                "i10n" => ["sv" => "Exekutiva personalförändring", "fi" => "Johtava henkilöstö muuttuu"],
                             ]
                         ]
                     ]
@@ -402,8 +405,7 @@ function sync_mfn_taxonomy()
     };
 
 
-
-    $upsert_pll = function ($enItem, $enTerm, $prefix = ''){
+    $upsert_pll = function ($enItem, $enTerm, $prefix = '') {
 
         $enParentTerm = null;
         if ($enTerm->parent > 0) {
@@ -422,11 +424,10 @@ function sync_mfn_taxonomy()
             if ($enParentTerm != null) {
                 $p_slug = $enParentTerm->slug . '_' . $lang;
                 $term = get_term_by('slug', $p_slug, MFN_TAXONOMY_NAME);
-                if(is_object($term) ){
-                    $l_parent_term_id =  $term->term_id;
+                if (is_object($term)) {
+                    $l_parent_term_id = $term->term_id;
                 }
             }
-
 
 
             $term = get_term_by('slug', $slug, MFN_TAXONOMY_NAME);

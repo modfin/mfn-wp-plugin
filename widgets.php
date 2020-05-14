@@ -15,28 +15,48 @@ function mfn_load_widget()
 
 add_action('widgets_init', 'mfn_load_widget');
 
+function create_mfn_wid_translate()
+{
+    $l10n = array(
+        'Financial reports' => ['sv' => "Finansiella rapporter", 'fi' => "Taloudelliset raportit"],
+        'All' => ['sv' => "Alla", 'fi' => 'Kaikki'],
+        'Interim reports' => ['sv' => "Kvartalsrapport", 'fi' => "Osavuosikatsaukset"],
+        'Annual Reports' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
+        'Filter' => ['sv' => "Filter", 'fi' => "Suodattaa"],
+        'Next' => ['sv' => "Nästa", 'fi' => "Seuraava"],
+        'Previous' => ['sv' => "Föregående", 'fi' => "Edellinen"],
+        'Press releases' => ['sv' => "Pressmeddelanden", 'fi' => "Lehdistötiedotteet"],
+        'Reports' => ['sv' => "Rapporter", 'fi' => "Raportit"],
+        'Annual reports' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
+        'Other news' => ['sv' => "Övriga nyheter", 'fi' => "Muut uutiset"],
+        'Subscribe' => ['sv' => "Prenumerera", 'fi' => "Tilaus"],
+        'Approve' => ['sv' => "Godkänn", 'fi' => "Hyväksyä"],
+        'A real email address must be provided.' => ['sv' => "Välj en korrekt emailadress.", 'fi' => "Oikea sähköpostiosoite on annettava."],
+        'The GDPR policy must be accepted.' => ['sv' => "GDPR policyn måste godkännas", 'fi' => "GDPR-politiikka on hyväksyttävä"],
+        'An email has been sent to confirm your subscription.' => ['sv' => "Ett email har skickats till adressen, bekräfta det för att slutföra prenumerationen.", 'fi' => "Sähköposti on lähetetty osoitteeseen, vahvista se tilauksen loppuun saattamiseksi."],
+        'Check the languages you would like to subscribe to.' => ['sv' => "Välj vilka språk du vill prenumerera på.", 'fi' => "Katso kielet, jotka haluat tilata."],
+        'Receive company data continuously to your inbox.' => ['sv' => "Få kontinuerlig information från bolaget via email.", 'fi' => "Hanki jatkuvia tietoja yritykseltä sähköpostitse."],
+        'Check the category of messages you would like to subscribe to below.' => ['sv' => "Välj vilka typer av meddelanden du vill prenumerera genom att fylla i checkboxen för respektive typ.", 'fi' => "Valitse tilaamasi viestityypit täyttämällä kunkin tyypin valintaruutu."],
+        'sv-name' => ['sv' => "Svenska", 'en' => "Swedish", 'fi' => 'Suotsi'],
+        'en-name' => ['sv' => "Engelska", 'en' => "English", 'fi' => 'Englanti'],
+        'fi-name' => ['sv' => "Finska", 'en' => "Finnish", 'fi' => 'Suomi']
+    );
+    return function ($word, $lang) use ($l10n) {
+        if (empty($l10n[$word])) {
+            return $word;
+        }
+        if (empty($l10n[$word][$lang])) {
+            return $word;
+        }
+        return $l10n[$word][$lang];
+    };
+}
+$mfn_wid_translate = create_mfn_wid_translate();
+
 
 // Creating the widget
 class mfn_archive_widget extends WP_Widget
 {
-    private $l10n = array(
-        'Financial reports' => ['sv' => "Finansiella rapporter"],
-        'All' => ['sv' => "Alla"],
-        'Interim reports' => ['sv' => "Kvartalsrapport"],
-        'Annual Reports' => ['sv' => "Årsredovisning"],
-    );
-
-    private function translate($word, $lang)
-    {
-
-        if (empty($this->l10n[$word])) {
-            return $word;
-        }
-        if (empty($this->l10n[$word][$lang])) {
-            return $word;
-        }
-        return $this->l10n[$word][$lang];
-    }
 
     function __construct()
     {
@@ -51,13 +71,14 @@ class mfn_archive_widget extends WP_Widget
     {
 
         $w = array(
-           'showfilter' => $instance['showfilter'],
-           'instance_id' => mt_rand(1, time())
+            'showfilter' => empty($instance['showfilter']) ? true : $instance['showfilter'],
+            'instance_id' => mt_rand(1, time())
         );
 
-        $me = $this;
-        $l = function ($word, $lang) use ($me) {
-            return $me->translate($word, $lang);
+
+        $l = function ($word, $lang) {
+            global $mfn_wid_translate;
+            return $mfn_wid_translate($word, $lang);
         };
 
         echo $args['before_widget'];
@@ -97,7 +118,7 @@ class mfn_archive_widget extends WP_Widget
             echo "<style>#mfn-report-date-id-" . $w['instance_id'] . "{display:none}</style>";
         }
 
-        if($w['showfilter']) {
+        if ($w['showfilter']) {
             echo "
             <style>
                 .mfn-filter ul{
@@ -135,7 +156,7 @@ class mfn_archive_widget extends WP_Widget
                 }
             </script>
             <div class=\"mfn-filter\">
-            Filter:
+            " . $l('Filter', $lang) . ":
                 <ul>
                     <li class=\"all\" onclick=\"MFN_SET_FILTER('all', '" . $w['instance_id'] . "')\">" . $l('All', $lang) . "</li>
                     <li class=\"interim\" onclick=\"MFN_SET_FILTER('interim', '" . $w['instance_id'] . "')\">" . $l('Interim reports', $lang) . "</li>
@@ -216,6 +237,7 @@ class mfn_archive_widget extends WP_Widget
                     'auto' => __('Auto (best effort to figure out what lang is used)', 'text_domain'),
                     'sv' => __('Swedish', 'text_domain'),
                     'en' => __('English', 'text_domain'),
+                    'fi' => __('Finnish', 'text_domain'),
                 );
 
                 // Loop through options and add each one to the select dropdown
@@ -273,32 +295,6 @@ class mfn_archive_widget extends WP_Widget
 // Creating the widget
 class mfn_subscription_widget extends WP_Widget
 {
-    private $l10n = array(
-        'Press releases' => ['sv' => "Pressmeddelanden"],
-        'Reports' => ['sv' => "Rapporter"],
-        'Annual reports' => ['sv' => "Årsredovisning"],
-        'Other news' => ['sv' => "Övriga nyheter"],
-        'Subscribe' => ['sv' => "Prenumerera"],
-        'Approve' => ['sv' => "Godkänn"],
-        'A real email address must be provided.' => ['sv' => "Välj en korrekt emailadress."],
-        'The GDPR policy must be accepted' => ['sv' => "GDPR policyn måste godkännas"],
-        'An email has been sent to confirm your subscription.' => ['sv' => "Ett email har skickats till adressen, bekräfta det för att slutföra prenumerationen."],
-        'Check the languages you would like to subscribe to.' => ['sv' => "Välj vilka språk du vill prenumerera på."],
-
-        'sv-name' => ['sv' => "Svenska", 'en' => "Swedish"],
-        'en-name' => ['sv' => "Engelska", 'en' => "English"],
-    );
-
-    private function translate($word, $lang)
-    {
-        if (empty($this->l10n[$word])) {
-            return $word;
-        }
-        if (empty($this->l10n[$word][$lang])) {
-            return $word;
-        }
-        return $this->l10n[$word][$lang];
-    }
 
     function __construct()
     {
@@ -311,11 +307,9 @@ class mfn_subscription_widget extends WP_Widget
 
     public function widget($args, $instance)
     {
-
-
-        $me = $this;
-        $l = function ($word, $lang) use ($me) {
-            return $me->translate($word, $lang);
+        $l = function ($word, $lang) {
+            global $mfn_wid_translate;
+            return $mfn_wid_translate($word, $lang);
         };
 
         echo $args['before_widget'];
@@ -380,35 +374,13 @@ class mfn_subscription_widget extends WP_Widget
                    value="{{.Settings.SubscribeToWidgetLanguage}}">
 
             <div class="mfn-info">
-
-                <?php
-                if ($lang == "sv") {
-                    echo "
-                            <p>Få kontinuerlig information från bolaget via email.</p>
-                        ";
-                }
-                if ($lang == "en") {
-                    echo "
-                            <p>Receive company data continuously to your inbox.</p>
-                        ";
-                }
-                ?>
+               <p><?php echo $l("Receive company data continuously to your inbox.", $lang) ?></p>
             </div>
 
             <div class="mfn-info mfn-categories">
-
-                <?php
-                if ($lang == "sv") {
-                    echo "
-                            <p>Välj vilka typer av meddelanden du vill prenumerera genom att fylla i checkboxen för respektive typ.</p>
-                        ";
-                }
-                if ($lang == "en") {
-                    echo "
-                            <p>Check the category of messages you would like to subscribe to below.</p>
-                        ";
-                }
-                ?>
+                <p>
+                    <?php echo $l("Check the category of messages you would like to subscribe to below.", $lang) ?>
+                </p>
                 <ul>
                     <li>
                         <input checked id="sub-ir" type="checkbox">
@@ -453,6 +425,9 @@ class mfn_subscription_widget extends WP_Widget
                     }
                     if ($lang == "en") {
                         echo "To subscribe, please read and approve our <a href=\"$privacy_policy\" target=\"_blank\">data storage policy</a> to comply with GDPR.";
+                    }
+                    if ($lang == "fi") {
+                        echo "Tilataksesi, lue ja hyväksy <a href=\"$privacy_policy\" target=\"_blank\">tietojen tallennuskäytäntömme</a> noudattamaan GDPR: ää.";
                     }
                     ?>
 
@@ -542,6 +517,7 @@ class mfn_subscription_widget extends WP_Widget
                     'auto' => __('Auto (best effort to figure out what lang is used)', 'text_domain'),
                     'sv' => __('Swedish', 'text_domain'),
                     'en' => __('English', 'text_domain'),
+                    'fi' => __('Finnish', 'text_domain'),
                 );
 
                 // Loop through options and add each one to the select dropdown
@@ -603,22 +579,6 @@ class mfn_subscription_widget extends WP_Widget
 // Creating the widget
 class mfn_news_feed_widget extends WP_Widget
 {
-    private $l10n = array(
-        'Next' => ['sv' => "Nästa"],
-        'Previous' => ['sv' => "Föregående"],
-    );
-
-    private function translate($word, $lang)
-    {
-
-        if (empty($this->l10n[$word])) {
-            return $word;
-        }
-        if (empty($this->l10n[$word][$lang])) {
-            return $word;
-        }
-        return $this->l10n[$word][$lang];
-    }
 
     function __construct()
     {
@@ -637,24 +597,24 @@ class mfn_news_feed_widget extends WP_Widget
             }
             return $default;
         };
-        $me = $this;
-        $l = function ($word, $lang) use ($me) {
-            return $me->translate($word, $lang);
+
+        $l = function ($word, $lang) {
+            global $mfn_wid_translate;
+            return $mfn_wid_translate($word, $lang);
         };
 
         echo $args['before_widget'];
 
         global $wp;
-        $baseurl = explode('?', home_url( add_query_arg( array(), $wp->request ) ))[0];
-
+        $baseurl = explode('?', home_url(add_query_arg(array(), $wp->request)))[0];
 
 
         $tzLocation = empty($instance['tzLocation']) ? 'Europe/Stockholm' : $instance['tzLocation'];
         $timestampFormat = empty($instance['timestampFormat']) ? 'Y-m-d H:i' : $instance['timestampFormat'];
-        if(isset($instance['tzlocation'])) {
+        if (isset($instance['tzlocation'])) {
             $tzLocation = normalize_whitespace($instance['tzlocation']);
         }
-        if(isset($instance['timestampformat'])) {
+        if (isset($instance['timestampformat'])) {
             $timestampFormat = normalize_whitespace($instance['timestampformat']);
         }
         $pagelen = empty($instance['pagelen']) ? 20 : $instance['pagelen'];
@@ -681,7 +641,7 @@ class mfn_news_feed_widget extends WP_Widget
         }
 
         $tagsstr = $qury_param('m-tags', "");
-        if(isset($instance['tags'])) {
+        if (isset($instance['tags'])) {
             $tagsstr = normalize_whitespace($instance['tags']);
         }
         $hasTags = array();
@@ -709,8 +669,8 @@ class mfn_news_feed_widget extends WP_Widget
         $year = $qury_param('m-year', "");
 
         $year = $qury_param('m-year', "");
-        if(isset($instance['year'])) {
-             $year = normalize_whitespace($instance['year']);
+        if (isset($instance['year'])) {
+            $year = normalize_whitespace($instance['year']);
         }
         $min_max_years = MFN_get_feed_min_max_years();
         $res = MFN_get_feed($pmlang, $year, $hasTags, $hasNotTags, $page * $pagelen, $pagelen);
@@ -767,11 +727,11 @@ class mfn_news_feed_widget extends WP_Widget
 //            echo "<a href='$url3'>Reports</a>";
 //        echo "</div>";
 
-        if(is_object($min_max_years) &&
+        if (is_object($min_max_years) &&
             isset($min_max_years->max_year) &&
             isset($min_max_years->min_year) &&
             is_numeric($min_max_years->max_year) &&
-            is_numeric($min_max_years->min_year)){
+            is_numeric($min_max_years->min_year)) {
 
             echo "<div class='mfn-newsfeed-year-selector'>";
             for ($i = $min_max_years->max_year; $i >= $min_max_years->min_year; $i--) {
@@ -942,6 +902,7 @@ class mfn_news_feed_widget extends WP_Widget
                     'auto' => __('Auto (best effort to figure out what lang is used)', 'text_domain'),
                     'sv' => __('Swedish', 'text_domain'),
                     'en' => __('English', 'text_domain'),
+                    'fi' => __('Finnish', 'text_domain'),
                 );
 
                 // Loop through options and add each one to the select dropdown
@@ -1041,31 +1002,37 @@ class mfn_news_feed_widget extends WP_Widget
     }
 } //
 
-function load_shortcode_mfn_archive_widget($atts) {
+function load_shortcode_mfn_archive_widget($atts)
+{
     ob_start();
-    the_widget( 'mfn_archive_widget', $atts);
+    the_widget('mfn_archive_widget', $atts);
     $contents = ob_get_clean();
 
     return $contents;
 }
-add_shortcode( 'mfn_archive_widget', 'load_shortcode_mfn_archive_widget' );
+
+add_shortcode('mfn_archive_widget', 'load_shortcode_mfn_archive_widget');
 
 
-function load_shortcode_mfn_news_feed_widget($atts) {
+function load_shortcode_mfn_news_feed_widget($atts)
+{
     ob_start();
-    the_widget( 'mfn_news_feed_widget', $atts);
+    the_widget('mfn_news_feed_widget', $atts);
     $contents = ob_get_clean();
 
     return $contents;
 }
-add_shortcode( 'mfn_news_feed_widget', 'load_shortcode_mfn_news_feed_widget' );
+
+add_shortcode('mfn_news_feed_widget', 'load_shortcode_mfn_news_feed_widget');
 
 
-function load_shortcode_mfn_subscription_widget($atts) {
+function load_shortcode_mfn_subscription_widget($atts)
+{
     ob_start();
-    the_widget( 'mfn_subscription_widget', $atts);
+    the_widget('mfn_subscription_widget', $atts);
     $contents = ob_get_clean();
 
     return $contents;
 }
-add_shortcode( 'mfn_subscription_widget', 'load_shortcode_mfn_subscription_widget' );
+
+add_shortcode('mfn_subscription_widget', 'load_shortcode_mfn_subscription_widget');
