@@ -83,7 +83,7 @@ WHERE (
         $rr->lang = $r->lang;
         $rr->type = $r->report_type;
 
-        if(!$exists[$r->url]){
+        if(empty($exists[$r->url])){
             array_push($reports, $rr);
         }
         $exists[$r->url] = 1;
