@@ -29,8 +29,8 @@ function create_mfn_wid_translate()
         'Reports' => ['sv' => "Rapporter", 'fi' => "Raportit"],
         'Annual reports' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
         'Other news' => ['sv' => "Övriga nyheter", 'fi' => "Muut uutiset"],
-        'Subscribe' => ['sv' => "Prenumerera", 'fi' => "Tilaus"],
-        'Approve' => ['sv' => "Godkänn", 'fi' => "Hyväksyä"],
+        'Subscribe' => ['sv' => "Prenumerera", 'fi' => "Tilaa"],
+        'Approve' => ['sv' => "Godkänn", 'fi' => "Hyväksy"],
         'A real email address must be provided.' => ['sv' => "Välj en korrekt emailadress.", 'fi' => "Oikea sähköpostiosoite on annettava."],
         'The GDPR policy must be accepted.' => ['sv' => "GDPR policyn måste godkännas", 'fi' => "GDPR-politiikka on hyväksyttävä"],
         'An email has been sent to confirm your subscription.' => ['sv' => "Ett email har skickats till adressen, bekräfta det för att slutföra prenumerationen.", 'fi' => "Sähköposti on lähetetty osoitteeseen, vahvista se tilauksen loppuun saattamiseksi."],
@@ -774,7 +774,7 @@ class mfn_news_feed_widget extends WP_Widget
             $templateData = array(
                 'date' => $datestr,
                 'title' => $item->post_title,
-                'url' => "/mfn_news/" . $item->post_name,
+                'url' => get_home_url() . "/mfn_news/" . $item->post_name,
                 'tags' => $tags,
             );
             $html = $template;
