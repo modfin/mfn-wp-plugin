@@ -256,7 +256,7 @@ function sync_mfn_taxonomy()
                             [
                                 "slug" => "info",
                                 "name" => "Report of the AGM",
-                                "i10n" => ["sv" => "Raport bolagsstämman", 'fi' => "Yhtiökokouksen raportti"]
+                                "i10n" => ["sv" => "Rapport bolagsstämman", 'fi' => "Yhtiökokouksen raportti"]
                             ]
                         ]
                     ],
@@ -300,7 +300,7 @@ function sync_mfn_taxonomy()
                             [
                                 "slug" => "xxo",
                                 "name" => "Executive staff changes",
-                                "i10n" => ["sv" => "Exekutiva personalförändring", "fi" => "Johtava henkilöstö muuttuu"],
+                                "i10n" => ["sv" => "Exekutiva personalförändringar", "fi" => "Johtava henkilöstö muuttuu"],
                             ]
                         ]
                     ]
