@@ -785,7 +785,7 @@ class mfn_news_feed_widget extends WP_Widget
             echo $html;
 
         }
-        echo "<div class='mfn-newsfeed-pagination'>";
+        echo "</div></div><div class='mfn-newsfeed-pagination'>";
 
         if ($page > 0) {
             $params = http_build_query(array_merge($_GET, array('m-page' => $page - 1)));
