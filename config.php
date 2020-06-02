@@ -111,7 +111,7 @@ function sync_mfn_taxonomy()
                 "i10n" => ["sv" => "Engelska", 'fi' => "Englanti"]
             ],
             [
-                "slug" => "lang-en",
+                "slug" => "lang-fi",
                 "name" => "Finnish",
                 "i10n" => ["sv" => "Finska", 'fi' => "Suomi"]
             ],
