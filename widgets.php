@@ -118,7 +118,7 @@ class mfn_archive_widget extends WP_Widget
             echo "<style>#mfn-report-date-id-" . $w['instance_id'] . "{display:none}</style>";
         }
 
-        if ($w['showfilter']) {
+        if ($w['showfilter'] === '1') {
             echo "
             <style>
                 .mfn-filter ul{
