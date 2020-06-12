@@ -25,7 +25,7 @@ function cmp($a, $b)
         $bScore++;
     }
 
-    return $aScore < $bScore;
+    return $aScore > $bScore;
 }
 
 function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DESC')
@@ -66,10 +66,6 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
         $params[] = $lang;
     }
 
-    if($order !== "DESC") {
-        $order = "ASC";
-    }
-
     $q = $wpdb->prepare($query, $params);
     $res = $wpdb->get_results($q);
 
@@ -88,7 +84,7 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
 
     usort($reports, "cmp");
 
-    if ($order !== "DESC" ) {
+    if (strtoupper($order) !== "ASC") {
         $reports = array_reverse($reports);
     }
 
