@@ -8,89 +8,106 @@ class Report {
     public $url;
     public $lang;
     public $type;
+    public $tags;
+    public $post_id;
 }
 
+function cmp($a, $b)
+{
+    $aScore = strtotime($a->timestamp);
+    $bScore = strtotime($b->timestamp);
+
+    if($a->tags !== null && in_array(":primary", $a->tags, true)) {
+        $aScore++;
+    }
+
+    if($b->tags !== null && in_array(":primary", $b->tags, true)) {
+        $bScore++;
+    }
+
+    return $aScore < $bScore;
+}
 
 function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DESC')
 {
     global $wpdb;
 
-
     $params = array();
 
     $query = "
-SELECT posts.post_date_gmt date_gmt,
-       posts.post_title title,
-       lang.meta_value lang,
-       t.slug report_type,
-       (
-         SELECT meta.meta_value ->> '$.url'
-         FROM  $wpdb->postmeta meta
-         WHERE posts.ID = meta.post_id
-         AND meta.meta_key = 'mfn_news_attachment_data'
-         ORDER BY JSON_CONTAINS(meta.meta_value, '\":primary\"', '$.tags') DESC
-         LIMIT 1
-       ) url
-FROM $wpdb->terms t
-       INNER JOIN $wpdb->term_taxonomy tax
-                  ON t.term_id = tax.term_id
-       INNER JOIN $wpdb->term_relationships r
-                  ON r.term_taxonomy_id = tax.term_taxonomy_id
-       INNER JOIN $wpdb->posts posts
-                  ON posts.ID = r.object_id
-      INNER JOIN $wpdb->postmeta lang
-        ON posts.ID = lang.post_id AND lang.meta_key = 'mfn_news_lang'
-WHERE (
-        t.slug = 'mfn-report-annual' 
-        OR t.slug = 'mfn-report-interim' 
-        OR t.slug like 'mfn-report-annual_%' 
-        OR t.slug like 'mfn-report-interim_%'
-      )
-  AND tax.taxonomy = 'mfn-news-tag'
-";
+        SELECT posts.ID post_id,
+               posts.post_date_gmt date_gmt,
+               posts.post_title title,
+               lang.meta_value lang,
+               t.slug report_type,
+               meta.meta_value attachment_meta_value
+        FROM $wpdb->terms t
+            INNER JOIN $wpdb->term_taxonomy tax
+                ON t.term_id = tax.term_id
+            INNER JOIN $wpdb->term_relationships r
+                ON r.term_taxonomy_id = tax.term_taxonomy_id
+            INNER JOIN $wpdb->posts posts
+                ON posts.ID = r.object_id
+            INNER JOIN $wpdb->postmeta lang
+                ON posts.ID = lang.post_id AND lang.meta_key = 'mfn_news_lang'
+            LEFT JOIN $wpdb->postmeta meta
+                ON posts.ID = meta.post_id AND meta.meta_key = 'mfn_news_attachment_data'
+            WHERE (
+                t.slug = 'mfn-report-annual'
+                OR t.slug = 'mfn-report-interim'
+                OR t.slug like 'mfn-report-annual_%'
+                OR t.slug like 'mfn-report-interim_%'
+            )
+            AND tax.taxonomy = 'mfn-news-tag'
+    ";
 
-
-    if($lang != "all"){
+    if($lang !== "all") {
         $query .= " AND lang.meta_value = %s ";
-        array_push($params, $lang);
+        $params[] = $lang;
     }
 
-    if($order != "DESC"){
+    if($order !== "DESC") {
         $order = "ASC";
     }
-    $query .= " ORDER BY post_date_gmt " . $order . " ";
-
-    $query .= " LIMIT %d ";
-    array_push($params, $limit);
-    $query .= " OFFSET %d ";
-    array_push($params, $offset);
 
     $q = $wpdb->prepare($query, $params);
-
     $res = $wpdb->get_results($q);
 
     $reports = array();
+    foreach ($res as $r) {
+        $rr = new Report();
+        $rr->post_id = $r->post_id;
+        $rr->timestamp = $r->date_gmt;
+        $rr->title = $r->title;
+        $rr->tags = json_decode($r->attachment_meta_value, true)["tags"];
+        $rr->url = json_decode($r->attachment_meta_value, true)["url"];
+        $rr->lang = $r->lang;
+        $rr->type = $r->report_type;
+        $reports[] = $rr;
+    }
+
+    usort($reports, "cmp");
+
+    if ($order !== "DESC" ) {
+        $reports = array_reverse($reports);
+    }
+
     $exists = array();
-    foreach ($res as $r){
+    $filtered_reports = array();
+
+    foreach ($reports as $r){
         if(strlen($r->url) < 5){
             continue;
         }
 
-        $rr = new Report();
-        $rr->timestamp = $r->date_gmt;
-        $rr->title = $r->title;
-        $rr->url = $r->url;
-        $rr->lang = $r->lang;
-        $rr->type = $r->report_type;
-
-        if(empty($exists[$r->url])){
-            array_push($reports, $rr);
+        if(empty($exists[$r->post_id])){
+            $filtered_reports[] = $r;
         }
-        $exists[$r->url] = 1;
+
+        $exists[$r->post_id] = 1;
     }
 
-    return $reports;
-
+    return array_slice($filtered_reports, $offset, $limit);
 }
 
 function MFN_get_feed_min_max_years(){
