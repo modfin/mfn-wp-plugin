@@ -751,9 +751,9 @@ class mfn_news_feed_widget extends WP_Widget
         echo "<div class=\"mfn-list\">";
 
         foreach ($res as $item) {
-            $date = date_create($item->post_date_gmt . "Z");
-            $date = date_timezone_set($date, new DateTimeZone($tzLocation));
-            $datestr = date_format($date, $timestampFormat);
+            $date = new DateTime($item->post_date_gmt . "Z");
+            $date->setTimezone(new DateTimeZone($tzLocation));
+            $datestr = date_i18n($timestampFormat,$date->getTimestamp() + $date->getOffset());
 
             $tags = "";
             foreach ($item->tags as $tag) {

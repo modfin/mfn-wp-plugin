@@ -86,6 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
     $signature = $_SERVER['HTTP_X_HUB_SIGNATURE'];
     $content = file_get_contents("php://input");
 
+    do_action( 'mfn_before_posthook', $content);
+
     $verify_signature =  isset($ops['verify_signature']) ? $ops['verify_signature'] : 'off';
     $reset_cache =  isset($ops['reset_cache']) ? ($ops['reset_cache'] == 'on') : false;
 
@@ -106,4 +108,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 
     $news_item = json_decode($content);
     upsertItem($news_item, $signature, $content, $reset_cache);
+    do_action( 'mfn_after_posthook', $news_item);
+
 }
