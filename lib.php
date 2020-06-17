@@ -147,6 +147,7 @@ function upsertLanguage($post_id, $groupId, $lang)
 
 function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false)
 {
+    do_action('mfn_before_upsertitem', $item);
     global $wpdb;
 
     $newsid = $item->news_id;
@@ -215,6 +216,9 @@ LIMIT 1
         }
         $outro($post_id);
     }
+
+    // run callback
+    do_action('mfn_after_upsertitem', $post_id);
 
     return 1;
 }
