@@ -36,7 +36,7 @@ function create_mfn_wid_translate()
         'An email has been sent to confirm your subscription.' => ['sv' => "Ett email har skickats till adressen, bekräfta det för att slutföra prenumerationen.", 'fi' => "Sähköposti on lähetetty osoitteeseen, vahvista se tilauksen loppuun saattamiseksi."],
         'Check the languages you would like to subscribe to.' => ['sv' => "Välj vilka språk du vill prenumerera på.", 'fi' => "Valitse kielet, jotka haluat tilata."],
         'Receive company data continuously to your inbox.' => ['sv' => "Få kontinuerlig information från bolaget via email.", 'fi' => "Saa säännöllisesti tietoja yritykseltä sähköpostitse."],
-        'Check the category of messages you would like to subscribe to below.' => ['sv' => "Välj vilka typer av meddelanden du vill prenumerera genom att fylla i checkboxen för respektive typ.", 'fi' => "Valitse tilaamasi viestityypit täyttämällä kunkin tyypin valintaruutu."],
+        'Check the category of messages you would like to subscribe to below.' => ['sv' => "Välj vilka typer av meddelanden du vill prenumerera på genom att fylla i checkboxen för respektive typ.", 'fi' => "Valitse tilaamasi viestityypit täyttämällä kunkin tyypin valintaruutu."],
         'sv-name' => ['sv' => "Svenska", 'en' => "Swedish", 'fi' => 'Ruotsi'],
         'en-name' => ['sv' => "Engelska", 'en' => "English", 'fi' => 'Englanti'],
         'fi-name' => ['sv' => "Finska", 'en' => "Finnish", 'fi' => 'Suomi']
@@ -301,7 +301,7 @@ class mfn_subscription_widget extends WP_Widget
         parent::__construct(
             'mfn_subscription_widget',
             __('MFN Subscription Widget', 'mfn_subscription_widget_domain'),
-            array('description' => __('A widget add a MFN subscription possibilities', 'mfn_subscription_widget_domain'),)
+            array('description' => __('A widget that adds MFN subscription possibilities', 'mfn_subscription_widget_domain'),)
         );
     }
 
@@ -430,14 +430,14 @@ class mfn_subscription_widget extends WP_Widget
                         echo "Tilataksesi, lue ja hyväksy <a href=\"$privacy_policy\" target=\"_blank\">tietojen tallennuskäytäntömme</a> noudattamaan GDPR: ää.";
                     }
                     ?>
-
-                    <label for="approve"><?php echo $l("Approve", $lang) ?></label>
-                    <input id="approve" onclick="document.getElementById('gdpr-policy-fail').classList.add('hidden');"
-                           type="checkbox">
+                    <div class="mfn-approve-container">
+                        <label for="approve">
+                            <?php echo $l("Approve", $lang) ?>
+                        </label>
+                        <input id="approve" onclick="document.getElementById('gdpr-policy-fail').classList.add('hidden');" type="checkbox">
+                    </div>
                 </p>
-
             </div>
-
 
             <div class="subscription-wrapper">
                 <form onsubmit="event.preventDefault(); return datablocks_SubscribeMail()">
