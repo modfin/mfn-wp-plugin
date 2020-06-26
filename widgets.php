@@ -39,7 +39,10 @@ function create_mfn_wid_translate()
         'Check the category of messages you would like to subscribe to below.' => ['sv' => "Välj vilka typer av meddelanden du vill prenumerera på genom att fylla i checkboxen för respektive typ.", 'fi' => "Valitse tilaamasi viestityypit täyttämällä kunkin tyypin valintaruutu."],
         'sv-name' => ['sv' => "Svenska", 'en' => "Swedish", 'fi' => 'Ruotsi'],
         'en-name' => ['sv' => "Engelska", 'en' => "English", 'fi' => 'Englanti'],
-        'fi-name' => ['sv' => "Finska", 'en' => "Finnish", 'fi' => 'Suomi']
+        'fi-name' => ['sv' => "Finska", 'en' => "Finnish", 'fi' => 'Suomi'],
+        'Interim Report' => ['sv' => "Kvartalsrapport", 'fi' => "Osavuosikatsaukset"],
+        'Year-end Report' => ['sv' => "Bokslutskommuniké", 'fi' => "Tilinpäätöstiedote"],
+        'Annual Report' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
     );
     return function ($word, $lang) use ($l10n) {
         if (empty($l10n[$word])) {
@@ -71,10 +74,13 @@ class mfn_archive_widget extends WP_Widget
     {
 
         $w = array(
-            'showfilter' => empty($instance['showfilter']) ? true : $instance['showfilter'],
+            'showfilter' => isset($instance['showfilter']) ? $instance['showfilter'] : false,
+            'showthumbnail' => isset($instance['showthumbnail']) ? $instance['showthumbnail'] : false,
+            'showgenerictitle' => isset($instance['showgenerictitle']) ? $instance['showgenerictitle'] : false,
+            'usefiscalyearoffset' => isset($instance['usefiscalyearoffset']) ? $instance['usefiscalyearoffset'] : true,
+            'fiscalyearoffset' => isset($instance['fiscalyearoffset']) ? $instance['fiscalyearoffset'] : 0,
             'instance_id' => mt_rand(1, time())
         );
-
 
         $l = function ($word, $lang) {
             global $mfn_wid_translate;
@@ -100,11 +106,15 @@ class mfn_archive_widget extends WP_Widget
 
         echo "<div class=\"mfn-report-container all\" id=\"mfn-report-archive-id-" . $w['instance_id'] . "\">";
 
-        if (!empty($instance['showtitle'])) {
+        if (!empty($instance['showheading'])) {
             echo "<h2>" . $l("Financial reports", $lang) . "</h2>";
         }
 
-        $reports = MFN_get_reports($pmlang, 0, 500, 'DESC');
+        $fiscal_year_offset = null;
+        if ($w['usefiscalyearoffset']) {
+            $fiscal_year_offset = $w['fiscalyearoffset'];
+        }
+        $reports = MFN_get_reports($pmlang, 0, 500, 'DESC', $fiscal_year_offset);
 
         if (sizeof($reports) < 1) {
             return;
@@ -118,7 +128,24 @@ class mfn_archive_widget extends WP_Widget
             echo "<style>#mfn-report-date-id-" . $w['instance_id'] . "{display:none}</style>";
         }
 
-        if ($w['showfilter'] === '1') {
+        echo '
+        <style>
+            ul.mfn-report-items{
+                list-style: none;
+                padding-left: 0;
+            }
+            .mfn-report-thumbnail {
+                width: 150px;
+            }
+            .mfn-report-year::before {
+                content: "\00a0";
+            }
+            .mfn-report-quarter::before {
+                content: "\00a0";
+            }
+        </style>
+        ';
+        if ($w['showfilter']) {
             echo "
             <style>
                 .mfn-filter ul{
@@ -129,10 +156,6 @@ class mfn_archive_widget extends WP_Widget
                     cursor: pointer;
                     display: inline-block;
                     padding-right: 1em;
-                }
-                ul.mfn-report-items{
-                    list-style: none;
-                    padding-left: 0;
                 }
                 .mfn-report-container.annual .mfn-report-interim{
                     display: none;
@@ -169,7 +192,7 @@ class mfn_archive_widget extends WP_Widget
         $year = "";
         foreach ($reports as $r) {
 
-            $y = substr($r->timestamp, 0, 4);
+            $y = $r->year;
             if ($y != $year) {
                 if ($year != "") {
                     echo "</ul>";
@@ -182,7 +205,59 @@ class mfn_archive_widget extends WP_Widget
 
             $date = substr($r->timestamp, 0, 10);
 
-            echo "<li class='$r->type'> <span class='mfn-report-date' id='mfn-report-date-id-" . $w['instance_id'] . "'>$date</span> <a href=\"$r->url\" target=\"_blank\" rel='noopener'>$r->title</a></li>";
+            $parts = explode('-', $r->type);
+            $base_type = join("-", array_slice($parts, 0, count($parts)-1));
+
+
+            $li  = "<li class='$base_type $r->type'>";
+            $li .=   "<span class='mfn-report-date' id='mfn-report-date-id-" . $w['instance_id'] . "'>$date</span>";
+
+            if ($w['showthumbnail']) {
+                $li .=   "<div class='mfn-report-thumbnail'>";
+                $li .=     "<a href=\"$r->url\" target=\"_blank\" rel='noopener'>";
+                $li .=       "<img src=\"https://storage.mfn.se/proxy?url=" . $r->url . "&type=jpg\" />";
+                $li .=     "</a>";
+                $li .=   "</div>";
+            }
+
+            $li .=   "<span class='mfn-report-title'>";
+            $li .=     "<a href=\"$r->url\" target=\"_blank\" rel='noopener'>";
+
+            if ($w['showgenerictitle']) {
+
+                global $mfn_wid_translate;
+
+                $report_names = [
+                    'mfn-report-interim-q4' => "Year-end Report",
+                    'mfn-report-interim' => "Interim Report",
+                    'mfn-report-annual' => "Annual Report"
+                ];
+
+                $base_title = isset($report_names[$r->type]) ? $report_names[$r->type] : $report_names[$base_type];
+                $base_title = $mfn_wid_translate($base_title, $lang);
+
+                $li .=     "<span class='mfn-report-base-title mfn-report-base-title-$lang'>";
+                $li .=       $base_title;
+                $li .=     "</span>";
+
+                if ($r->type !== 'mfn-report-annual') {
+                    $li .=     "<span class='mfn-report-quarter mfn-report-quarter-" . end($parts) . "'>";
+                    $li .=       strtoupper(end($parts));
+                    $li .=     "</span>";
+                }
+
+                $li .=     "<span class='mfn-report-year'>";
+                $li .=       $r->year;
+                $li .=     "</span>";
+
+            } else {
+                $li .=       $r->title;
+            }
+            $li .=     "</a>";
+            $li .=   "</span>";
+
+            $li .= "</li>";
+            echo $li;
 
         }
         echo "</ul>";
@@ -199,10 +274,10 @@ class mfn_archive_widget extends WP_Widget
             $lang = 'auto';
         }
 
-        if (isset($instance['showtitle'])) {
-            $showtitle = $instance['showtitle'];
+        if (isset($instance['showheading'])) {
+            $showheading = $instance['showheading'];
         } else {
-            $showtitle = '1';
+            $showheading = '0';
         }
 
         if (isset($instance['showfilter'])) {
@@ -223,6 +298,29 @@ class mfn_archive_widget extends WP_Widget
             $showdate = '1';
         }
 
+        if (isset($instance['showthumbnail'])) {
+            $showthumbnail = $instance['showthumbnail'];
+        } else {
+            $showthumbnail = '0';
+        }
+
+        if (isset($instance['showgenerictitle'])) {
+            $showgenerictitle = $instance['showgenerictitle'];
+        } else {
+            $showgenerictitle = '0';
+        }
+
+        if (isset($instance['usefiscalyearoffset'])) {
+            $usefiscalyearoffset = $instance['usefiscalyearoffset'];
+        } else {
+            $usefiscalyearoffset = '1';
+        }
+
+        if (isset($instance['fiscalyearoffset'])) {
+            $fiscalyearoffset = $instance['fiscalyearoffset'];
+        } else {
+            $fiscalyearoffset = '0';
+        }
 
         ?>
 
@@ -250,10 +348,10 @@ class mfn_archive_widget extends WP_Widget
 
 
         <p>
-            <input id="<?php echo esc_attr($this->get_field_id('showtitle')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('showtitle')); ?>" type="checkbox"
-                   value="1" <?php checked('1', $showtitle); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('showtitle')); ?>"><?php _e('Show title', 'text_domain'); ?></label>
+            <input id="<?php echo esc_attr($this->get_field_id('showheading')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('showheading')); ?>" type="checkbox"
+                   value="1" <?php checked('1', $showheading); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('showheading')); ?>"><?php _e('Show heading', 'text_domain'); ?></label>
         </p>
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('showfilter')); ?>"
@@ -276,6 +374,34 @@ class mfn_archive_widget extends WP_Widget
             <label for="<?php echo esc_attr($this->get_field_id('showdate')); ?>"><?php _e('Show date of report', 'text_domain'); ?></label>
         </p>
 
+        <p>
+            <input id="<?php echo esc_attr($this->get_field_id('showthumbnail')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('showthumbnail')); ?>" type="checkbox"
+                   value="1" <?php checked('1', $showthumbnail); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('showthumbnail')); ?>"><?php _e('Show thumbnail', 'text_domain'); ?></label>
+        </p>
+
+        <p>
+            <input id="<?php echo esc_attr($this->get_field_id('showgenerictitle')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('showgenerictitle')); ?>" type="checkbox"
+                   value="1" <?php checked('1', $showgenerictitle); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('showgenerictitle')); ?>"><?php _e('Show generic title', 'text_domain'); ?></label>
+        </p>
+
+        <p>
+            <input id="<?php echo esc_attr($this->get_field_id('usefiscalyearoffset')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('usefiscalyearoffset')); ?>" type="checkbox"
+                   value="1" <?php checked('1', $usefiscalyearoffset); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('usefiscalyearoffset')); ?>"><?php _e('Use fiscal year for grouping', 'text_domain'); ?></label>
+        </p>
+
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('fiscalyearoffset')); ?>"><?php _e('Fiscal year offset', 'text_domain'); ?></label>
+            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('fiscalyearoffset')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('fiscalyearoffset')); ?>" type="text"
+                   value="<?php echo esc_attr($fiscalyearoffset); ?>"/>
+        </p>
+
         <?php
     }
 
@@ -283,10 +409,14 @@ class mfn_archive_widget extends WP_Widget
     {
         $instance = array();
         $instance['lang'] = (!empty($new_instance['lang'])) ? strip_tags($new_instance['lang']) : '';
-        $instance['showtitle'] = (!empty($new_instance['showtitle'])) ? strip_tags($new_instance['showtitle']) : '';
+        $instance['showheading'] = (!empty($new_instance['showheading'])) ? strip_tags($new_instance['showheading']) : '';
         $instance['showfilter'] = (!empty($new_instance['showfilter'])) ? strip_tags($new_instance['showfilter']) : '';
         $instance['showyear'] = (!empty($new_instance['showyear'])) ? strip_tags($new_instance['showyear']) : '';
         $instance['showdate'] = (!empty($new_instance['showdate'])) ? strip_tags($new_instance['showdate']) : '';
+        $instance['showgenerictitle'] = (!empty($new_instance['showgenerictitle'])) ? strip_tags($new_instance['showgenerictitle']) : '';
+        $instance['showthumbnail'] = (!empty($new_instance['showthumbnail'])) ? strip_tags($new_instance['showthumbnail']) : '';
+        $instance['usefiscalyearoffset'] = (!empty($new_instance['usefiscalyearoffset'])) ? strip_tags($new_instance['usefiscalyearoffset']) : '';
+        $instance['fiscalyearoffset'] = (!empty($new_instance['fiscalyearoffset'])) ? strip_tags($new_instance['fiscalyearoffset']) : '';
         return $instance;
     }
 } //
