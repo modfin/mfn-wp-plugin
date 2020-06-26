@@ -10,25 +10,115 @@ class Report {
     public $type;
     public $tags;
     public $post_id;
+    public $year;
 }
 
-function cmp($a, $b)
+function MFN_report_cmp($a, $b)
 {
     $aScore = strtotime($a->timestamp);
     $bScore = strtotime($b->timestamp);
 
     if($a->tags !== null && in_array(":primary", $a->tags, true)) {
-        $aScore++;
+        $aScore+=2;
     }
 
     if($b->tags !== null && in_array(":primary", $b->tags, true)) {
-        $bScore++;
+        $bScore+=2;
     }
+
+    // sort 'mfn-report-interim-q2' before 'mfn-report-interim'
+    $aTypeLen = strlen($a->type);
+    $bTypeLen = strlen($b->type);
+    if ($aTypeLen > $bTypeLen) $aScore++;
+    if ($bTypeLen > $aTypeLen) $bScore++;
 
     return $aScore > $bScore;
 }
 
-function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DESC')
+class MFN_CustomDate
+{
+    public $year;
+    public $month;
+
+    function __construct($year, $month)
+    {
+        $this->year = $year;
+        $this->month = $month;
+    }
+    function __toString()
+    {
+        return $this->year . "-" . $this->month;
+    }
+    function add_months($months): MFN_CustomDate
+    {
+	    $x = $this->month - 1 + $months;
+	    $addToYear = (int) ($x / 12);
+	    $month = $x % 12;
+	    if ($month < 0) {
+            $month += 12;
+		    $addToYear -= 1;
+	    }
+	    return new MFN_CustomDate($this->year + $addToYear, $month + 1);
+    }
+    function before_or_equal(MFN_CustomDate $d2): bool {
+        if ($this->year > $d2->year) {
+            return false;
+	    }
+        if ($this->year === $d2->year && $this->month > $d2->month) {
+            return false;
+	    }
+        return true;
+    }
+}
+
+function get_report_fiscal_year($report_date_string, $report_type, $fiscal_year_offset)
+{
+    // normalize fiscal year offset
+    $fiscal_year_offset = ($fiscal_year_offset + 12) % 12;
+
+    try {
+        $report_date = new DateTimeImmutable($report_date_string);
+    } catch (Exception $e) {
+        return "";
+    }
+
+    $report_period_months = null;
+    switch ($report_type) {
+        case "mfn-report-interim-q1":
+            $report_period_months = 3;
+            break;
+	    case "mfn-report-interim-q2":
+            $report_period_months = 6;
+            break;
+	    case "mfn-report-interim-q3":
+            $report_period_months = 9;
+            break;
+	    case "mfn-report-interim-q4":
+	    case "mfn-report-annual":
+            $report_period_months = 12;
+	}
+	if (!$report_period_months) return "";
+
+    $report_year = intval($report_date->format('Y'));
+    $report_yonth = intval($report_date->format('m'));
+
+    if ($report_year === 0 || $report_yonth === 0) return "";
+
+    $date = new MFN_CustomDate($report_year, $report_yonth);
+
+    for ($year = $date->year - 1; $year <= $date->year; $year++) {
+        $report_end_date = (new MFN_CustomDate($year - 1, 12))
+            ->add_months($report_period_months)
+            ->add_months($fiscal_year_offset);
+        if ($report_end_date->before_or_equal($date) && $date->before_or_equal($report_end_date->add_months(7))) {
+            return $year;
+        }
+    }
+
+    return "";
+}
+
+function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DESC', $fiscal_year_offset = null)
 {
     global $wpdb;
 
@@ -79,10 +169,11 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
         $rr->url = json_decode($r->attachment_meta_value, true)["url"];
         $rr->lang = $r->lang;
         $rr->type = $r->report_type;
+        $rr->year = substr($r->date_gmt, 0, 4);
         $reports[] = $rr;
     }
 
-    usort($reports, "cmp");
+    usort($reports, "MFN_report_cmp");
 
     if (strtoupper($order) !== "ASC") {
         $reports = array_reverse($reports);
@@ -97,6 +188,19 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
         }
 
         if(empty($exists[$r->post_id])){
+            // try to group reports by fiscal year, instead of publish_date
+            if ($fiscal_year_offset !== null) {
+                $year = get_report_fiscal_year($r->timestamp, $r->type, (int)$fiscal_year_offset);
+                if ($year !== "") {
+                    $r->year = $year . ((int)$fiscal_year_offset > 0 ? ("/" . ($year + 1)) : "");
+                } else {
+                    // the '* is a warning, it means either:
+                    // - there is a bug in getReportFiscalYear()
+                    // - $fiscalYearOffset is incorrect for this company
+                    // - some reports are not tagged correctly
+                    $r->year .= " *";
+                }
+            }
             $filtered_reports[] = $r;
         }
 
