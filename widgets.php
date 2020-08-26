@@ -234,9 +234,9 @@ class mfn_archive_widget extends WP_Widget
                 ];
 
                 $base_title = isset($report_names[$r->type]) ? $report_names[$r->type] : $report_names[$base_type];
-                $base_title = $mfn_wid_translate($base_title, $lang);
+                $base_title = $mfn_wid_translate($base_title, $r->lang);
 
-                $li .=     "<span class='mfn-report-base-title mfn-report-base-title-$lang'>";
+                $li .=     "<span class='mfn-report-base-title mfn-report-base-title-$r->lang'>";
                 $li .=       $base_title;
                 $li .=     "</span>";
 
