@@ -86,6 +86,7 @@ class mfn_archive_widget extends WP_Widget
             'showgenerictitle' => isset($instance['showgenerictitle']) ? $instance['showgenerictitle'] : false,
             'usefiscalyearoffset' => isset($instance['usefiscalyearoffset']) ? $instance['usefiscalyearoffset'] : true,
             'fiscalyearoffset' => isset($instance['fiscalyearoffset']) ? $instance['fiscalyearoffset'] : 0,
+            'limit' => isset($instance['limit']) ? $instance['limit'] : 500,
             'instance_id' => mt_rand(1, time())
         );
 
@@ -121,7 +122,7 @@ class mfn_archive_widget extends WP_Widget
         if ($w['usefiscalyearoffset']) {
             $fiscal_year_offset = $w['fiscalyearoffset'];
         }
-        $reports = MFN_get_reports($pmlang, 0, 500, 'DESC', $fiscal_year_offset);
+        $reports = MFN_get_reports($pmlang, 0, $w['limit'], 'DESC', $fiscal_year_offset);
 
         if (sizeof($reports) < 1) {
             return;
@@ -329,6 +330,12 @@ class mfn_archive_widget extends WP_Widget
             $fiscalyearoffset = '0';
         }
 
+        if (isset($instance['limit'])) {
+            $limit = $instance['limit'];
+        } else {
+            $limit = '500';
+        }
+
         ?>
 
         <p>
@@ -409,6 +416,13 @@ class mfn_archive_widget extends WP_Widget
                    value="<?php echo esc_attr($fiscalyearoffset); ?>"/>
         </p>
 
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('limit')); ?>"><?php _e('Limit amount of reports to show', 'text_domain'); ?></label>
+            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('limit')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('limit')); ?>" type="text"
+                   value="<?php echo esc_attr($limit); ?>"/>
+        </p>
+
         <?php
     }
 
@@ -424,6 +438,7 @@ class mfn_archive_widget extends WP_Widget
         $instance['showthumbnail'] = (!empty($new_instance['showthumbnail'])) ? strip_tags($new_instance['showthumbnail']) : '';
         $instance['usefiscalyearoffset'] = (!empty($new_instance['usefiscalyearoffset'])) ? strip_tags($new_instance['usefiscalyearoffset']) : '';
         $instance['fiscalyearoffset'] = (!empty($new_instance['fiscalyearoffset'])) ? strip_tags($new_instance['fiscalyearoffset']) : '';
+        $instance['limit'] = (!empty($new_instance['limit'])) ? strip_tags($new_instance['limit']) : '';
         return $instance;
     }
 } //
