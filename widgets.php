@@ -56,6 +56,13 @@ function create_mfn_wid_translate()
 }
 $mfn_wid_translate = create_mfn_wid_translate();
 
+// Determine locale
+function determineLocale() {
+    if(function_exists('determine_locale')) {
+        return $locale = determine_locale();
+    }
+    return get_locale();
+}
 
 // Creating the widget
 class mfn_archive_widget extends WP_Widget
@@ -91,7 +98,7 @@ class mfn_archive_widget extends WP_Widget
 
         $lang = 'en';
 
-        $locale = determine_locale();
+        $locale = determineLocale();
         if (is_string($locale)) {
             $parts = explode("_", $locale);
             if (strlen($parts[0]) == 2) {
@@ -446,9 +453,10 @@ class mfn_subscription_widget extends WP_Widget
 
 
         $lang = empty($instance['lang']) ? 'auto' : $instance['lang'];
+        $locale = determineLocale();
 
         if ($lang == "auto") {
-            $locale = determine_locale();
+            $locale = $locale;
             if (is_string($locale)) {
                 $parts = explode("_", $locale);
                 if (strlen($parts[0]) == 2) {
@@ -752,7 +760,7 @@ class mfn_news_feed_widget extends WP_Widget
         $showpagination = empty($instance['showpagination']) ? false : $instance['showpagination'];
 
         $lang = 'en';
-        $locale = determine_locale();
+        $locale = determineLocale();
         if (is_string($locale)) {
             $parts = explode("_", $locale);
             if (strlen($parts[0]) == 2) {
