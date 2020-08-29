@@ -1,8 +1,7 @@
 <?php
 
-
-require_once(dirname(__FILE__) . '/api.php');
-require_once(dirname(__FILE__) . '/consts.php');
+require_once(__DIR__ . '/api.php');
+require_once(__DIR__ . '/consts.php');
 
 // Register and load the widget
 function mfn_load_widget()
@@ -10,7 +9,6 @@ function mfn_load_widget()
     register_widget('mfn_archive_widget');
     register_widget('mfn_subscription_widget');
     register_widget('mfn_news_feed_widget');
-
 }
 
 add_action('widgets_init', 'mfn_load_widget');
@@ -44,7 +42,8 @@ function create_mfn_wid_translate()
         'Year-end Report' => ['sv' => "Bokslutskommuniké", 'fi' => "Tilinpäätöstiedote"],
         'Annual Report' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
     );
-    return function ($word, $lang) use ($l10n) {
+
+    return static function ($word, $lang) use ($l10n) {
         if (empty($l10n[$word])) {
             return $word;
         }
@@ -58,8 +57,8 @@ $mfn_wid_translate = create_mfn_wid_translate();
 
 // Determine locale
 function determineLocale() {
-    if(function_exists('determine_locale')) {
-        return $locale = determine_locale();
+    if (function_exists('determine_locale')) {
+        return determine_locale();
     }
     return get_locale();
 }
@@ -68,7 +67,7 @@ function determineLocale() {
 class mfn_archive_widget extends WP_Widget
 {
 
-    function __construct()
+    public function __construct()
     {
         parent::__construct(
             'mfn_archive_widget',
@@ -81,16 +80,16 @@ class mfn_archive_widget extends WP_Widget
     {
 
         $w = array(
-            'showfilter' => isset($instance['showfilter']) ? $instance['showfilter'] : false,
-            'showthumbnail' => isset($instance['showthumbnail']) ? $instance['showthumbnail'] : false,
-            'showgenerictitle' => isset($instance['showgenerictitle']) ? $instance['showgenerictitle'] : false,
-            'usefiscalyearoffset' => isset($instance['usefiscalyearoffset']) ? $instance['usefiscalyearoffset'] : true,
-            'fiscalyearoffset' => isset($instance['fiscalyearoffset']) ? $instance['fiscalyearoffset'] : 0,
-            'limit' => isset($instance['limit']) ? $instance['limit'] : 500,
-            'instance_id' => mt_rand(1, time())
+            'showfilter' => $instance['showfilter'] ?? false,
+            'showthumbnail' => $instance['showthumbnail'] ?? false,
+            'showgenerictitle' => $instance['showgenerictitle'] ?? false,
+            'usefiscalyearoffset' => $instance['usefiscalyearoffset'] ?? true,
+            'fiscalyearoffset' => $instance['fiscalyearoffset'] ?? 0,
+            'limit' => $instance['limit'] ?? 500,
+            'instance_id' => random_int(1, time())
         );
 
-        $l = function ($word, $lang) {
+        $l = static function ($word, $lang) {
             global $mfn_wid_translate;
             return $mfn_wid_translate($word, $lang);
         };
@@ -98,17 +97,16 @@ class mfn_archive_widget extends WP_Widget
         echo $args['before_widget'];
 
         $lang = 'en';
-
         $locale = determineLocale();
         if (is_string($locale)) {
             $parts = explode("_", $locale);
-            if (strlen($parts[0]) == 2) {
+            if (strlen($parts[0]) === 2) {
                 $lang = $parts[0];
             }
         }
 
         $pmlang = empty($instance['lang']) ? 'all' : $instance['lang'];
-        if ($pmlang == 'auto') {
+        if ($pmlang === 'auto') {
             $pmlang = $lang;
         }
 
@@ -122,9 +120,10 @@ class mfn_archive_widget extends WP_Widget
         if ($w['usefiscalyearoffset']) {
             $fiscal_year_offset = $w['fiscalyearoffset'];
         }
+
         $reports = MFN_get_reports($pmlang, 0, $w['limit'], 'DESC', $fiscal_year_offset);
 
-        if (sizeof($reports) < 1) {
+        if (count($reports) < 1) {
             return;
         }
 
@@ -138,7 +137,7 @@ class mfn_archive_widget extends WP_Widget
 
         echo '
         <style>
-            ul.mfn-report-items{
+            ul.mfn-report-items {
                 list-style: none;
                 padding-left: 0;
             }
@@ -156,29 +155,29 @@ class mfn_archive_widget extends WP_Widget
         if ($w['showfilter']) {
             echo "
             <style>
-                .mfn-filter ul{
+                .mfn-filter ul {
                     list-style: none;
                     display: inline-block;
                 }
-                .mfn-filter li{
+                .mfn-filter li {
                     cursor: pointer;
                     display: inline-block;
                     padding-right: 1em;
                 }
-                .mfn-report-container.annual .mfn-report-interim{
+                .mfn-report-container.annual .mfn-report-interim {
                     display: none;
                 }
-                .mfn-report-container.interim .mfn-report-annual{
+                .mfn-report-container.interim .mfn-report-annual {
                     display: none;
                 }
                 .mfn-report-container.all .mfn-filter .all,
                 .mfn-report-container.annual .mfn-filter .annual,
-                .mfn-report-container.interim .mfn-filter .interim{
+                .mfn-report-container.interim .mfn-filter .interim {
                     text-decoration: underline;
                 }
             </style>
             <script>
-                function MFN_SET_FILTER(type, instance_id){
+                function MFN_SET_FILTER(type, instance_id) {
                     var list = document.querySelector('#mfn-report-archive-id-' + instance_id);
                     list.classList.remove('all');
                     list.classList.remove('annual');
@@ -201,8 +200,8 @@ class mfn_archive_widget extends WP_Widget
         foreach ($reports as $r) {
 
             $y = $r->year;
-            if ($y != $year) {
-                if ($year != "") {
+            if ($y !== $year) {
+                if ($year !== "") {
                     echo "</ul>";
                 }
 
@@ -241,7 +240,7 @@ class mfn_archive_widget extends WP_Widget
                     'mfn-report-annual' => "Annual Report"
                 ];
 
-                $base_title = isset($report_names[$r->type]) ? $report_names[$r->type] : $report_names[$base_type];
+                $base_title = $report_names[$r->type] ?? $report_names[$base_type];
                 $base_title = $mfn_wid_translate($base_title, $r->lang);
 
                 $li .=     "<span class='mfn-report-base-title mfn-report-base-title-$r->lang'>";
@@ -360,7 +359,6 @@ class mfn_archive_widget extends WP_Widget
             </select>
         </p>
 
-
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('showheading')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('showheading')); ?>" type="checkbox"
@@ -443,12 +441,11 @@ class mfn_archive_widget extends WP_Widget
     }
 } //
 
-
 // Creating the widget
 class mfn_subscription_widget extends WP_Widget
 {
 
-    function __construct()
+    public function __construct()
     {
         parent::__construct(
             'mfn_subscription_widget',
@@ -459,27 +456,26 @@ class mfn_subscription_widget extends WP_Widget
 
     public function widget($args, $instance)
     {
-        $l = function ($word, $lang) {
+        $l = static function ($word, $lang) {
             global $mfn_wid_translate;
             return $mfn_wid_translate($word, $lang);
         };
 
         echo $args['before_widget'];
 
-
         $lang = empty($instance['lang']) ? 'auto' : $instance['lang'];
         $locale = determineLocale();
 
-        if ($lang == "auto") {
-            $locale = $locale;
+        if ($lang === "auto") {
             if (is_string($locale)) {
                 $parts = explode("_", $locale);
-                if (strlen($parts[0]) == 2) {
+                if (strlen($parts[0]) === 2) {
                     $lang = $parts[0];
                 }
             }
         }
-        if ($lang == "auto") {
+
+        if ($lang === "auto") {
             $lang = "en";
         }
 
@@ -488,11 +484,9 @@ class mfn_subscription_widget extends WP_Widget
 
         $privacy_policy = empty($instance['privacy_policy']) ? "https://mfn.se/privacy-policy" : $instance['privacy_policy'];
 
-
         $ops = get_option('mfn-wp-plugin');
-        $entity_id = isset($ops['entity_id']) ? $ops['entity_id'] : "bad-entity-id";
-        $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "bad-hub-url";
-
+        $entity_id = $ops['entity_id'] ?? "bad-entity-id";
+        $hub_url = $ops['hub_url'] ?? "bad-hub-url";
 
         if (empty($instance['showlangs'])) {
             echo "<style>.mfn-subscribe .mfn-languages{display: none}</style>";
@@ -501,7 +495,6 @@ class mfn_subscription_widget extends WP_Widget
         if (empty($instance['showtypes'])) {
             echo "<style>.mfn-subscribe .mfn-categories{display: none}</style>";
         }
-
 
         ?>
 
@@ -552,7 +545,6 @@ class mfn_subscription_widget extends WP_Widget
                         <label for="sub-pr"><?php echo $l("Other news", $lang) ?></label>
                     </li>
                 </ul>
-
             </div>
 
             <div class="mfn-info mfn-languages">
@@ -573,15 +565,15 @@ class mfn_subscription_widget extends WP_Widget
             <div>
                 <p id="policy-text">
                     <?php
-                    if ($lang == "sv") {
-                        echo "För att prenumerera på detta behöver du godkänna våra <a href=\"$privacy_policy\" target=\"_blank\">generella villkor</a> i syfte för GDPR.";
-                    }
-                    if ($lang == "en") {
-                        echo "To subscribe, please read and approve our <a href=\"$privacy_policy\" target=\"_blank\">data storage policy</a> to comply with GDPR.";
-                    }
-                    if ($lang == "fi") {
-                        echo "Tilataksesi, lue ja hyväksy <a href=\"$privacy_policy\" target=\"_blank\">tietojen tallennuskäytäntömme</a> noudattamaan GDPR: ää.";
-                    }
+                        if ($lang === "sv") {
+                            echo "För att prenumerera på detta behöver du godkänna våra <a href=\"$privacy_policy\" target=\"_blank\">generella villkor</a> i syfte för GDPR.";
+                        }
+                        if ($lang === "en") {
+                            echo "To subscribe, please read and approve our <a href=\"$privacy_policy\" target=\"_blank\">data storage policy</a> to comply with GDPR.";
+                        }
+                        if ($lang === "fi") {
+                            echo "Tilataksesi, lue ja hyväksy <a href=\"$privacy_policy\" target=\"_blank\">tietojen tallennuskäytäntömme</a> noudattamaan GDPR: ää.";
+                        }
                     ?>
                     <div class="mfn-approve-container">
                         <label for="approve">
@@ -594,23 +586,21 @@ class mfn_subscription_widget extends WP_Widget
 
             <div class="subscription-wrapper">
                 <form onsubmit="event.preventDefault(); return datablocks_SubscribeMail()">
-                    <input id="sub-email" type="text" placeholder="Email" name="hub.callback">
+                    <label for="sub-email"></label><input id="sub-email" type="text" placeholder="Email" name="hub.callback">
                     <button type="submit">
-                        <?php echo $l("Subscribe", $lang) ?>
+                        <?php echo $l("Subscribe", $lang); ?>
                     </button>
                 </form>
             </div>
             <div id="email-bad-input" class="hidden warning mfn-info alert">
-                <?php echo $l("A real email address must be provided.", $lang) ?>
+                <?php echo $l("A real email address must be provided.", $lang); ?>
             </div>
             <div id="gdpr-policy-fail" class="hidden warning mfn-info alert">
-                <?php echo $l("The GDPR policy must be accepted.", $lang) ?>
+                <?php echo $l("The GDPR policy must be accepted.", $lang); ?>
             </div>
             <div id="email-success" class="hidden success mfn-info">
-                <?php echo $l("An email has been sent to confirm your subscription.", $lang) ?>
+                <?php echo $l("An email has been sent to confirm your subscription.", $lang); ?>
             </div>
-
-
         </div>
         <?php
         echo "<script>" . JS_SUB_LIB . "</script>";
@@ -620,25 +610,8 @@ class mfn_subscription_widget extends WP_Widget
 
     public function form($instance)
     {
-        if (isset($instance['lang'])) {
-            $lang = $instance['lang'];
-        } else {
-            $lang = 'auto';
-        }
-
-        if (isset($instance['langs'])) {
-            $langs = strtolower(trim($instance['langs']));
-        } else {
-            $langs = 'sv,en';
-        }
-
-
-        if (isset($instance['privacy_policy'])) {
-            $privacy_policy = $instance['privacy_policy'];
-        } else {
-            $privacy_policy = "https://mfn.se/privacy-policy";
-        }
-
+        $lang = $instance['lang'] ?? 'auto';
+        $privacy_policy = $instance['privacy_policy'] ?? "https://mfn.se/privacy-policy";
 
         if (isset($instance['langs'])) {
             $langs = strtolower(trim($instance['langs']));
@@ -651,12 +624,12 @@ class mfn_subscription_widget extends WP_Widget
         } else {
             $showlangs = '1';
         }
+
         if (isset($instance['showtypes'])) {
             $showtypes = strtolower(trim($instance['showtypes']));
         } else {
             $showtypes = '1';
         }
-
 
         ?>
 
@@ -688,14 +661,12 @@ class mfn_subscription_widget extends WP_Widget
                    value="<?php echo esc_attr($langs); ?>"/>
         </p>
 
-
         <p>
             <label for="<?php echo esc_attr($this->get_field_id('privacy_policy')); ?>"><?php _e('GDPR Policy link', 'text_domain'); ?></label>
             <input class="widefat" id="<?php echo esc_attr($this->get_field_id('privacy_policy')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('privacy_policy')); ?>" type="text"
                    value="<?php echo esc_attr($privacy_policy); ?>"/>
         </p>
-
 
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('showtypes')); ?>"
@@ -710,7 +681,6 @@ class mfn_subscription_widget extends WP_Widget
                    value="1" <?php checked('1', $showlangs); ?> />
             <label for="<?php echo esc_attr($this->get_field_id('showlangs')); ?>"><?php _e('Show Languages', 'text_domain'); ?></label>
         </p>
-
 
         <?php
     }
@@ -728,55 +698,54 @@ class mfn_subscription_widget extends WP_Widget
     }
 } //
 
-
 // Creating the widget
 class mfn_news_feed_widget extends WP_Widget
 {
 
-    function __construct()
+    public function __construct()
     {
         parent::__construct(
             'mfn_news_feed_widget',
             __('MFN News Feed', 'mfn_news_feed_domain'),
-            array('description' => __('A widget that creates an archive for reports', 'mfn_news_feed_domain'),)
+            array('description' => __('A widget that creates a news feed', 'mfn_news_feed_domain'),)
         );
 
     }
 
     private function list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear) {
-        $c = 0;
         $years = [];
         $group_by_year = $groupbyyear && !empty($res);
-        foreach ($res as $item) {
-            $year = explode("-", $item->post_date_gmt)[0];
 
-            if($c === 0) {
+        foreach ($res as $k => $item) {
+            $year = explode("-", $item->post_date_gmt)[0];
+            if ($k === 0) {
                 $years[] = $year;
 
-                if($group_by_year) {
-                    $this->print_year_header($year);
+                if ($group_by_year) {
+                    $this->parse_year_header($year);
                 }
-            } else if(!in_array($year, $years, true)) {
-                if($group_by_year) {
-                    $this->print_year_header($year);
+            } else if (!in_array($year, $years, true)) {
+                if ($group_by_year) {
+                    $this->parse_year_header($year);
                 }
                 $years[] = $year;
             }
+
             $date = new DateTime($item->post_date_gmt . "Z");
             $date->setTimezone(new DateTimeZone($tzLocation));
             $datestr = date_i18n($timestampFormat,$date->getTimestamp() + $date->getOffset());
+
             $tags = "";
             foreach ($item->tags as $tag) {
                 $parts = explode(":", $tag);
-                if (sizeof($onlytagsallowed) > 0) {
+                if (count($onlytagsallowed) > 0) {
                     $key = array_search($parts[1], $onlytagsallowed, true);
                     if (!is_numeric($key)) {
                         continue;
                     }
                 }
                 $html = $tagtemplate;
-                $html = str_replace("[tag]", $parts[0], $html);
-                $html = str_replace("[slug]", $parts[1], $html);
+                $html = str_replace(array("[tag]", "[slug]"), array($parts[0], $parts[1]), $html);
                 $tags .= $html;
             }
 
@@ -786,30 +755,27 @@ class mfn_news_feed_widget extends WP_Widget
                 'url' => get_home_url() . "/mfn_news/" . $item->post_name,
                 'tags' => $tags,
             );
+
             $html = $template;
             foreach ($templateData as $key => $value) {
                 $html = str_replace("[$key]", $value, $html);
             }
 
             echo $html;
-            $c++;
         }
     }
 
-    public function print_year_header($year) {
-        print("<h4 class='mfn-feed-year-header' id='mfn-feed-year-header-" . $year . "'>$year</h4>");
+    public function parse_year_header($year) {
+        echo "<h4 class='mfn-feed-year-header' id='mfn-feed-year-header-" . $year . "'>$year</h4>";
     }
 
     public function widget($args, $instance)
     {
-        $qury_param = function ($name, $default) {
-            if (isset($_GET[$name])) {
-                return $_GET[$name];
-            }
-            return $default;
+        $query_param = static function ($name, $default) {
+            return $_GET[$name] ?? $default;
         };
 
-        $l = function ($word, $lang) {
+        $l = static function ($word, $lang) {
             global $mfn_wid_translate;
             return $mfn_wid_translate($word, $lang);
         };
@@ -819,15 +785,17 @@ class mfn_news_feed_widget extends WP_Widget
         global $wp;
         $baseurl = explode('?', home_url(add_query_arg(array(), $wp->request)))[0];
 
-
         $tzLocation = empty($instance['tzLocation']) ? 'Europe/Stockholm' : $instance['tzLocation'];
         $timestampFormat = empty($instance['timestampFormat']) ? 'Y-m-d H:i' : $instance['timestampFormat'];
+
         if (isset($instance['tzlocation'])) {
             $tzLocation = normalize_whitespace($instance['tzlocation']);
         }
+
         if (isset($instance['timestampformat'])) {
             $timestampFormat = normalize_whitespace($instance['timestampformat']);
         }
+
         $pagelen = empty($instance['pagelen']) ? 20 : $instance['pagelen'];
         $showyears = empty($instance['showyears']) ? false : $instance['showyears'];
         $groupbyyear = empty($instance['groupbyyear']) ? false : $instance['groupbyyear'];
@@ -837,29 +805,29 @@ class mfn_news_feed_widget extends WP_Widget
         $locale = determineLocale();
         if (is_string($locale)) {
             $parts = explode("_", $locale);
-            if (strlen($parts[0]) == 2) {
+            if (strlen($parts[0]) === 2) {
                 $lang = $parts[0];
             }
         }
 
         $pmlang = empty($instance['lang']) ? 'all' : $instance['lang'];
-        if ($pmlang == 'auto') {
+        if ($pmlang === 'auto') {
             $pmlang = $lang;
         }
 
-        $page = $qury_param('m-page', 0);
+        $page = $query_param('m-page', 0);
         if ($page < 0) {
             return;
         }
 
-        $tagsstr = $qury_param('m-tags', "");
+        $tagsstr = $query_param('m-tags', "");
         if (isset($instance['tags'])) {
             $tagsstr = normalize_whitespace($instance['tags']);
         }
         $hasTags = array();
         $hasNotTags = array();
         foreach (explode(",", $tagsstr) as $tag) {
-            if ($tag == "") {
+            if ($tag === "") {
                 continue;
             }
             if (strpos($tag, '-') === 0 || strpos($tag, '!') === 0) {
@@ -868,23 +836,23 @@ class mfn_news_feed_widget extends WP_Widget
                     $tag = 'mfn-' . $tag;
                 }
 
-                array_push($hasNotTags, $tag);
+                $hasNotTags[] = $tag;
                 continue;
             }
 
             if (strpos($tag, 'mfn-') !== 0) {
                 $tag = 'mfn-' . $tag;
             }
-            array_push($hasTags, $tag);
+            $hasTags[] = $tag;
         }
 
-        $year = $qury_param('m-year', "");
+        $year = $query_param('m-year', "");
         $y = $year;
 
         if (isset($instance['year'])) {
             $year = normalize_whitespace($instance['year']);
         }
-        else if(empty($year)) {
+        else if (empty($year)) {
             $y = "";
         }
 
@@ -899,7 +867,6 @@ class mfn_news_feed_widget extends WP_Widget
         </div>
         " : $instance['template'];
 
-
         $tagtemplate = empty($instance['tagtemplate']) ? "
         <div class='mfn-tag mfn-tag-[slug]'>[tag]</div>
         " : $instance['tagtemplate'];
@@ -910,24 +877,23 @@ class mfn_news_feed_widget extends WP_Widget
 
         $onlytagsallowed = array();
         $onlytagsallowedstr = empty($instance['onlytagsallowed']) ? "" : $instance['onlytagsallowed'];
-        if ($onlytagsallowedstr != "") {
+        if ($onlytagsallowedstr !== "") {
             $onlytagsallowed = explode(",", $onlytagsallowedstr);
         }
 
         echo "
         <style>
-            .mfn-tags{float: right}
-            .mfn-tag{ display: inline-block}
-            .mfn-date{ display: inline-block}
+            .mfn-tags { float: right; }
+            .mfn-tag { display: inline-block; }
+            .mfn-date { display: inline-block; }
         </style>";
 
         if (!$showyears) {
-            echo "<style>.mfn-newsfeed-year-selector{display: none}</style>";
+            echo "<style>.mfn-newsfeed-year-selector { display: none; }</style>";
         }
         if (!$showpagination) {
-            echo "<style>.mfn-newsfeed-pagination{display: none}</style>";
+            echo "<style>.mfn-newsfeed-pagination { display: none; }</style>";
         }
-
 
         echo "<div class=\"mfn-newsfeed\">";
 
@@ -954,10 +920,8 @@ class mfn_news_feed_widget extends WP_Widget
                 $params = http_build_query(array_merge($_GET, array('m-year' => $i)));
                 $url = $baseurl . "?" . $params;
                 $html = $yeartemplate;
-                $html = str_replace("[url]", $url, $html);
-                $html = str_replace("[year]", $i, $html);
-                $html = str_replace("[mfn-year-selected]", $i == $year ? 'mfn-year-selected' : '', $html);
-
+                $html = str_replace(array("[url]", "[year]", "[mfn-year-selected]"),
+                    array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
 
                 echo $html;
             }
@@ -976,7 +940,8 @@ class mfn_news_feed_widget extends WP_Widget
             $word = $l("Previous", $lang);
             echo "<a href='$url1' class='mfn-next-link'>$word</a>";
         }
-        if (sizeof($res) == $pagelen) {
+
+        if (count($res) === $pagelen) {
             $params = http_build_query(array_merge($_GET, array('m-page' => $page + 1)));
             $url2 = $baseurl . "?" . $params;
             $word = $l("Next", $lang);
@@ -987,7 +952,6 @@ class mfn_news_feed_widget extends WP_Widget
 
         echo $args['after_widget'];
     }
-
 
     public function form($instance)
     {
@@ -1007,21 +971,25 @@ class mfn_news_feed_widget extends WP_Widget
         } else {
             $showpagination = '1';
         }
+
         if (isset($instance['showyears'])) {
             $showyears = $instance['showyears'];
         } else {
             $showyears = '1';
         }
+
         if (isset($instance['groupbyyear'])) {
             $groupbyyear = $instance['groupbyyear'];
         } else {
             $groupbyyear = '0';
         }
+
         if (isset($instance['tzLocation'])) {
             $tzLocation = $instance['tzLocation'];
         } else {
             $tzLocation = 'Europe/Stockholm';
         }
+
         // Format at https://www.php.net/manual/en/function.date.php#refsect1-function.date-parameters
         if (isset($instance['timestampFormat'])) {
             $timestampFormat = $instance['timestampFormat'];
@@ -1029,38 +997,31 @@ class mfn_news_feed_widget extends WP_Widget
             $timestampFormat = 'Y-m-d H:i';
         }
 
-        if (isset($instance['template']) && $instance['template'] != "") {
+        if (isset($instance['template']) && $instance['template'] !== "") {
             $template = $instance['template'];
         } else {
             $template = "
-<div class='mfn-item'>
-    <div class='mfn-date'>[date]</div>
-    <div class='mfn-tags'>[tags]</div>
-    <div class='mfn-title'><a href='[url]'>[title]</a></div>
-</div>
-        ";
+                <div class='mfn-item'>
+                    <div class='mfn-date'>[date]</div>
+                    <div class='mfn-tags'>[tags]</div>
+                    <div class='mfn-title'><a href='[url]'>[title]</a></div>
+                </div>
+            ";
         }
 
-
-        if (isset($instance['tagtemplate']) && $instance['tagtemplate'] != "") {
+        if (isset($instance['tagtemplate']) && $instance['tagtemplate'] !== "") {
             $tagtemplate = $instance['tagtemplate'];
         } else {
             $tagtemplate = "<div class='mfn-tag mfn-tag-[slug]'>[tag]</div>";
         }
 
-
-        if (isset($instance['yeartemplate']) && $instance['yeartemplate'] != "") {
+        if (isset($instance['yeartemplate']) && $instance['yeartemplate'] !== "") {
             $yeartemplate = $instance['yeartemplate'];
         } else {
             $yeartemplate = "<a href='[url]' class='[mfn-year-selected]'>[year]</a>";
         }
 
-        if (isset($instance['onlytagsallowed'])) {
-            $onlytagsallowed = $instance['onlytagsallowed'];
-        } else {
-            $onlytagsallowed = "";
-        }
-
+        $onlytagsallowed = $instance['onlytagsallowed'] ?? "";
 
         ?>
 
@@ -1102,7 +1063,6 @@ class mfn_news_feed_widget extends WP_Widget
                 // Loop through options and add each one to the select dropdown
                 foreach ($options as $key => $name) {
                     echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($lang, $key, false) . '>' . $name . '</option>';
-
                 } ?>
             </select>
 
@@ -1127,11 +1087,9 @@ class mfn_news_feed_widget extends WP_Widget
                 // Loop through options and add each one to the select dropdown
                 foreach ($options as $key => $name) {
                     echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($tzLocation, $key, false) . '>' . $name . '</option>';
-
                 } ?>
             </select>
         </p>
-
 
         <p>
             <label for="<?php echo esc_attr($this->get_field_id('pagelen')); ?>"><?php _e('# stories / page:', 'text_domain'); ?></label>
@@ -1140,7 +1098,6 @@ class mfn_news_feed_widget extends WP_Widget
                    value="<?php echo esc_attr($pagelen); ?>"/>
         </p>
 
-
         <p>
             <label for="<?php echo esc_attr($this->get_field_id('timestampFormat')); ?>"><?php _e('Timestamp Format:', 'text_domain'); ?></label>
             <input class="widefat" id="<?php echo esc_attr($this->get_field_id('timestampFormat')); ?>"
@@ -1148,30 +1105,29 @@ class mfn_news_feed_widget extends WP_Widget
                    value="<?php echo esc_attr($timestampFormat); ?>"/>
         </p>
 
-
         <p>
             <label for="<?php echo esc_attr($this->get_field_id('template')); ?>">Template</label>
             <textarea rows="8" class="widefat" id="<?php echo esc_attr($this->get_field_id('template')); ?>"
                       name="<?php echo esc_attr($this->get_field_name('template')); ?>"><?php echo wp_kses_post($template); ?></textarea>
         </p>
+
         <p>
             <label for="<?php echo esc_attr($this->get_field_id('tagtemplate')); ?>">Tag Template</label>
             <textarea rows="2" class="widefat" id="<?php echo esc_attr($this->get_field_id('tagtemplate')); ?>"
                       name="<?php echo esc_attr($this->get_field_name('tagtemplate')); ?>"><?php echo wp_kses_post($tagtemplate); ?></textarea>
         </p>
+
         <p>
             <label for="<?php echo esc_attr($this->get_field_id('yeartemplate')); ?>">Year Template</label>
             <textarea rows="2" class="widefat" id="<?php echo esc_attr($this->get_field_id('yeartemplate')); ?>"
                       name="<?php echo esc_attr($this->get_field_name('yeartemplate')); ?>"><?php echo wp_kses_post($yeartemplate); ?></textarea>
         </p>
 
-
         <p>
             <label for="<?php echo esc_attr($this->get_field_id('onlytagsallowed')); ?>">Show Only tags</label>
             <textarea rows="2" class="widefat" id="<?php echo esc_attr($this->get_field_id('onlytagsallowed')); ?>"
                       name="<?php echo esc_attr($this->get_field_name('onlytagsallowed')); ?>"><?php echo wp_kses_post($onlytagsallowed); ?></textarea>
         </p>
-
 
         <?php
     }
@@ -1180,11 +1136,9 @@ class mfn_news_feed_widget extends WP_Widget
     {
         $instance = array();
         $instance['lang'] = (!empty($new_instance['lang'])) ? wp_strip_all_tags($new_instance['lang']) : '';
-
         $instance['showpagination'] = (!empty($new_instance['showpagination'])) ? strip_tags($new_instance['showpagination']) : '';
         $instance['showyears'] = (!empty($new_instance['showyears'])) ? strip_tags($new_instance['showyears']) : '';
         $instance['groupbyyear'] = (!empty($new_instance['groupbyyear'])) ? strip_tags($new_instance['groupbyyear']) : '';
-
         $instance['pagelen'] = (!empty($new_instance['pagelen'])) ? wp_strip_all_tags($new_instance['pagelen']) : 20;
         $instance['tzLocation'] = (!empty($new_instance['tzLocation'])) ? wp_strip_all_tags($new_instance['tzLocation']) : '';
         $instance['timestampFormat'] = (!empty($new_instance['timestampFormat'])) ? wp_strip_all_tags($new_instance['timestampFormat']) : '';
@@ -1200,33 +1154,25 @@ function load_shortcode_mfn_archive_widget($atts)
 {
     ob_start();
     the_widget('mfn_archive_widget', $atts);
-    $contents = ob_get_clean();
-
-    return $contents;
+    return ob_get_clean();
 }
 
 add_shortcode('mfn_archive_widget', 'load_shortcode_mfn_archive_widget');
-
 
 function load_shortcode_mfn_news_feed_widget($atts)
 {
     ob_start();
     the_widget('mfn_news_feed_widget', $atts);
-    $contents = ob_get_clean();
-
-    return $contents;
+    return ob_get_clean();
 }
 
 add_shortcode('mfn_news_feed_widget', 'load_shortcode_mfn_news_feed_widget');
-
 
 function load_shortcode_mfn_subscription_widget($atts)
 {
     ob_start();
     the_widget('mfn_subscription_widget', $atts);
-    $contents = ob_get_clean();
-
-    return $contents;
+    return ob_get_clean();
 }
 
 add_shortcode('mfn_subscription_widget', 'load_shortcode_mfn_subscription_widget');
