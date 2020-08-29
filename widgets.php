@@ -489,11 +489,11 @@ class mfn_subscription_widget extends WP_Widget
         $hub_url = $ops['hub_url'] ?? "bad-hub-url";
 
         if (empty($instance['showlangs'])) {
-            echo "<style>.mfn-subscribe .mfn-languages{display: none}</style>";
+            echo "<style>.mfn-subscribe .mfn-languages { display: none; }</style>";
         }
 
         if (empty($instance['showtypes'])) {
-            echo "<style>.mfn-subscribe .mfn-categories{display: none}</style>";
+            echo "<style>.mfn-subscribe .mfn-categories { display: none; }</style>";
         }
 
         ?>
@@ -634,7 +634,7 @@ class mfn_subscription_widget extends WP_Widget
         ?>
 
         <p>
-            <label for="<?php echo $this->get_field_id('lang'); ?>"><?php _e('Archive Language', 'text_domain'); ?></label>
+            <label for="<?php echo $this->get_field_id('lang'); ?>"><?php _e('Language', 'text_domain'); ?></label>
             <select name="<?php echo $this->get_field_name('lang'); ?>" id="<?php echo $this->get_field_id('lang'); ?>"
                     class="widefat">
                 <?php
@@ -889,10 +889,10 @@ class mfn_news_feed_widget extends WP_Widget
         </style>";
 
         if (!$showyears) {
-            echo "<style>.mfn-newsfeed-year-selector{ display: none; }</style>";
+            echo "<style>.mfn-newsfeed-year-selector { display: none; }</style>";
         }
         if (!$showpagination) {
-            echo "<style>.mfn-newsfeed-pagination{ display: none; }</style>";
+            echo "<style>.mfn-newsfeed-pagination { display: none; }</style>";
         }
 
         echo "<div class=\"mfn-newsfeed\">";
