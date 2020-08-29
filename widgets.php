@@ -740,6 +740,64 @@ class mfn_news_feed_widget extends WP_Widget
             __('MFN News Feed', 'mfn_news_feed_domain'),
             array('description' => __('A widget that creates an archive for reports', 'mfn_news_feed_domain'),)
         );
+
+    }
+
+    private function list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear) {
+        $c = 0;
+        $years = [];
+        $group_by_year = $groupbyyear && !empty($res);
+        foreach ($res as $item) {
+            $year = explode("-", $item->post_date_gmt)[0];
+
+            if($c === 0) {
+                $years[] = $year;
+
+                if($group_by_year) {
+                    $this->print_year_header($year);
+                }
+            } else if(!in_array($year, $years, true)) {
+                if($group_by_year) {
+                    $this->print_year_header($year);
+                }
+                $years[] = $year;
+            }
+            $date = new DateTime($item->post_date_gmt . "Z");
+            $date->setTimezone(new DateTimeZone($tzLocation));
+            $datestr = date_i18n($timestampFormat,$date->getTimestamp() + $date->getOffset());
+            $tags = "";
+            foreach ($item->tags as $tag) {
+                $parts = explode(":", $tag);
+                if (sizeof($onlytagsallowed) > 0) {
+                    $key = array_search($parts[1], $onlytagsallowed, true);
+                    if (!is_numeric($key)) {
+                        continue;
+                    }
+                }
+                $html = $tagtemplate;
+                $html = str_replace("[tag]", $parts[0], $html);
+                $html = str_replace("[slug]", $parts[1], $html);
+                $tags .= $html;
+            }
+
+            $templateData = array(
+                'date' => $datestr,
+                'title' => $item->post_title,
+                'url' => get_home_url() . "/mfn_news/" . $item->post_name,
+                'tags' => $tags,
+            );
+            $html = $template;
+            foreach ($templateData as $key => $value) {
+                $html = str_replace("[$key]", $value, $html);
+            }
+
+            echo $html;
+            $c++;
+        }
+    }
+
+    public function print_year_header($year) {
+        print("<h4 class='mfn-feed-year-header' id='mfn-feed-year-header-" . $year . "'>$year</h4>");
     }
 
     public function widget($args, $instance)
@@ -772,6 +830,7 @@ class mfn_news_feed_widget extends WP_Widget
         }
         $pagelen = empty($instance['pagelen']) ? 20 : $instance['pagelen'];
         $showyears = empty($instance['showyears']) ? false : $instance['showyears'];
+        $groupbyyear = empty($instance['groupbyyear']) ? false : $instance['groupbyyear'];
         $showpagination = empty($instance['showpagination']) ? false : $instance['showpagination'];
 
         $lang = 'en';
@@ -820,13 +879,17 @@ class mfn_news_feed_widget extends WP_Widget
         }
 
         $year = $qury_param('m-year', "");
+        $y = $year;
 
-        $year = $qury_param('m-year', "");
         if (isset($instance['year'])) {
             $year = normalize_whitespace($instance['year']);
         }
-        $min_max_years = MFN_get_feed_min_max_years();
-        $res = MFN_get_feed($pmlang, $year, $hasTags, $hasNotTags, $page * $pagelen, $pagelen);
+        else if(empty($year)) {
+            $y = "";
+        }
+
+        $min_max_years = MFN_get_feed_min_max_years($lang);
+        $res = MFN_get_feed($pmlang, $y, $hasTags, $hasNotTags, $page * $pagelen, $pagelen);
 
         $template = empty($instance['template']) ? "
         <div class='mfn-item'>
@@ -852,11 +915,11 @@ class mfn_news_feed_widget extends WP_Widget
         }
 
         echo "
-<style>
-    .mfn-tags{float: right}
-    .mfn-tag{ display: inline-block}
-    .mfn-date{ display: inline-block}
-</style>";
+        <style>
+            .mfn-tags{float: right}
+            .mfn-tag{ display: inline-block}
+            .mfn-date{ display: inline-block}
+        </style>";
 
         if (!$showyears) {
             echo "<style>.mfn-newsfeed-year-selector{display: none}</style>";
@@ -903,41 +966,8 @@ class mfn_news_feed_widget extends WP_Widget
 
         echo "<div class=\"mfn-list\">";
 
-        foreach ($res as $item) {
-            $date = new DateTime($item->post_date_gmt . "Z");
-            $date->setTimezone(new DateTimeZone($tzLocation));
-            $datestr = date_i18n($timestampFormat,$date->getTimestamp() + $date->getOffset());
+        $this->list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear);
 
-            $tags = "";
-            foreach ($item->tags as $tag) {
-                $parts = explode(":", $tag);
-                if (sizeof($onlytagsallowed) > 0) {
-                    $key = array_search($parts[1], $onlytagsallowed);
-                    if (!is_numeric($key)) {
-                        continue;
-                    }
-                }
-                $html = $tagtemplate;
-                $html = str_replace("[tag]", $parts[0], $html);
-                $html = str_replace("[slug]", $parts[1], $html);
-                $tags .= $html;
-            }
-
-
-            $templateData = array(
-                'date' => $datestr,
-                'title' => $item->post_title,
-                'url' => get_home_url() . "/mfn_news/" . $item->post_name,
-                'tags' => $tags,
-            );
-            $html = $template;
-            foreach ($templateData as $key => $value) {
-                $html = str_replace("[$key]", $value, $html);
-            }
-
-            echo $html;
-
-        }
         echo "</div></div><div class='mfn-newsfeed-pagination'>";
 
         if ($page > 0) {
@@ -982,8 +1012,11 @@ class mfn_news_feed_widget extends WP_Widget
         } else {
             $showyears = '1';
         }
-
-
+        if (isset($instance['groupbyyear'])) {
+            $groupbyyear = $instance['groupbyyear'];
+        } else {
+            $groupbyyear = '0';
+        }
         if (isset($instance['tzLocation'])) {
             $tzLocation = $instance['tzLocation'];
         } else {
@@ -1037,6 +1070,14 @@ class mfn_news_feed_widget extends WP_Widget
                    value="1" <?php checked('1', $showyears); ?> />
             <label for="<?php echo esc_attr($this->get_field_id('showyears')); ?>"><?php _e('Show Years', 'text_domain'); ?></label>
         </p>
+
+        <p>
+            <input id="<?php echo esc_attr($this->get_field_id('groupbyyear')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('groupbyyear')); ?>" type="checkbox"
+                   value="1" <?php checked($groupbyyear, '1'); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('groupbyyear')); ?>"><?php _e('Group By Year', 'text_domain'); ?></label>
+        </p>
+
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('showpagination')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('showpagination')); ?>" type="checkbox"
@@ -1142,7 +1183,7 @@ class mfn_news_feed_widget extends WP_Widget
 
         $instance['showpagination'] = (!empty($new_instance['showpagination'])) ? strip_tags($new_instance['showpagination']) : '';
         $instance['showyears'] = (!empty($new_instance['showyears'])) ? strip_tags($new_instance['showyears']) : '';
-
+        $instance['groupbyyear'] = (!empty($new_instance['groupbyyear'])) ? strip_tags($new_instance['groupbyyear']) : '';
 
         $instance['pagelen'] = (!empty($new_instance['pagelen'])) ? wp_strip_all_tags($new_instance['pagelen']) : 20;
         $instance['tzLocation'] = (!empty($new_instance['tzLocation'])) ? wp_strip_all_tags($new_instance['tzLocation']) : '';

@@ -210,17 +210,27 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
     return array_slice($filtered_reports, $offset, $limit);
 }
 
-function MFN_get_feed_min_max_years(){
+function MFN_get_feed_min_max_years($lang = 'all'){
     global $wpdb;
     $params = array();
     $query = "
-    SELECT max(YEAR(post_date_gmt)) max_year, min(YEAR(post_date_gmt)) min_year 
-    FROM $wpdb->posts
+    SELECT max(YEAR(post_date_gmt)) max_year, min(YEAR(post_date_gmt)) min_year, lang.meta_value lang
+    FROM $wpdb->posts p
+    INNER JOIN $wpdb->postmeta lang
+    ON p.ID = lang.post_id
     WHERE post_type = 'mfn_news'
       AND post_date_gmt IS NOT NULL
       AND post_date_gmt <> 0
     ";
-    $res = $wpdb->get_results($query);
+
+    if($lang !== "all") {
+        $query .= " AND lang.meta_value = %s ";
+        $params[] = $lang;
+    }
+
+    $q = $wpdb->prepare($query, $params);
+    $res = $wpdb->get_results($q);
+
     if (sizeof($res) > 0) {
         return $res[0];
     }
