@@ -955,15 +955,47 @@ class mfn_news_feed_widget extends WP_Widget
 
     public function form($instance)
     {
-        $lang = $instance['lang'] ?? 'auto';
-        $pagelen = $instance['pagelen'] ?? '20';
-        $showpagination = $instance['showpagination'] ?? '1';
-        $showyears = $instance['showyears'] ?? '1';
-        $groupbyyear = $instance['groupbyyear'] ?? '0';
-        $tzLocation = $instance['tzLocation'] ?? 'Europe/Stockholm';
+        if (isset($instance['lang'])) {
+            $lang = $instance['lang'];
+        } else {
+            $lang = 'auto';
+        }
+        if (isset($instance['pagelen'])) {
+            $pagelen = $instance['pagelen'];
+        } else {
+            $pagelen = '20';
+        }
+
+        if (isset($instance['showpagination'])) {
+            $showpagination = $instance['showpagination'];
+        } else {
+            $showpagination = '1';
+        }
+
+        if (isset($instance['showyears'])) {
+            $showyears = $instance['showyears'];
+        } else {
+            $showyears = '1';
+        }
+
+        if (isset($instance['groupbyyear'])) {
+            $groupbyyear = $instance['groupbyyear'];
+        } else {
+            $groupbyyear = '0';
+        }
+
+        if (isset($instance['tzLocation'])) {
+            $tzLocation = $instance['tzLocation'];
+        } else {
+            $tzLocation = 'Europe/Stockholm';
+        }
 
         // Format at https://www.php.net/manual/en/function.date.php#refsect1-function.date-parameters
-        $timestampFormat = $instance['timestampFormat'] ?? 'Y-m-d H:i';
+        if (isset($instance['timestampFormat'])) {
+            $timestampFormat = $instance['timestampFormat'];
+        } else {
+            $timestampFormat = 'Y-m-d H:i';
+        }
 
         if (isset($instance['template']) && $instance['template'] !== "") {
             $template = $instance['template'];
