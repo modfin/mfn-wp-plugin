@@ -738,7 +738,7 @@ class mfn_news_feed_widget extends WP_Widget
         parent::__construct(
             'mfn_news_feed_widget',
             __('MFN News Feed', 'mfn_news_feed_domain'),
-            array('description' => __('A widget that creates an archive for reports', 'mfn_news_feed_domain'),)
+            array('description' => __('A widget that creates a news feed', 'mfn_news_feed_domain'),)
         );
 
     }
