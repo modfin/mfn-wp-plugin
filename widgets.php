@@ -86,6 +86,7 @@ class mfn_archive_widget extends WP_Widget
             'usefiscalyearoffset' => $instance['usefiscalyearoffset'] ?? true,
             'fiscalyearoffset' => $instance['fiscalyearoffset'] ?? 0,
             'limit' => $instance['limit'] ?? 500,
+            'exclude_latest' => $instance['exclude_latest'] ?? false,
             'instance_id' => random_int(1, time())
         );
 
@@ -128,11 +129,11 @@ class mfn_archive_widget extends WP_Widget
         }
 
         if (empty($instance['showyear'])) {
-            echo "<style>#mfn-year-header-id-" . $w['instance_id'] . "{display:none}</style>";
+            echo "<style>#mfn-year-header-id-" . $w['instance_id'] . "{ display: none; }</style>";
         }
 
         if (empty($instance['showdate'])) {
-            echo "<style>#mfn-report-date-id-" . $w['instance_id'] . "{display:none}</style>";
+            echo "<style>#mfn-report-date-id-" . $w['instance_id'] . "{ display: none; }</style>";
         }
 
         echo '
@@ -197,7 +198,7 @@ class mfn_archive_widget extends WP_Widget
         }
 
         $year = "";
-        foreach ($reports as $r) {
+        foreach ($reports as $k => $r) {
 
             $y = $r->year;
             if ($y !== $year) {
@@ -213,10 +214,9 @@ class mfn_archive_widget extends WP_Widget
             $date = substr($r->timestamp, 0, 10);
 
             $parts = explode('-', $r->type);
-            $base_type = join("-", array_slice($parts, 0, count($parts)-1));
+            $base_type = implode("-", array_slice($parts, 0, count($parts)-1));
 
-
-            $li  = "<li class='$base_type $r->type'>";
+            $li  = "<li class='mfn-report-item mfn-report-year-$year $base_type $r->type'>";
             $li .=   "<span class='mfn-report-date' id='mfn-report-date-id-" . $w['instance_id'] . "'>$date</span>";
 
             if ($w['showthumbnail']) {
@@ -264,6 +264,11 @@ class mfn_archive_widget extends WP_Widget
             $li .=   "</span>";
 
             $li .= "</li>";
+
+            if ($k === 0 && $w['exclude_latest']) {
+                continue;
+            }
+
             echo $li;
 
         }
@@ -333,6 +338,12 @@ class mfn_archive_widget extends WP_Widget
             $limit = $instance['limit'];
         } else {
             $limit = '500';
+        }
+
+        if (isset($instance['exclude_latest'])) {
+            $exclude_latest = $instance['exclude_latest'];
+        } else {
+            $exclude_latest = '0';
         }
 
         ?>
@@ -408,6 +419,13 @@ class mfn_archive_widget extends WP_Widget
         </p>
 
         <p>
+            <input id="<?php echo esc_attr($this->get_field_id('exclude_latest')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('exclude_latest')); ?>" type="checkbox"
+                   value="1" <?php checked($exclude_latest, '1'); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('exclude_latest')); ?>"><?php _e('Exclude the latest report', 'text_domain'); ?></label>
+        </p>
+
+        <p>
             <label for="<?php echo esc_attr($this->get_field_id('fiscalyearoffset')); ?>"><?php _e('Fiscal year offset', 'text_domain'); ?></label>
             <input class="widefat" id="<?php echo esc_attr($this->get_field_id('fiscalyearoffset')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('fiscalyearoffset')); ?>" type="text"
@@ -437,6 +455,7 @@ class mfn_archive_widget extends WP_Widget
         $instance['usefiscalyearoffset'] = (!empty($new_instance['usefiscalyearoffset'])) ? strip_tags($new_instance['usefiscalyearoffset']) : '';
         $instance['fiscalyearoffset'] = (!empty($new_instance['fiscalyearoffset'])) ? strip_tags($new_instance['fiscalyearoffset']) : '';
         $instance['limit'] = (!empty($new_instance['limit'])) ? strip_tags($new_instance['limit']) : '';
+        $instance['exclude_latest'] = (!empty($new_instance['exclude_latest'])) ? strip_tags($new_instance['exclude_latest']) : '';
         return $instance;
     }
 } //
