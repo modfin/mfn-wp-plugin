@@ -128,11 +128,11 @@ class mfn_archive_widget extends WP_Widget
         }
 
         if (empty($instance['showyear'])) {
-            echo "<style>#mfn-year-header-id-" . $w['instance_id'] . "{display:none}</style>";
+            echo "<style>#mfn-year-header-id-" . $w['instance_id'] . "{ display: none; }</style>";
         }
 
         if (empty($instance['showdate'])) {
-            echo "<style>#mfn-report-date-id-" . $w['instance_id'] . "{display:none}</style>";
+            echo "<style>#mfn-report-date-id-" . $w['instance_id'] . "{ display: none; }</style>";
         }
 
         echo '
