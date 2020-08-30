@@ -86,7 +86,7 @@ class mfn_archive_widget extends WP_Widget
             'usefiscalyearoffset' => $instance['usefiscalyearoffset'] ?? true,
             'fiscalyearoffset' => $instance['fiscalyearoffset'] ?? 0,
             'limit' => $instance['limit'] ?? 500,
-            'exclude_latest' => $instance['exclude_latest'] ?? false,
+            'excludelatest' => $instance['excludelatest'] ?? false,
             'instance_id' => random_int(1, time())
         );
 
@@ -265,7 +265,7 @@ class mfn_archive_widget extends WP_Widget
 
             $li .= "</li>";
 
-            if ($k === 0 && $w['exclude_latest']) {
+            if ($k === 0 && $w['excludelatest']) {
                 continue;
             }
 
@@ -340,10 +340,10 @@ class mfn_archive_widget extends WP_Widget
             $limit = '500';
         }
 
-        if (isset($instance['exclude_latest'])) {
-            $exclude_latest = $instance['exclude_latest'];
+        if (isset($instance['excludelatest'])) {
+            $excludelatest = $instance['excludelatest'];
         } else {
-            $exclude_latest = '0';
+            $excludelatest = '0';
         }
 
         ?>
@@ -419,10 +419,10 @@ class mfn_archive_widget extends WP_Widget
         </p>
 
         <p>
-            <input id="<?php echo esc_attr($this->get_field_id('exclude_latest')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('exclude_latest')); ?>" type="checkbox"
-                   value="1" <?php checked($exclude_latest, '1'); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('exclude_latest')); ?>"><?php _e('Exclude the latest report', 'text_domain'); ?></label>
+            <input id="<?php echo esc_attr($this->get_field_id('excludelatest')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('excludelatest')); ?>" type="checkbox"
+                   value="1" <?php checked($excludelatest, '1'); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('excludelatest')); ?>"><?php _e('Exclude the latest report', 'text_domain'); ?></label>
         </p>
 
         <p>
@@ -455,7 +455,7 @@ class mfn_archive_widget extends WP_Widget
         $instance['usefiscalyearoffset'] = (!empty($new_instance['usefiscalyearoffset'])) ? strip_tags($new_instance['usefiscalyearoffset']) : '';
         $instance['fiscalyearoffset'] = (!empty($new_instance['fiscalyearoffset'])) ? strip_tags($new_instance['fiscalyearoffset']) : '';
         $instance['limit'] = (!empty($new_instance['limit'])) ? strip_tags($new_instance['limit']) : '';
-        $instance['exclude_latest'] = (!empty($new_instance['exclude_latest'])) ? strip_tags($new_instance['exclude_latest']) : '';
+        $instance['excludelatest'] = (!empty($new_instance['excludelatest'])) ? strip_tags($new_instance['excludelatest']) : '';
         return $instance;
     }
 } //
