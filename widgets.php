@@ -213,10 +213,9 @@ class mfn_archive_widget extends WP_Widget
             $date = substr($r->timestamp, 0, 10);
 
             $parts = explode('-', $r->type);
-            $base_type = join("-", array_slice($parts, 0, count($parts)-1));
+            $base_type = implode("-", array_slice($parts, 0, count($parts)-1));
 
-
-            $li  = "<li class='$base_type $r->type'>";
+            $li  = "<li class='mfn-report-item mfn-report-year-$year $base_type $r->type'>";
             $li .=   "<span class='mfn-report-date' id='mfn-report-date-id-" . $w['instance_id'] . "'>$date</span>";
 
             if ($w['showthumbnail']) {
