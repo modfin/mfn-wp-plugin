@@ -11,6 +11,7 @@ class Report {
     public $tags;
     public $post_id;
     public $year;
+    public $group_id;
 }
 
 function MFN_report_cmp($a, $b)
@@ -129,6 +130,7 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
                posts.post_date_gmt date_gmt,
                posts.post_title title,
                lang.meta_value lang,
+               group_id.meta_value group_id,
                t.slug report_type,
                meta.meta_value attachment_meta_value
         FROM $wpdb->terms t
@@ -140,6 +142,8 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
                 ON posts.ID = r.object_id
             INNER JOIN $wpdb->postmeta lang
                 ON posts.ID = lang.post_id AND lang.meta_key = 'mfn_news_lang'
+            INNER JOIN $wpdb->postmeta group_id
+                ON posts.ID = group_id.post_id AND group_id.meta_key = 'mfn_news_group_id'
             LEFT JOIN $wpdb->postmeta meta
                 ON posts.ID = meta.post_id AND meta.meta_key = 'mfn_news_attachment_data'
             WHERE (
@@ -163,6 +167,7 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
     foreach ($res as $r) {
         $rr = new Report();
         $rr->post_id = $r->post_id;
+        $rr->group_id = $r->group_id;
         $rr->timestamp = $r->date_gmt;
         $rr->title = $r->title;
         $rr->tags = json_decode($r->attachment_meta_value, true)["tags"];

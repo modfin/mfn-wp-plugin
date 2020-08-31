@@ -80,13 +80,15 @@ class mfn_archive_widget extends WP_Widget
     {
 
         $w = array(
+            'showdate' => $instance['showdate'] ?? false,
+            'showyear' => $instance['showyear'] ?? false,
             'showfilter' => $instance['showfilter'] ?? false,
             'showthumbnail' => $instance['showthumbnail'] ?? false,
             'showgenerictitle' => $instance['showgenerictitle'] ?? false,
             'usefiscalyearoffset' => $instance['usefiscalyearoffset'] ?? true,
             'fiscalyearoffset' => $instance['fiscalyearoffset'] ?? 0,
-            'limit' => $instance['limit'] ?? 500,
-            'excludelatest' => $instance['excludelatest'] ?? false,
+            'limit' => (!empty($instance['limit'])) ? $instance['limit'] : 500,
+            'offset' => (!empty($instance['offset'])) ? $instance['offset'] : 0,
             'instance_id' => random_int(1, time())
         );
 
@@ -113,7 +115,7 @@ class mfn_archive_widget extends WP_Widget
 
         echo "<div class=\"mfn-report-container all\" id=\"mfn-report-archive-id-" . $w['instance_id'] . "\">";
 
-        if (!empty($instance['showheading'])) {
+        if (isset($instance['showheading']) && $instance['showheading']) {
             echo "<h2>" . $l("Financial reports", $lang) . "</h2>";
         }
 
@@ -122,18 +124,10 @@ class mfn_archive_widget extends WP_Widget
             $fiscal_year_offset = $w['fiscalyearoffset'];
         }
 
-        $reports = MFN_get_reports($pmlang, 0, $w['limit'], 'DESC', $fiscal_year_offset);
+        $reports = MFN_get_reports($pmlang, $w['offset'], $w['limit'], 'DESC', $fiscal_year_offset);
 
         if (count($reports) < 1) {
             return;
-        }
-
-        if (empty($instance['showyear'])) {
-            echo "<style>#mfn-year-header-id-" . $w['instance_id'] . "{ display: none; }</style>";
-        }
-
-        if (empty($instance['showdate'])) {
-            echo "<style>#mfn-report-date-id-" . $w['instance_id'] . "{ display: none; }</style>";
         }
 
         echo '
@@ -198,7 +192,7 @@ class mfn_archive_widget extends WP_Widget
         }
 
         $year = "";
-        foreach ($reports as $k => $r) {
+        foreach ($reports as $r) {
 
             $y = $r->year;
             if ($y !== $year) {
@@ -207,7 +201,11 @@ class mfn_archive_widget extends WP_Widget
                 }
 
                 $year = $y;
-                echo "<h3 class='mfn-year-header' id='mfn-year-header-id-" . $w['instance_id'] . "'>$year</h3>";
+
+                if ($w['showyear']) {
+                    echo "<h3 class='mfn-year-header' id='mfn-year-header-id-" . $w['instance_id'] . "'>$year</h3>";
+                }
+
                 echo "<ul class='mfn-report-items'>";
             }
 
@@ -216,8 +214,13 @@ class mfn_archive_widget extends WP_Widget
             $parts = explode('-', $r->type);
             $base_type = implode("-", array_slice($parts, 0, count($parts)-1));
 
-            $li  = "<li class='mfn-report-item mfn-report-year-$year $base_type $r->type'>";
-            $li .=   "<span class='mfn-report-date' id='mfn-report-date-id-" . $w['instance_id'] . "'>$date</span>";
+            $year_class = trim(str_replace('/', '-', str_replace('*', '', $year)));
+
+            $li  = "<li class='mfn-report-item mfn-report-year-$year_class mfn-report-group-id-$r->group_id mfn-report-lang-$pmlang $base_type $r->type'>";
+
+            if ($w['showdate']) {
+                $li .=   "<span class='mfn-report-date' id='mfn-report-date-id-" . $w['instance_id'] . "'>$date</span>";
+            }
 
             if ($w['showthumbnail']) {
                 $li .=   "<div class='mfn-report-thumbnail'>";
@@ -264,10 +267,6 @@ class mfn_archive_widget extends WP_Widget
             $li .=   "</span>";
 
             $li .= "</li>";
-
-            if ($k === 0 && $w['excludelatest']) {
-                continue;
-            }
 
             echo $li;
 
@@ -340,10 +339,10 @@ class mfn_archive_widget extends WP_Widget
             $limit = '500';
         }
 
-        if (isset($instance['excludelatest'])) {
-            $excludelatest = $instance['excludelatest'];
+        if (isset($instance['offset'])) {
+            $offset = $instance['offset'];
         } else {
-            $excludelatest = '0';
+            $offset = '0';
         }
 
         ?>
@@ -419,13 +418,6 @@ class mfn_archive_widget extends WP_Widget
         </p>
 
         <p>
-            <input id="<?php echo esc_attr($this->get_field_id('excludelatest')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('excludelatest')); ?>" type="checkbox"
-                   value="1" <?php checked($excludelatest, '1'); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('excludelatest')); ?>"><?php _e('Exclude the latest report', 'text_domain'); ?></label>
-        </p>
-
-        <p>
             <label for="<?php echo esc_attr($this->get_field_id('fiscalyearoffset')); ?>"><?php _e('Fiscal year offset', 'text_domain'); ?></label>
             <input class="widefat" id="<?php echo esc_attr($this->get_field_id('fiscalyearoffset')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('fiscalyearoffset')); ?>" type="text"
@@ -433,10 +425,17 @@ class mfn_archive_widget extends WP_Widget
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('limit')); ?>"><?php _e('Limit amount of reports to show', 'text_domain'); ?></label>
+            <label for="<?php echo esc_attr($this->get_field_id('limit')); ?>"><?php _e('Limit: number of items to show', 'text_domain'); ?></label>
             <input class="widefat" id="<?php echo esc_attr($this->get_field_id('limit')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('limit')); ?>" type="text"
                    value="<?php echo esc_attr($limit); ?>"/>
+        </p>
+
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('offset')); ?>"><?php _e('Offset: drop X number of items from start of the list', 'text_domain'); ?></label>
+            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('offset')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('offset')); ?>" type="text"
+                   value="<?php echo esc_attr($offset); ?>"/>
         </p>
 
         <?php
@@ -455,7 +454,7 @@ class mfn_archive_widget extends WP_Widget
         $instance['usefiscalyearoffset'] = (!empty($new_instance['usefiscalyearoffset'])) ? strip_tags($new_instance['usefiscalyearoffset']) : '';
         $instance['fiscalyearoffset'] = (!empty($new_instance['fiscalyearoffset'])) ? strip_tags($new_instance['fiscalyearoffset']) : '';
         $instance['limit'] = (!empty($new_instance['limit'])) ? strip_tags($new_instance['limit']) : '';
-        $instance['excludelatest'] = (!empty($new_instance['excludelatest'])) ? strip_tags($new_instance['excludelatest']) : '';
+        $instance['offset'] = (!empty($new_instance['offset'])) ? strip_tags($new_instance['offset']) : '';
         return $instance;
     }
 } //
@@ -907,13 +906,6 @@ class mfn_news_feed_widget extends WP_Widget
             .mfn-date { display: inline-block; }
         </style>";
 
-        if (!$showyears) {
-            echo "<style>.mfn-newsfeed-year-selector { display: none; }</style>";
-        }
-        if (!$showpagination) {
-            echo "<style>.mfn-newsfeed-pagination { display: none; }</style>";
-        }
-
         echo "<div class=\"mfn-newsfeed\">";
 
 //        echo "<div class='mfn-newsfeed-tag-selector'>";
@@ -928,47 +920,53 @@ class mfn_news_feed_widget extends WP_Widget
 //            echo "<a href='$url3'>Reports</a>";
 //        echo "</div>";
 
-        if (is_object($min_max_years) &&
-            isset($min_max_years->max_year) &&
-            isset($min_max_years->min_year) &&
-            is_numeric($min_max_years->max_year) &&
-            is_numeric($min_max_years->min_year)) {
+        if ($showyears) {
 
-            echo "<div class='mfn-newsfeed-year-selector'>";
-            for ($i = $min_max_years->max_year; $i >= $min_max_years->min_year; $i--) {
-                $params = http_build_query(array_merge($_GET, array('m-year' => $i)));
-                $url = $baseurl . "?" . $params;
-                $html = $yeartemplate;
-                $html = str_replace(array("[url]", "[year]", "[mfn-year-selected]"),
-                    array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
+            if (is_object($min_max_years) &&
+                isset($min_max_years->max_year) &&
+                isset($min_max_years->min_year) &&
+                is_numeric($min_max_years->max_year) &&
+                is_numeric($min_max_years->min_year)) {
 
-                echo $html;
+                echo "<div class='mfn-newsfeed-year-selector'>";
+                for ($i = $min_max_years->max_year; $i >= $min_max_years->min_year; $i--) {
+                    $params = http_build_query(array_merge($_GET, array('m-year' => $i)));
+                    $url = $baseurl . "?" . $params;
+                    $html = $yeartemplate;
+                    $html = str_replace(array("[url]", "[year]", "[mfn-year-selected]"),
+                        array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
+
+                    echo $html;
+                }
+                echo "</div>";
             }
-            echo "</div>";
+
         }
 
         echo "<div class=\"mfn-list\">";
 
         $this->list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear);
 
-        echo "</div></div><div class='mfn-newsfeed-pagination'>";
 
-        if ($page > 0) {
-            $params = http_build_query(array_merge($_GET, array('m-page' => $page - 1)));
-            $url1 = $baseurl . "?" . $params;
-            $word = $l("Previous", $lang);
-            echo "<a href='$url1' class='mfn-next-link'>$word</a>";
+        if ($showpagination) {
+            echo "</div></div><div class='mfn-newsfeed-pagination'>";
+
+            if ($page > 0) {
+                $params = http_build_query(array_merge($_GET, array('m-page' => $page - 1)));
+                $url1 = $baseurl . "?" . $params;
+                $word = $l("Previous", $lang);
+                echo "<a href='$url1' class='mfn-next-link'>$word</a>";
+            }
+
+            if (count($res) == $pagelen) {
+                $params = http_build_query(array_merge($_GET, array('m-page' => $page + 1)));
+                $url2 = $baseurl . "?" . $params;
+                $word = $l("Next", $lang);
+                echo "<a href='$url2' class='mfn-next-link'>$word</a>";
+            }
+
+            echo "</div>";
         }
-
-        if (count($res) == $pagelen) {
-            $params = http_build_query(array_merge($_GET, array('m-page' => $page + 1)));
-            $url2 = $baseurl . "?" . $params;
-            $word = $l("Next", $lang);
-            echo "<a href='$url2' class='mfn-next-link'>$word</a>";
-        }
-
-        echo "</div>";
-
         echo $args['after_widget'];
     }
 
@@ -977,7 +975,7 @@ class mfn_news_feed_widget extends WP_Widget
         $lang = $instance['lang'] ?? 'auto';
         $pagelen = $instance['pagelen'] ?? '20';
         $showpagination = $instance['showpagination'] ?? '1';
-        $showyears = $instance['showyears'] ?? '1';
+        $showyears = $instance['showyears'] ?? '0';
         $groupbyyear = $instance['groupbyyear'] ?? '0';
         $tzLocation = $instance['tzLocation'] ?? 'Europe/Stockholm';
         // Format at https://www.php.net/manual/en/function.date.php#refsect1-function.date-parameters
@@ -1021,7 +1019,7 @@ class mfn_news_feed_widget extends WP_Widget
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('groupbyyear')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('groupbyyear')); ?>" type="checkbox"
-                   value="1" <?php checked($groupbyyear, '1'); ?> />
+                   value="1" <?php checked('1', $groupbyyear); ?> />
             <label for="<?php echo esc_attr($this->get_field_id('groupbyyear')); ?>"><?php _e('Group By Year', 'text_domain'); ?></label>
         </p>
 
