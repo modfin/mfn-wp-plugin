@@ -191,12 +191,15 @@ class mfn_archive_widget extends WP_Widget
             ";
         }
 
+        if (!$w['showyear']) {
+            echo "<ul class='mfn-report-items'>";
+        }
         $year = "";
         foreach ($reports as $r) {
 
             $y = $r->year;
             if ($y !== $year) {
-                if ($year !== "") {
+                if ($year !== "" && $w['showyear']) {
                     echo "</ul>";
                 }
 
@@ -204,9 +207,8 @@ class mfn_archive_widget extends WP_Widget
 
                 if ($w['showyear']) {
                     echo "<h3 class='mfn-year-header' id='mfn-year-header-id-" . $w['instance_id'] . "'>$year</h3>";
+                    echo "<ul class='mfn-report-items'>";
                 }
-
-                echo "<ul class='mfn-report-items'>";
             }
 
             $date = substr($r->timestamp, 0, 10);
