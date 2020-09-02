@@ -63,6 +63,10 @@ function determineLocale() {
     return get_locale();
 }
 
+function yearClass($year) {
+    return trim(str_replace('/', '-', str_replace('*', '', $year)));
+}
+
 // Creating the widget
 class mfn_archive_widget extends WP_Widget
 {
@@ -205,9 +209,11 @@ class mfn_archive_widget extends WP_Widget
 
                 $year = $y;
 
+                $year_class = yearClass($year);
+
                 if ($w['showyear']) {
-                    echo "<h3 class='mfn-year-header' id='mfn-year-header-id-" . $w['instance_id'] . "'>$year</h3>";
-                    echo "<ul class='mfn-report-items'>";
+                    echo "<h3 class='mfn-year-header mfn-year-$year_class'>$year</h3>";
+                    echo "<ul class='mfn-report-items mfn-year-$year_class'>";
                 }
             }
 
@@ -216,12 +222,12 @@ class mfn_archive_widget extends WP_Widget
             $parts = explode('-', $r->type);
             $base_type = implode("-", array_slice($parts, 0, count($parts)-1));
 
-            $year_class = trim(str_replace('/', '-', str_replace('*', '', $year)));
+            $year_class = yearClass($year);
 
             $li  = "<li class='mfn-report-item mfn-report-year-$year_class mfn-report-group-id-$r->group_id mfn-report-lang-$pmlang $base_type $r->type'>";
 
             if ($w['showdate']) {
-                $li .=   "<span class='mfn-report-date' id='mfn-report-date-id-" . $w['instance_id'] . "'>$date</span>";
+                $li .=   "<span class='mfn-report-date'>$date</span>";
             }
 
             if ($w['showthumbnail']) {
