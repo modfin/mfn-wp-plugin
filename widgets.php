@@ -955,7 +955,6 @@ class mfn_news_feed_widget extends WP_Widget
 
         $this->list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear);
 
-
         if ($showpagination) {
             echo "</div></div><div class='mfn-newsfeed-pagination'>";
 
@@ -975,6 +974,7 @@ class mfn_news_feed_widget extends WP_Widget
 
             echo "</div>";
         }
+        echo "</div></div>";
         echo $args['after_widget'];
     }
 
