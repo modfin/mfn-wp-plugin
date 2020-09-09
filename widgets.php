@@ -789,6 +789,8 @@ class mfn_news_feed_widget extends WP_Widget
                 'tags' => $tags,
             );
 
+            $templateData['preview'] = '';
+
             if ($showpreview) {
                 $dom = new DomDocument();
                 $encoding = '<?xml encoding="utf-8" ?>';
@@ -804,7 +806,7 @@ class mfn_news_feed_widget extends WP_Widget
                 if ($this->words_count($preview) <= 10) {
                     $dom->loadHTML($encoding . $item->post_content);
                     $second_paragraph = $dom->getElementsByTagName('p')->item(1)->nodeValue;
-                    $last_char =  substr($preview,-1);
+                    $last_char = substr($preview,-1);
 
                     if ($last_char === '.' || $last_char === '"') {
                         $preview .= ' ' . $second_paragraph;
@@ -1178,7 +1180,7 @@ class mfn_news_feed_widget extends WP_Widget
                     </li>
                 ';
             }
-            else if($showpreview && strpos($template, '[preview]') === false) {
+            else if ($showpreview && strpos($template, '[preview]') === false) {
                 echo '
                     <li style="border-color: #fedb75; background-color: #fff3d0; padding: 10px 20px 10px 20px; border-radius: 2px;">
                         <b>Notice:</b> Please add ' . '"<i>' . htmlspecialchars("<div class='mfn-preview'>[preview]</div>") . '"</i>' . ' to the template if "Show preview" is checked.
