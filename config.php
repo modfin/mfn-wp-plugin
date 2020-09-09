@@ -41,19 +41,26 @@ require_once(ABSPATH . 'wp-admin/includes/taxonomy.php');
 require_once(ABSPATH . 'wp-includes/taxonomy.php');
 
 
+
 function register_mfn_types()
 {
 
-    register_post_type('mfn_news',
-        array(
-            'labels' => array(
-                'name' => __('MFN News Items'),
-                'singular_name' => __('MFN News Item'),
-            ),
-            'public' => true,
-            'has_archive' => true,
-        )
-    );
+    if(empty(MFN_POST_TYPE)) {
+        die("MFN News Feed - The post type was empty. Please enter a post type name in consts.php.");
+    }
+    else {
+        register_post_type(MFN_POST_TYPE,
+            array(
+                'labels' => array(
+                    'name' => __('MFN News Items'),
+                    'singular_name' => __('MFN News Item'),
+                ),
+                'public' => true,
+                'has_archive' => true,
+            )
+        );
+
+    }
 
 
     $labels = array(

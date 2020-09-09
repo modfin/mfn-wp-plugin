@@ -738,7 +738,12 @@ class mfn_news_feed_widget extends WP_Widget
 
     }
 
-    private function list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear) {
+    private function words_count($words): int
+    {
+        return count(explode(' ', preg_replace('/\s+/', ' ', trim($words))));
+    }
+
+    private function list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $showpreview, $previewlen) {
         $years = [];
         $group_by_year = $groupbyyear && !empty($res);
 
@@ -770,28 +775,66 @@ class mfn_news_feed_widget extends WP_Widget
                         continue;
                     }
                 }
+
                 $html = $tagtemplate;
                 $html = str_replace(array("[tag]", "[slug]"), array($parts[0], $parts[1]), $html);
+                $html = str_replace(array("{{tag}}", "{{slug}}"), array($parts[0], $parts[1]), $html);
                 $tags .= $html;
             }
 
             $templateData = array(
                 'date' => $datestr,
                 'title' => $item->post_title,
-                'url' => get_home_url() . "/mfn_news/" . $item->post_name,
+                'url' => get_home_url() . "/" . MFN_POST_TYPE . "/" . $item->post_name,
                 'tags' => $tags,
             );
+
+            $templateData['preview'] = '';
+
+            if ($showpreview) {
+                $dom = new DomDocument();
+                $encoding = '<?xml encoding="utf-8" ?>';
+
+                if (!empty($item->post_excerpt)) {
+                    $preview = $item->post_excerpt;
+                }
+                else {
+                    $dom->loadHTML($encoding . $item->post_content);
+                    $preview = $dom->getElementsByTagName('p')->item(0)->nodeValue;
+                }
+
+                if ($this->words_count($preview) <= 10) {
+                    $dom->loadHTML($encoding . $item->post_content);
+                    $second_paragraph = $dom->getElementsByTagName('p')->item(1)->nodeValue;
+                    $last_char = substr($preview,-1);
+
+                    if ($last_char === '.' || $last_char === '"') {
+                        $preview .= ' ' . $second_paragraph;
+                    }
+                    else {
+                        $preview .= '. ' . $second_paragraph;
+                    }
+                }
+
+                $preview_length = $previewlen === '' ? strlen($preview) : $previewlen;
+                if($previewlen !== '') {
+                    $preview = mb_substr($preview, 0, $preview_length) . '<span class="mfn-ellipsis">...</span>';
+                }
+
+                $templateData['preview'] = $preview;
+            }
 
             $html = $template;
             foreach ($templateData as $key => $value) {
                 $html = str_replace("[$key]", $value, $html);
+                $html = str_replace("{{" . $key . "}}", $value, $html);
             }
 
             echo $html;
         }
     }
 
-    public function parse_year_header($year) {
+    private function parse_year_header($year) {
         echo "<h4 class='mfn-feed-year-header' id='mfn-feed-year-header-" . $year . "'>$year</h4>";
     }
 
@@ -823,7 +866,9 @@ class mfn_news_feed_widget extends WP_Widget
         }
 
         $pagelen = empty($instance['pagelen']) ? 20 : $instance['pagelen'];
+        $previewlen = empty($instance['previewlen']) ? '' : $instance['previewlen'];
         $showyears = empty($instance['showyears']) ? false : $instance['showyears'];
+        $showpreview = empty($instance['showpreview']) ? false : $instance['showpreview'];
         $groupbyyear = empty($instance['groupbyyear']) ? false : $instance['groupbyyear'];
         $showpagination = empty($instance['showpagination']) ? false : $instance['showpagination'];
 
@@ -883,13 +928,14 @@ class mfn_news_feed_widget extends WP_Widget
         }
 
         $min_max_years = MFN_get_feed_min_max_years($lang);
-        $res = MFN_get_feed($pmlang, $y, $hasTags, $hasNotTags, $page * $pagelen, $pagelen);
+        $res = MFN_get_feed($pmlang, $y, $hasTags, $hasNotTags, $page * $pagelen, $pagelen, $showpreview);
 
         $template = empty($instance['template']) ? "
         <div class='mfn-item'>
             <div class='mfn-date'>[date]</div>
             <div class='mfn-tags'>[tags]</div>
             <div class='mfn-title'><a href='[url]'>[title]</a></div>
+            <div class='mfn-preview'>[preview]</div>
         </div>
         " : $instance['template'];
 
@@ -953,7 +999,7 @@ class mfn_news_feed_widget extends WP_Widget
 
         echo "<div class=\"mfn-list\">";
 
-        $this->list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear);
+        $this->list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $showpreview, $previewlen);
 
         if ($showpagination) {
             echo "</div></div><div class='mfn-newsfeed-pagination'>";
@@ -982,8 +1028,10 @@ class mfn_news_feed_widget extends WP_Widget
     {
         $lang = $instance['lang'] ?? 'auto';
         $pagelen = $instance['pagelen'] ?? '20';
+        $previewlen = $instance['previewlen'] ?? '';
         $showpagination = $instance['showpagination'] ?? '1';
         $showyears = $instance['showyears'] ?? '0';
+        $showpreview = $instance['showpreview'] ?? '0';
         $groupbyyear = $instance['groupbyyear'] ?? '0';
         $tzLocation = $instance['tzLocation'] ?? 'Europe/Stockholm';
         // Format at https://www.php.net/manual/en/function.date.php#refsect1-function.date-parameters
@@ -997,6 +1045,7 @@ class mfn_news_feed_widget extends WP_Widget
                     <div class='mfn-date'>[date]</div>
                     <div class='mfn-tags'>[tags]</div>
                     <div class='mfn-title'><a href='[url]'>[title]</a></div>
+                    <div class='mfn-preview'>[preview]</div>
                 </div>
             ";
         }
@@ -1023,6 +1072,26 @@ class mfn_news_feed_widget extends WP_Widget
                    value="1" <?php checked('1', $showyears); ?> />
             <label for="<?php echo esc_attr($this->get_field_id('showyears')); ?>"><?php _e('Show Years', 'text_domain'); ?></label>
         </p>
+
+        <p>
+            <input id="<?php echo esc_attr($this->get_field_id('showpreview')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('showpreview')); ?>" type="checkbox"
+                   value="1" <?php checked('1', $showpreview); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('showpreview')); ?>"><?php _e('Show Preview', 'text_domain'); ?></label>
+        </p>
+
+        <?php
+            if ($showpreview) {
+                echo '
+                <p>
+                    <label for="' . esc_attr($this->get_field_id("previewlen")) . '">' . _e('Preview length (e.g. "250". Default is to leave this field empty)', 'text_domain') . '</label>
+                    <input class="widefat" id= "' . esc_attr($this->get_field_id('previewlen')) . '"
+                           name="' . esc_attr($this->get_field_name('previewlen')) . '" type="number"
+                           value="' . esc_attr($previewlen) . '"/>
+                </p>
+                ';
+            }
+        ?>
 
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('groupbyyear')); ?>"
@@ -1103,6 +1172,23 @@ class mfn_news_feed_widget extends WP_Widget
                       name="<?php echo esc_attr($this->get_field_name('template')); ?>"><?php echo wp_kses_post($template); ?></textarea>
         </p>
 
+        <?php
+            if (!$showpreview && strpos($template, '[preview]') !== false) {
+                echo '
+                    <li style="border-color: #fedb75; background-color: #fff3d0; padding: 10px 20px 10px 20px; border-radius: 2px;">
+                        <b>Notice:</b> Please remove the [preview] section from the template if "Show preview" is not checked.
+                    </li>
+                ';
+            }
+            else if ($showpreview && strpos($template, '[preview]') === false) {
+                echo '
+                    <li style="border-color: #fedb75; background-color: #fff3d0; padding: 10px 20px 10px 20px; border-radius: 2px;">
+                        <b>Notice:</b> Please add ' . '"<i>' . htmlspecialchars("<div class='mfn-preview'>[preview]</div>") . '"</i>' . ' to the template if "Show preview" is checked.
+                    </li>
+                ';
+            }
+        ?>
+
         <p>
             <label for="<?php echo esc_attr($this->get_field_id('tagtemplate')); ?>">Tag Template</label>
             <textarea rows="2" class="widefat" id="<?php echo esc_attr($this->get_field_id('tagtemplate')); ?>"
@@ -1130,8 +1216,10 @@ class mfn_news_feed_widget extends WP_Widget
         $instance['lang'] = (!empty($new_instance['lang'])) ? wp_strip_all_tags($new_instance['lang']) : '';
         $instance['showpagination'] = (!empty($new_instance['showpagination'])) ? strip_tags($new_instance['showpagination']) : '';
         $instance['showyears'] = (!empty($new_instance['showyears'])) ? strip_tags($new_instance['showyears']) : '';
+        $instance['showpreview'] = (!empty($new_instance['showpreview'])) ? strip_tags($new_instance['showpreview']) : '';
         $instance['groupbyyear'] = (!empty($new_instance['groupbyyear'])) ? strip_tags($new_instance['groupbyyear']) : '';
         $instance['pagelen'] = (!empty($new_instance['pagelen'])) ? wp_strip_all_tags($new_instance['pagelen']) : 20;
+        $instance['previewlen'] = (!empty($new_instance['previewlen'])) ? wp_strip_all_tags($new_instance['previewlen']) : '';
         $instance['tzLocation'] = (!empty($new_instance['tzLocation'])) ? wp_strip_all_tags($new_instance['tzLocation']) : '';
         $instance['timestampFormat'] = (!empty($new_instance['timestampFormat'])) ? wp_strip_all_tags($new_instance['timestampFormat']) : '';
         $instance['template'] = (!empty($new_instance['template'])) ? wp_kses_post($new_instance['template']) : '';
