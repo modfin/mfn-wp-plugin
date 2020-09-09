@@ -92,9 +92,9 @@ function upsertLanguage($post_id, $groupId, $lang)
         SELECT lang.post_id, lang.meta_value as lang
         FROM  $wpdb->postmeta grp
         INNER JOIN  $wpdb->postmeta lang
-        ON grp.post_id = lang.post_id AND lang.meta_key = 'mfn_news_lang'
+        ON grp.post_id = lang.post_id AND lang.meta_key = '" . MFN_POST_TYPE . "_lang'
         WHERE grp.meta_value = %s
-          AND grp.meta_key = 'mfn_news_group_id';
+          AND grp.meta_key = '" . MFN_POST_TYPE . "_group_id';
         ", $groupId);
 
         $res = $wpdb->get_results($q);
@@ -127,8 +127,8 @@ function upsertLanguage($post_id, $groupId, $lang)
             SELECT min(t.trid)
             FROM $wpdb->postmeta m
             INNER JOIN $tableName t
-            ON m.post_id = t.element_id AND t.element_type = 'post_mfn_news'
-            WHERE m.meta_key = 'mfn_news_group_id'
+            ON m.post_id = t.element_id AND t.element_type = 'post_" . MFN_POST_TYPE . "'
+            WHERE m.meta_key = '" . MFN_POST_TYPE . "_group_id'
               AND m.meta_value = %s
       ", $groupId);
         $trid = $wpdb->get_var($q);

@@ -141,11 +141,11 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
             INNER JOIN $wpdb->posts posts
                 ON posts.ID = r.object_id
             INNER JOIN $wpdb->postmeta lang
-                ON posts.ID = lang.post_id AND lang.meta_key = 'mfn_news_lang'
+                ON posts.ID = lang.post_id AND lang.meta_key = '" . MFN_POST_TYPE . "_lang'
             INNER JOIN $wpdb->postmeta group_id
-                ON posts.ID = group_id.post_id AND group_id.meta_key = 'mfn_news_group_id'
+                ON posts.ID = group_id.post_id AND group_id.meta_key = '" . MFN_POST_TYPE . "_group_id'
             LEFT JOIN $wpdb->postmeta meta
-                ON posts.ID = meta.post_id AND meta.meta_key = 'mfn_news_attachment_data'
+                ON posts.ID = meta.post_id AND meta.meta_key = '" . MFN_POST_TYPE . "_attachment_data'
             WHERE (
                 t.slug = 'mfn-report-annual'
                 OR t.slug = 'mfn-report-interim'
@@ -223,7 +223,7 @@ function MFN_get_feed_min_max_years($lang = 'all'){
     FROM $wpdb->posts p
     INNER JOIN $wpdb->postmeta lang
     ON p.ID = lang.post_id
-    WHERE post_type = 'mfn_news'
+    WHERE post_type = '" . MFN_POST_TYPE . "'
       AND post_date_gmt IS NOT NULL
       AND post_date_gmt <> 0
     ";
@@ -243,14 +243,14 @@ function MFN_get_feed_min_max_years($lang = 'all'){
 }
 
 
-function MFN_get_feed($lang = 'all', $year = "", $hasTags = array(), $hasNotTags = array(), $offset = 0, $limit = 30)
+function MFN_get_feed($lang = 'all', $year = "", $hasTags = array(), $hasNotTags = array(), $offset = 0, $limit = 30, $include_content)
 {
 
     global $wpdb;
     $params = array();
 
     $query = "
-SELECT post_date_gmt, p.post_title, tags, lang.meta_value lang, post_name
+SELECT post_date_gmt, p.post_title, tags, lang.meta_value lang, post_name" . ($include_content ? ', post_content, post_excerpt' : '' ) . "
 FROM $wpdb->posts p
 INNER JOIN $wpdb->postmeta lang
 ON p.ID = lang.post_id
@@ -263,18 +263,17 @@ INNER JOIN (
                     USING (term_taxonomy_id)
          INNER JOIN $wpdb->terms ter
                     USING (term_id)
-  WHERE po.post_type = 'mfn_news'
+  WHERE po.post_type = '" . MFN_POST_TYPE . "'
     AND po.post_status = 'publish'
-  GROUP BY po.ID
+    GROUP BY po.ID
 ) t  ON t.ID = p.ID
 
-WHERE p.post_type = 'mfn_news'
-  AND lang.meta_key = 'mfn_news_lang'
-  AND p.post_status = 'publish'
+  WHERE p.post_type = '" . MFN_POST_TYPE . "'
+    AND lang.meta_key = '" . MFN_POST_TYPE . "_lang'
+    AND p.post_status = 'publish'
  ";
 
-
-    if($lang != "all"){
+    if($lang != "all") {
         $query .= " AND lang.meta_value = %s ";
         array_push($params, $lang);
     }
@@ -283,20 +282,16 @@ WHERE p.post_type = 'mfn_news'
         $query .= " AND FIND_IN_SET(%s, t.tag_slugs) > 0 ";
         array_push($params, $tag);
     }
+
     foreach ($hasNotTags as $tag) {
         $query .= " AND FIND_IN_SET(%s, t.tag_slugs) = 0 ";
         array_push($params, $tag);
     }
-    foreach ($hasNotTags as $tag) {
-        $query .= " AND FIND_IN_SET(%s, t.tag_slugs) = 0 ";
-        array_push($params, $tag);
-    }
+
     if($year != ""){
         $query .= " AND YEAR(p.post_date_gmt) = %s ";
         array_push($params, $year);
     }
-
-
 
     $query .= " ORDER BY p.post_date_gmt DESC ";
 
