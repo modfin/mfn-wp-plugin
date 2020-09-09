@@ -1174,14 +1174,14 @@ class mfn_news_feed_widget extends WP_Widget
             if (!$showpreview && strpos($template, '[preview]') !== false) {
                 echo '
                     <li style="border-color: #fedb75; background-color: #fff3d0; padding: 10px 20px 10px 20px; border-radius: 2px;">
-                        <b>Warning:</b> Please remove the [preview] section from the template if "Show preview" is not checked.
+                        <b>Notice:</b> Please remove the [preview] section from the template if "Show preview" is not checked.
                     </li>
                 ';
             }
             else if($showpreview && strpos($template, '[preview]') === false) {
                 echo '
                     <li style="border-color: #fedb75; background-color: #fff3d0; padding: 10px 20px 10px 20px; border-radius: 2px;">
-                        <b>Warning:</b> Please add ' . '"<i>' . htmlspecialchars("<div class='mfn-preview'>[preview]</div>") . '"</i>' . ' to the template if "Show preview" is checked.
+                        <b>Notice:</b> Please add ' . '"<i>' . htmlspecialchars("<div class='mfn-preview'>[preview]</div>") . '"</i>' . ' to the template if "Show preview" is checked.
                     </li>
                 ';
             }
