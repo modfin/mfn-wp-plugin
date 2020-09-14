@@ -791,24 +791,21 @@ class mfn_news_feed_widget extends WP_Widget
                 $encoding = '<?xml encoding="utf-8" ?>';
 
                 $appendEllipsis = false;
-                if (!empty($item->post_excerpt)) {
-                    $preview = $item->post_excerpt;
-                } else {
-                    $dom->loadHTML($encoding . $item->post_content);
-                    $preview = '';
-                    foreach ($dom->getElementsByTagName('p') as $node) {
-                        if (!$node->nodeValue) {
-                            continue;
-                        }
-                        $value = str_replace('&nbsp;', '', htmlentities($node->nodeValue));
-                        if (trim($value) === '') {
-                            continue;
-                        }
-                        $preview .= trim($value) . ' ';
-                        if ($previewlen !== '' && strlen($preview) > $previewlen) {
-                            $appendEllipsis = true;
-                            break;
-                        }
+                $dom->loadHTML($encoding . $item->post_content);
+                $preview = '';
+
+                foreach ($dom->getElementsByTagName('p') as $node) {
+                    if (!$node->textContent) {
+                        continue;
+                    }
+                    $value = str_replace('&nbsp;', '', htmlentities($node->textContent));
+                    if (trim($value) === '') {
+                        continue;
+                    }
+                    $preview .= trim($value) . ' ';
+                    if ($previewlen !== '' && strlen($preview) > $previewlen) {
+                        $appendEllipsis = true;
+                        break;
                     }
                 }
 
