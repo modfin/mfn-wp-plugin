@@ -797,17 +797,19 @@ class mfn_news_feed_widget extends WP_Widget
                     $dom->loadHTML($encoding . $item->post_content);
                     $preview = '';
                     foreach ($dom->getElementsByTagName('p') as $node) {
-                        if (!$node->nodeValue && (trim($node->nodeValue) === '')) {
+                        if (!$node->nodeValue) {
                             continue;
                         }
-                        $preview .= ' ' . trim($node->nodeValue);
+                        $value = str_replace('&nbsp;', '', htmlentities($node->nodeValue));
+                        if (trim($value) === '') {
+                            continue;
+                        }
+                        $preview .= trim($value) . ' ';
                         if ($previewlen !== '' && strlen($preview) > $previewlen) {
                             $appendEllipsis = true;
                             break;
                         }
                     }
-
-                    $preview = ltrim(str_replace('&nbsp;', '', htmlentities($preview)));
                 }
 
                 if ($previewlen !== '') {
@@ -820,8 +822,9 @@ class mfn_news_feed_widget extends WP_Widget
                             break;
                         }
                     }
-                    $preview = rtrim($preview);
                 }
+
+                $preview = rtrim($preview);
 
                 if ($appendEllipsis) {
                     $preview = rtrim($preview, '.,');
