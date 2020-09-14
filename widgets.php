@@ -789,16 +789,17 @@ class mfn_news_feed_widget extends WP_Widget
             if ($showpreview) {
                 $dom = new DomDocument();
                 $encoding = '<?xml encoding="utf-8" ?>';
+                $post_content = str_replace(array('<br/>', '<br>'), ' ', $item->post_content);
 
                 $appendEllipsis = false;
-                $dom->loadHTML($encoding . $item->post_content);
+                @$dom->loadHTML($encoding . $post_content);
                 $preview = '';
 
                 foreach ($dom->getElementsByTagName('p') as $node) {
                     if (!$node->textContent) {
                         continue;
                     }
-                    $value = str_replace('&nbsp;', '', htmlentities($node->textContent));
+                    $value = str_replace('&nbsp;', ' ', htmlentities($node->textContent));
                     if (trim($value) === '') {
                         continue;
                     }
@@ -824,7 +825,7 @@ class mfn_news_feed_widget extends WP_Widget
                 $preview = rtrim($preview);
 
                 if ($appendEllipsis) {
-                    $preview = rtrim($preview, '.,');
+                    $preview = rtrim($preview, '.,:;');
                     $preview .= '<span class="mfn-ellipsis">...</span>';
                 }
 
