@@ -807,7 +807,7 @@ class mfn_news_feed_widget extends WP_Widget
                         }
                     }
 
-                    $preview = str_replace('&nbsp;', '', htmlentities($preview));
+                    $preview = ltrim(str_replace('&nbsp;', '', htmlentities($preview)));
                 }
 
                 if ($previewlen !== '') {
