@@ -738,11 +738,6 @@ class mfn_news_feed_widget extends WP_Widget
 
     }
 
-    private function words_count($words): int
-    {
-        return count(explode(' ', preg_replace('/\s+/', ' ', trim($words))));
-    }
-
     private function list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $showpreview, $previewlen) {
         $years = [];
         $group_by_year = $groupbyyear && !empty($res);
@@ -795,30 +790,42 @@ class mfn_news_feed_widget extends WP_Widget
                 $dom = new DomDocument();
                 $encoding = '<?xml encoding="utf-8" ?>';
 
+                $appendEllipsis = false;
                 if (!empty($item->post_excerpt)) {
                     $preview = $item->post_excerpt;
-                }
-                else {
+                } else {
                     $dom->loadHTML($encoding . $item->post_content);
-                    $preview = $dom->getElementsByTagName('p')->item(0)->nodeValue;
+                    $preview = '';
+                    foreach ($dom->getElementsByTagName('p') as $node) {
+                        if (!$node->nodeValue && (trim($node->nodeValue) === '')) {
+                            continue;
+                        }
+                        $preview .= ' ' . trim($node->nodeValue);
+                        if ($previewlen !== '' && strlen($preview) > $previewlen) {
+                            $appendEllipsis = true;
+                            break;
+                        }
+                    }
+
+                    $preview = str_replace('&nbsp;', '', htmlentities($preview));
                 }
 
-                if ($this->words_count($preview) <= 10) {
-                    $dom->loadHTML($encoding . $item->post_content);
-                    $second_paragraph = $dom->getElementsByTagName('p')->item(1)->nodeValue;
-                    $last_char = substr($preview,-1);
-
-                    if ($last_char === '.' || $last_char === '"') {
-                        $preview .= ' ' . $second_paragraph;
+                if ($previewlen !== '') {
+                    $words = explode(' ', $preview);
+                    $preview = '';
+                    foreach ($words as $word) {
+                        $preview .= $word . ' ';
+                        if (strlen($preview) > $previewlen) {
+                            $appendEllipsis = true;
+                            break;
+                        }
                     }
-                    else {
-                        $preview .= '. ' . $second_paragraph;
-                    }
+                    $preview = rtrim($preview);
                 }
 
-                $preview_length = $previewlen === '' ? strlen($preview) : $previewlen;
-                if($previewlen !== '') {
-                    $preview = mb_substr($preview, 0, $preview_length) . '<span class="mfn-ellipsis">...</span>';
+                if ($appendEllipsis) {
+                    $preview = rtrim($preview, '.,');
+                    $preview .= '<span class="mfn-ellipsis">...</span>';
                 }
 
                 $templateData['preview'] = $preview;
