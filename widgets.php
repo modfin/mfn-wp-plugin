@@ -825,7 +825,7 @@ class mfn_news_feed_widget extends WP_Widget
                 $preview = rtrim($preview);
 
                 if ($appendEllipsis) {
-                    $preview = rtrim($preview, '.,:;');
+                    $preview = rtrim($preview, '.,:;!');
                     $preview .= '<span class="mfn-ellipsis">...</span>';
                 }
 
