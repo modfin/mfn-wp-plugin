@@ -1010,7 +1010,7 @@ class mfn_news_feed_widget extends WP_Widget
         $this->list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $showpreview, $previewlen);
 
         if ($showpagination) {
-            echo "</div></div><div class='mfn-newsfeed-pagination'>";
+            echo "</div><div class='mfn-newsfeed-pagination'>";
 
             if ($page > 0) {
                 $params = http_build_query(array_merge($_GET, array('m-page' => $page - 1)));
@@ -1026,7 +1026,6 @@ class mfn_news_feed_widget extends WP_Widget
                 echo "<a href='$url2' class='mfn-next-link'>$word</a>";
             }
 
-            echo "</div>";
         }
         echo "</div></div>";
         echo $args['after_widget'];

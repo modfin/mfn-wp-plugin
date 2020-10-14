@@ -125,6 +125,10 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
 
     $params = array();
 
+    $slug_prefix = (MFN_TAG_PREFIX !== '' && MFN_TAG_PREFIX !== null ? MFN_TAG_PREFIX . '-' : '');
+    $annual_slug = $slug_prefix . 'report-annual';
+    $interim_slug = $slug_prefix . 'report-interim';
+
     $query = "
         SELECT posts.ID post_id,
                posts.post_date_gmt date_gmt,
@@ -147,12 +151,12 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
             LEFT JOIN $wpdb->postmeta meta
                 ON posts.ID = meta.post_id AND meta.meta_key = '" . MFN_POST_TYPE . "_attachment_data'
             WHERE (
-                t.slug = 'mfn-report-annual'
-                OR t.slug = 'mfn-report-interim'
-                OR t.slug like 'mfn-report-annual_%'
-                OR t.slug like 'mfn-report-interim_%'
+                t.slug = '" . $annual_slug . "'
+                OR t.slug = '" . $interim_slug . "'
+                OR t.slug like '" . $annual_slug . "_%'
+                OR t.slug like '" . $interim_slug . "_%'
             )
-            AND tax.taxonomy = 'mfn-news-tag'
+            AND tax.taxonomy = '" . MFN_TAXONOMY_NAME . "'
     ";
 
     if($lang !== "all") {
