@@ -18,20 +18,22 @@ function createTags($item)
 
     $newtag = array();
 
+    $slug_prefix = (MFN_TAG_PREFIX !== '' && MFN_TAG_PREFIX !== null ? MFN_TAG_PREFIX . '-' : '');
+
     array_push($newtag, MFN_TAG_PREFIX);
-    array_push($newtag, MFN_TAG_PREFIX . '-lang-' . $lang);
-    array_push($newtag, MFN_TAG_PREFIX . '-type-' . $type);
+    array_push($newtag, $slug_prefix . 'lang-' . $lang);
+    array_push($newtag, $slug_prefix . 'type-' . $type);
 
     foreach ($tags as $i => $tag) {
         if (startsWith($tag, ':correction')) {
-            array_push($newtag, MFN_TAG_PREFIX . '-correction');
+            array_push($newtag, $slug_prefix . '-correction');
             continue;
         }
 
         $tag = str_replace('sub:', '', $tag);
         $tag = trim($tag, ' :');
         $tag = str_replace(':', '-', $tag);
-        $tag = MFN_TAG_PREFIX . '-' . $tag;
+        $tag = $slug_prefix . $tag;
         array_push($newtag, $tag);
     }
 

@@ -330,7 +330,7 @@ function sync_mfn_taxonomy()
         $wpdb->update(
             $tbmlTranslations,
             array('language_code' => 'en', 'source_language_code' => null),
-            array('element_id' => $enTerm->term_id, 'element_type' => 'tax_mfn-news-tag')
+            array('element_id' => $enTerm->term_id, 'element_type' => 'tax_' . MFN_TAXONOMY_NAME)
         );
 
         $q = $wpdb->prepare("
@@ -391,7 +391,7 @@ function sync_mfn_taxonomy()
                 $wpdb->update(
                     $tbmlTranslations,
                     array('source_language_code' => 'en', 'language_code' => $lang, 'trid' => $trid),
-                    array('element_id' => $tbmlTerms, 'element_type' => 'tax_mfn-news-tag')
+                    array('element_id' => $tbmlTerms, 'element_type' => 'tax_' . MFN_TAXONOMY_NAME)
                 );
             }
 
@@ -405,7 +405,7 @@ function sync_mfn_taxonomy()
                 $wpdb->update(
                     $tbmlTranslations,
                     array('source_language_code' => 'en', 'language_code' => $lang, 'trid' => $trid),
-                    array('element_id' => $l_term->term_id, 'element_type' => 'tax_mfn-news-tag')
+                    array('element_id' => $l_term->term_id, 'element_type' => 'tax_' . MFN_TAXONOMY_NAME)
                 );
             }
         }
