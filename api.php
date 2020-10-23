@@ -83,19 +83,21 @@ function get_report_fiscal_year($report_date_string, $report_type, $fiscal_year_
         return "";
     }
 
+    $slug_prefix = (MFN_TAG_PREFIX !== '' && MFN_TAG_PREFIX !== null ? MFN_TAG_PREFIX . '-' : '');
+
     $report_period_months = null;
     switch ($report_type) {
-        case "mfn-report-interim-q1":
+        case $slug_prefix . "report-interim-q1":
             $report_period_months = 3;
             break;
-	    case "mfn-report-interim-q2":
+	    case $slug_prefix . "report-interim-q2":
             $report_period_months = 6;
             break;
-	    case "mfn-report-interim-q3":
+	    case $slug_prefix . "report-interim-q3":
             $report_period_months = 9;
             break;
-	    case "mfn-report-interim-q4":
-	    case "mfn-report-annual":
+	    case $slug_prefix . "report-interim-q4":
+	    case $slug_prefix . "report-annual":
             $report_period_months = 12;
 	}
 	if (!$report_period_months) return "";
@@ -204,7 +206,7 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
                     $r->year = $year . ((int)$fiscal_year_offset > 0 ? ("/" . ($year + 1)) : "");
                 } else {
                     // the '* is a warning, it means either:
-                    // - there is a bug in getReportFiscalYear()
+                    // - there is a bug in get_report_fiscal_year()
                     // - $fiscalYearOffset is incorrect for this company
                     // - some reports are not tagged correctly
                     $r->year .= " *";

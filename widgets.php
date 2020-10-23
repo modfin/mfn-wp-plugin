@@ -245,10 +245,14 @@ class mfn_archive_widget extends WP_Widget
 
                 global $mfn_wid_translate;
 
+                $slug_prefix = (MFN_TAG_PREFIX !== '' && MFN_TAG_PREFIX !== null ? MFN_TAG_PREFIX . '-' : '');
+
+                echo $slug_prefix;
+
                 $report_names = [
-                    'mfn-report-interim-q4' => "Year-end Report",
-                    'mfn-report-interim' => "Interim Report",
-                    'mfn-report-annual' => "Annual Report"
+                    $slug_prefix . 'report-interim-q4' => "Year-end Report",
+                    $slug_prefix . 'report-interim' => "Interim Report",
+                    $slug_prefix . 'report-annual' => "Annual Report"
                 ];
 
                 $base_title = $report_names[$r->type] ?? $report_names[$base_type];
@@ -258,7 +262,7 @@ class mfn_archive_widget extends WP_Widget
                 $li .=       $base_title;
                 $li .=     "</span>";
 
-                if ($r->type !== 'mfn-report-annual') {
+                if ($r->type !== $slug_prefix . 'report-annual') {
                     $li .=     "<span class='mfn-report-quarter mfn-report-quarter-" . end($parts) . "'>";
                     $li .=       strtoupper(end($parts));
                     $li .=     "</span>";
