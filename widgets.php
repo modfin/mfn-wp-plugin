@@ -204,7 +204,7 @@ class mfn_archive_widget extends WP_Widget
             $y = $r->year;
             if ($y !== $year) {
                 if ($year !== "" && $w['showyear']) {
-                    echo "</ul>";
+                    echo "</ul></div>";
                 }
 
                 $year = $y;
@@ -212,6 +212,7 @@ class mfn_archive_widget extends WP_Widget
                 $year_class = yearClass($year);
 
                 if ($w['showyear']) {
+                    echo "<div class='mfn-year-container'>";
                     echo "<h3 class='mfn-year-header mfn-year-$year_class'>$year</h3>";
                     echo "<ul class='mfn-report-items mfn-year-$year_class'>";
                 }
