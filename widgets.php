@@ -91,10 +91,16 @@ class mfn_archive_widget extends WP_Widget
             'showgenerictitle' => $instance['showgenerictitle'] ?? false,
             'usefiscalyearoffset' => $instance['usefiscalyearoffset'] ?? true,
             'fiscalyearoffset' => $instance['fiscalyearoffset'] ?? 0,
+            'useproxiedattachments' => $instance['useproxiedattachments'] ?? true,
             'limit' => (!empty($instance['limit'])) ? $instance['limit'] : 500,
             'offset' => (!empty($instance['offset'])) ? $instance['offset'] : 0,
             'instance_id' => random_int(1, time())
         );
+
+        // force to true, since 'showgenerictitle' depends on 'usefiscalyearoffset' to even show meaningful titles
+        if ($w['showgenerictitle']) {
+            $w['usefiscalyearoffset'] = true;
+        }
 
         $l = static function ($word, $lang) {
             global $mfn_wid_translate;
@@ -231,24 +237,37 @@ class mfn_archive_widget extends WP_Widget
                 $li .=   "<span class='mfn-report-date'>$date</span>";
             }
 
+            $ops = get_option('mfn-wp-plugin');
+            $storage_url = isset($ops['sync_url']) ? str_replace('//mfn', '//storage.mfn', $ops['sync_url']) : null;
+
+            $proxiedUrl = $storage_url !== null && $storage_url !== '' && (strpos($r->url, $storage_url) !== 0)
+                ? "$storage_url/proxy?url=" . urlencode($r->url)
+                : $r->url;
+
+
             if ($w['showthumbnail']) {
+                $previewUrl = add_query_arg('type', 'jpg', $proxiedUrl);
+
                 $li .=   "<div class='mfn-report-thumbnail'>";
-                $li .=     "<a href=\"$r->url\" target=\"_blank\" rel='noopener'>";
-                $li .=       "<img src=\"https://storage.mfn.se/proxy?url=" . $r->url . "&type=jpg\" />";
+                $li .=     "<a href=\"$proxiedUrl\" target=\"_blank\" rel='noopener'>";
+                $li .=       "<img src=\"$previewUrl\" />";
                 $li .=     "</a>";
                 $li .=   "</div>";
             }
 
             $li .=   "<span class='mfn-report-title'>";
-            $li .=     "<a href=\"$r->url\" target=\"_blank\" rel='noopener'>";
+
+            if ($w['useproxiedattachments']) {
+                $li .=     "<a href=\"$proxiedUrl\" target=\"_blank\" rel='noopener'>";
+            } else {
+                $li .=     "<a href=\"$r->url\" target=\"_blank\" rel='noopener'>";
+            }
 
             if ($w['showgenerictitle']) {
 
                 global $mfn_wid_translate;
 
                 $slug_prefix = (MFN_TAG_PREFIX !== '' && MFN_TAG_PREFIX !== null ? MFN_TAG_PREFIX . '-' : '');
-
-                echo $slug_prefix;
 
                 $report_names = [
                     $slug_prefix . 'report-interim-q4' => "Year-end Report",

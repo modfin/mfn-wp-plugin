@@ -3,21 +3,37 @@
 require_once(dirname(__FILE__) .'/consts.php');
 
 class Report {
-    public $timestamp;
+    public $post_id;
+    public $group_id;
     public $title;
     public $url;
     public $lang;
     public $type;
     public $tags;
-    public $post_id;
     public $year;
-    public $group_id;
+    public $timestamp;
+    public $report_start_date;
+    public $report_end_date;
 }
 
 function MFN_report_cmp($a, $b)
 {
-    $aScore = strtotime($a->timestamp);
-    $bScore = strtotime($b->timestamp);
+
+    $aScore = 0;
+    $bScore = 0;
+
+    if ($a->report_end_date && $b->report_end_date) {
+        $aScore += $a->report_end_date->year * 100000;
+        $bScore += $b->report_end_date->year * 100000;
+        $aScore += $a->report_end_date->month * 1000;
+        $bScore += $b->report_end_date->month * 1000;
+
+        $aScore += ($a->type === 'mfn-report-annual' ? 100 : 0);
+        $bScore += ($b->type === 'mfn-report-annual' ? 100 : 0);
+    } else {
+        $aScore += strtotime($a->timestamp);
+        $bScore += strtotime($b->timestamp);
+    }
 
     if($a->tags !== null && in_array(":primary", $a->tags, true)) {
         $aScore+=2;
@@ -61,6 +77,15 @@ class MFN_CustomDate
 	    }
 	    return new MFN_CustomDate($this->year + $addToYear, $month + 1);
     }
+    function before(MFN_CustomDate $d2): bool {
+        if ($this->year > $d2->year) {
+            return false;
+        }
+        if ($this->year === $d2->year && $this->month >= $d2->month) {
+            return false;
+        }
+        return true;
+    }
     function before_or_equal(MFN_CustomDate $d2): bool {
         if ($this->year > $d2->year) {
             return false;
@@ -72,15 +97,15 @@ class MFN_CustomDate
     }
 }
 
-function get_report_fiscal_year($report_date_string, $report_type, $fiscal_year_offset)
+function get_report_period($publish_date_string, $report_type, $fiscal_year_offset)
 {
     // normalize fiscal year offset
     $fiscal_year_offset = ($fiscal_year_offset + 12) % 12;
 
     try {
-        $report_date = new DateTimeImmutable($report_date_string);
+        $publish_date = new DateTimeImmutable($publish_date_string);
     } catch (Exception $e) {
-        return "";
+        return null;
     }
 
     $slug_prefix = (MFN_TAG_PREFIX !== '' && MFN_TAG_PREFIX !== null ? MFN_TAG_PREFIX . '-' : '');
@@ -100,25 +125,31 @@ function get_report_fiscal_year($report_date_string, $report_type, $fiscal_year_
 	    case $slug_prefix . "report-annual":
             $report_period_months = 12;
 	}
-	if (!$report_period_months) return "";
+	if (!$report_period_months) return null;
 
-    $report_year = intval($report_date->format('Y'));
-    $report_yonth = intval($report_date->format('m'));
+    $publish_date_year = intval($publish_date->format('Y'));
+    $publish_date_month = intval($publish_date->format('m'));
 
-    if ($report_year === 0 || $report_yonth === 0) return "";
+    if ($publish_date_year === 0 || $publish_date_month === 0) return null;
 
-    $date = new MFN_CustomDate($report_year, $report_yonth);
+    $date = new MFN_CustomDate($publish_date_year, $publish_date_month);
 
     for ($year = $date->year - 1; $year <= $date->year; $year++) {
-        $report_end_date = (new MFN_CustomDate($year - 1, 12))
-            ->add_months($report_period_months)
+        $candidate_report_start_date = (new MFN_CustomDate($year, 1))
             ->add_months($fiscal_year_offset);
-        if ($report_end_date->before_or_equal($date) && $date->before_or_equal($report_end_date->add_months(7))) {
-            return $year;
+        $candidate_report_end_date = $candidate_report_start_date
+            ->add_months($report_period_months-1);
+
+        if ($candidate_report_end_date->before($date) && $date->before_or_equal($candidate_report_end_date->add_months(7))) {
+
+            return array(
+                'report_start_date' => $candidate_report_start_date,
+                'report_end_date' => $candidate_report_end_date,
+            );
         }
     }
 
-    return "";
+    return null;
 }
 
 function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DESC', $fiscal_year_offset = null)
@@ -181,6 +212,13 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
         $rr->lang = $r->lang;
         $rr->type = $r->report_type;
         $rr->year = substr($r->date_gmt, 0, 4);
+
+        if ($fiscal_year_offset !== null) {
+            $period = get_report_period($rr->timestamp, $rr->type, (int)$fiscal_year_offset);
+            $rr->report_start_date = $period['report_start_date'];
+            $rr->report_end_date = $period['report_end_date'];
+        }
+
         $reports[] = $rr;
     }
 
@@ -200,10 +238,12 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
 
         if(empty($exists[$r->post_id])){
             // try to group reports by fiscal year, instead of publish_date
-            if ($fiscal_year_offset !== null) {
-                $year = get_report_fiscal_year($r->timestamp, $r->type, (int)$fiscal_year_offset);
-                if ($year !== "") {
-                    $r->year = $year . ((int)$fiscal_year_offset > 0 ? ("/" . ($year + 1)) : "");
+
+            if ($r->report_start_date) {
+
+                $year = $r->report_start_date->year;
+                if ($year !== null) {
+                    $r->year = $year . ((int)$fiscal_year_offset !== 0 ? ("/" . ($year + 1)) : "");
                 } else {
                     // the '* is a warning, it means either:
                     // - there is a bug in get_report_fiscal_year()

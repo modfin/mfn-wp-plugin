@@ -1,5 +1,11 @@
 <?php
 
+/*
+ * !! WARNING !!
+ * !! These constants can only be changed initially before the plugin is used !!
+ *    Reason being that when you use functions like Sync press releases, taxonomy or when press releases
+ *    are received through the posthook, data is written into the database using the following constants
+ */
 const MFN_PLUGIN_NAME_VERSION = '0.0.7';
 const MFN_PLUGIN_NAME = 'mfn-wp-plugin';
 const MFN_TAXONOMY_NAME = 'mfn-news-tag';
