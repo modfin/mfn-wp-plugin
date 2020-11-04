@@ -152,7 +152,7 @@ function get_report_period($publish_date_string, $report_type, $fiscal_year_offs
     return null;
 }
 
-function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DESC', $fiscal_year_offset = null)
+function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limit = 100, $order = 'DESC', $fiscal_year_offset = null)
 {
     global $wpdb;
 
@@ -229,7 +229,7 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
     }
 
     $exists = array();
-    $filtered_reports = array();
+    $unique_reports = array();
 
     foreach ($reports as $r){
         if(strlen($r->url) < 5){
@@ -240,7 +240,6 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
             // try to group reports by fiscal year, instead of publish_date
 
             if ($r->report_start_date) {
-
                 $year = $r->report_start_date->year;
                 if ($year !== null) {
                     $r->year = $year . ((int)$fiscal_year_offset !== 0 ? ("/" . ($year + 1)) : "");
@@ -252,10 +251,24 @@ function MFN_get_reports($lang = 'all', $offset = 0, $limit = 100, $order = 'DES
                     $r->year .= " *";
                 }
             }
-            $filtered_reports[] = $r;
+            $unique_reports[] = $r;
         }
 
         $exists[$r->post_id] = 1;
+    }
+
+    // filter using year-filter
+    $filtered_reports = array();
+    foreach ($unique_reports as $r){
+        $y = $r->report_start_date->year ? $r->report_start_date->year : substr($r->timestamp, 0, 4);
+        if ($y && $from_year && (int)$y < (int)$from_year) {
+            continue;
+        }
+        if ($y && $to_year && (int)$y > (int)$to_year) {
+            continue;
+        }
+
+        $filtered_reports[] = $r;
     }
 
     return array_slice($filtered_reports, $offset, $limit);

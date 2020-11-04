@@ -82,6 +82,9 @@ class mfn_archive_widget extends WP_Widget
 
     public function widget($args, $instance)
     {
+        $query_param = static function ($name, $default) {
+            return $_GET[$name] ?? $default;
+        };
 
         $w = array(
             'showdate' => $instance['showdate'] ?? false,
@@ -92,6 +95,8 @@ class mfn_archive_widget extends WP_Widget
             'usefiscalyearoffset' => $instance['usefiscalyearoffset'] ?? true,
             'fiscalyearoffset' => $instance['fiscalyearoffset'] ?? 0,
             'useproxiedattachments' => $instance['useproxiedattachments'] ?? true,
+            'fromyear' => $instance['fromyear'] ?? '',
+            'toyear' => $instance['toyear'] ?? '',
             'limit' => (!empty($instance['limit'])) ? $instance['limit'] : 500,
             'offset' => (!empty($instance['offset'])) ? $instance['offset'] : 0,
             'instance_id' => random_int(1, time())
@@ -123,6 +128,21 @@ class mfn_archive_widget extends WP_Widget
             $pmlang = $lang;
         }
 
+        $from_year = $query_param('m-from-year', "");
+        if (!empty($w['fromyear'])) {
+            $from_year = normalize_whitespace($w['fromyear']);
+        }
+        if (empty($from_year)) {
+            $from_year = "";
+        }
+        $to_year = $query_param('m-to-year', "");
+        if (!empty($w['toyear'])) {
+            $to_year = normalize_whitespace($w['toyear']);
+        }
+        if (empty($to_year)) {
+            $to_year = "";
+        }
+
         echo "<div class=\"mfn-report-container all\" id=\"mfn-report-archive-id-" . $w['instance_id'] . "\">";
 
         if (isset($instance['showheading']) && $instance['showheading']) {
@@ -134,7 +154,7 @@ class mfn_archive_widget extends WP_Widget
             $fiscal_year_offset = $w['fiscalyearoffset'];
         }
 
-        $reports = MFN_get_reports($pmlang, $w['offset'], $w['limit'], 'DESC', $fiscal_year_offset);
+        $reports = MFN_get_reports($pmlang, $from_year, $to_year, $w['offset'], $w['limit'], 'DESC', $fiscal_year_offset);
 
         if (count($reports) < 1) {
             return;
