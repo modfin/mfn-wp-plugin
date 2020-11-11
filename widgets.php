@@ -323,8 +323,11 @@ class mfn_archive_widget extends WP_Widget
             echo $li;
 
         }
-        echo "</ul>";
-        echo "</div>";
+        if ($w['showyear']) {
+            echo "</ul></div>";
+        } else {
+            echo "</ul>";
+        }
 
         echo $args['after_widget'];
     }
