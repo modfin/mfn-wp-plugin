@@ -328,6 +328,7 @@ class mfn_archive_widget extends WP_Widget
         } else {
             echo "</ul>";
         }
+        echo "</div>";
 
         echo $args['after_widget'];
     }
