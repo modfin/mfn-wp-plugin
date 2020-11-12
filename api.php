@@ -260,7 +260,10 @@ function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limi
     // filter using year-filter
     $filtered_reports = array();
     foreach ($unique_reports as $r){
-        $y = $r->report_start_date->year ? $r->report_start_date->year : substr($r->timestamp, 0, 4);
+        $y = ($r->report_start_date && $r->report_start_date->year)
+            ? $r->report_start_date->year
+            : substr($r->timestamp, 0, 4);
+
         if ($y && $from_year && (int)$y < (int)$from_year) {
             continue;
         }
