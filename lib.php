@@ -68,7 +68,7 @@ function upsertAttachments($post_id, $attachments)
         $a = "<a href='$url' content='$content_type' target='_blank' rel='noopener'>$title</a>";
 
         add_post_meta($post_id, MFN_POST_TYPE . "_attachment_link", $a);
-        add_post_meta($post_id, MFN_POST_TYPE . "_attachment_data", json_encode($attachment));
+        add_post_meta($post_id, MFN_POST_TYPE . "_attachment_data", json_encode($attachment, JSON_UNESCAPED_UNICODE));
     }
 }
 
