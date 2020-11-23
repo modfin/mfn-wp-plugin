@@ -215,8 +215,10 @@ function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limi
 
         if ($fiscal_year_offset !== null) {
             $period = get_report_period($rr->timestamp, $rr->type, (int)$fiscal_year_offset);
-            $rr->report_start_date = $period['report_start_date'];
-            $rr->report_end_date = $period['report_end_date'];
+            if($period) {
+                $rr->report_start_date = $period['report_start_date'];
+                $rr->report_end_date = $period['report_end_date'];
+            }
         }
 
         $reports[] = $rr;
