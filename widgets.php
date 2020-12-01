@@ -812,8 +812,12 @@ class mfn_news_feed_widget extends WP_Widget
             $tags = "";
             foreach ($item->tags as $tag) {
                 $parts = explode(":", $tag);
+                if (count($parts) < 2) {
+                    continue;
+                }
                 if (count($onlytagsallowed) > 0) {
-                    $key = array_search($parts[1], $onlytagsallowed, true);
+                    $base_tag = explode("_", $parts[1])[0];
+                    $key = array_search($base_tag, $onlytagsallowed, true);
                     if (!is_numeric($key)) {
                         continue;
                     }
