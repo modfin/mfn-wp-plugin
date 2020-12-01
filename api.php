@@ -210,7 +210,7 @@ function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limi
         $rr->tags = json_decode($r->attachment_meta_value, true)["tags"];
         $rr->url = json_decode($r->attachment_meta_value, true)["url"];
         $rr->lang = $r->lang;
-        $rr->type = $r->report_type;
+        $rr->type = explode('_', $r->report_type)[0];
         $rr->year = substr($r->date_gmt, 0, 4);
 
         if ($fiscal_year_offset !== null) {
