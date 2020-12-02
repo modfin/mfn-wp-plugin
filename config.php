@@ -419,39 +419,67 @@ function sync_mfn_taxonomy()
             $enParentTerm = get_term($enTerm->parent, MFN_TAXONOMY_NAME);
         }
 
-
         $translations = array();
         $translations['en'] = $enTerm->term_id;
 
+        $allowed = pll_the_languages( array( 'raw' => true));
 
         foreach ($enItem['i10n'] as $lang => $name) {
+            if(!array_key_exists($lang, $allowed)){
+                continue;
+            }
             $slug = $enTerm->slug . "_" . $lang;
 
             $l_parent_term_id = 0;
             if ($enParentTerm != null) {
                 $p_slug = $enParentTerm->slug . '_' . $lang;
-                $term = get_term_by('slug', $p_slug, MFN_TAXONOMY_NAME);
-                if (is_object($term)) {
-                    $l_parent_term_id = $term->term_id;
+                $pterms = get_terms( array(
+                    'taxonomy' => MFN_TAXONOMY_NAME,
+                    'hide_empty' => false,
+                    'slug' => $p_slug
+                ) );
+                if (sizeof($pterms) == 0){
+                    $pterms = get_terms( array(
+                        'taxonomy' => MFN_TAXONOMY_NAME,
+                        'hide_empty' => false,
+                         'slug' => $p_slug,
+                     'lang' => $lang
+                    ));
+                }
+
+                if (sizeof($pterms) > 0) {
+                    $l_parent_term_id = $pterms[0]->term_id;
                 }
             }
 
+            $terms = get_terms( array(
+                'taxonomy' => MFN_TAXONOMY_NAME,
+                'hide_empty' => false,
+                'slug' => $slug
+            ));
+            if (sizeof($terms) == 0){
+                $ids = wp_insert_term($name, MFN_TAXONOMY_NAME, array(
+                    'slug' => $slug,
+                    'parent' => $l_parent_term_id,
+                ));
+                if (is_array($ids)){
+                    pll_set_term_language($ids['term_id'], $lang);
+                }
+                $terms = get_terms( array(
+                    'taxonomy' => MFN_TAXONOMY_NAME,
+                    'hide_empty' => false,
+                    'slug' => $slug,
+                    'lang' => $lang
+                ));
+            }
 
-            $term = get_term_by('slug', $slug, MFN_TAXONOMY_NAME);
+            $term = $terms[0];
             if (is_object($term)) {
                 wp_update_term($term->term_id, MFN_TAXONOMY_NAME, array(
                     'name' => $name,
                     'slug' => $slug,
                     'parent' => $l_parent_term_id,
                 ));
-            }
-            if ($term == false) {
-                wp_insert_term($name, MFN_TAXONOMY_NAME, array(
-                    'slug' => $slug,
-                    'parent' => $l_parent_term_id,
-                ));
-
-                $term = get_term_by('slug', $slug, MFN_TAXONOMY_NAME);
             }
 
             pll_set_term_language($term->term_id, $lang);
@@ -460,30 +488,61 @@ function sync_mfn_taxonomy()
         pll_save_term_translations($translations);
     };
 
+    $getTerm = function($slug, $lang){
+        $terms = get_terms( array(
+            'taxonomy' => MFN_TAXONOMY_NAME,
+            'hide_empty' => false,
+            'slug' => $slug,
+        ));
+        if (sizeof($terms) == 0){
+            $terms = get_terms( array(
+                'taxonomy' => MFN_TAXONOMY_NAME,
+                'hide_empty' => false,
+                'slug' => $slug,
+                'lang' => $lang
+            ));
+        }
+        if (sizeof($terms) == 0){
+            $terms = get_terms( array(
+                'taxonomy' => MFN_TAXONOMY_NAME,
+                'hide_empty' => false,
+                'slug' => $slug,
+                'lang' => ''
+            ));
+        }
+        echo print_r($terms);
+        if (sizeof($terms) == 0){
+            return false;
+        }
+        return $terms[0];
+    };
 
-    $upsert = function ($item, $prefix = '', $parent_id = null) use (&$upsert, $use_wpml, $has_wpml, $upsert_wpml, $has_pll, $use_pll, $upsert_pll) {
+    $upsert = function ($item, $prefix = '', $parent_id = null) use (&$upsert, &$getTerm, $use_wpml, $has_wpml, $upsert_wpml, $has_pll, $use_pll, $upsert_pll) {
 
         $slug = $prefix . $item['slug'];
 
-        $term = get_term_by('slug', $slug, MFN_TAXONOMY_NAME);
+        $term = $getTerm($slug, 'en');
+
+        if ($term == false){
+            wp_insert_term($item['name'], MFN_TAXONOMY_NAME, array(
+                'slug' => $slug,
+                'parent' => $parent_id,
+            ));
+            $term = $getTerm($slug, 'en');
+        }
         if (is_object($term)) {
             wp_update_term($term->term_id, MFN_TAXONOMY_NAME, array(
                 'name' => $item['name'],
                 'slug' => $slug,
             ));
         }
-        if ($term == false) {
-            wp_insert_term($item['name'], MFN_TAXONOMY_NAME, array(
-                'slug' => $slug,
-                'parent' => $parent_id,
-            ));
-
-            $term = get_term_by('slug', $slug, MFN_TAXONOMY_NAME);
-        }
-
 
         if ($has_wpml && $use_wpml == 'on') {
             $upsert_wpml($item, $term, $prefix);
+        }
+        if ($has_pll && $use_pll == 'on') {
+            pll_set_term_language($term->term_id, 'en');
+            $upsert_pll($item, $term, $prefix);
         }
 
         if (isset($item['children'])) {

@@ -39,17 +39,17 @@ function createTags($item)
 
     $options = get_option(MFN_PLUGIN_NAME);
     $use_wpml = isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
-//    $use_pll = isset($options['use_pll']) ? $options['use_pll'] : 'off';
+    $use_pll = isset($options['use_pll']) ? $options['use_pll'] : 'off';
     if ($use_wpml == 'on' && $lang != 'en') {
         foreach ($newtag as $i => $t) {
             $newtag[$i] = $t . "_" . $lang;
         }
     }
-//    if ($use_pll == 'on' && $lang != 'en') {
-//        foreach ($newtag as $i => $t) {
-//            $newtag[$i] = $t . "_" . $lang;
-//        }
-//    }
+    if ($use_pll == 'on' && $lang != 'en') {
+        foreach ($newtag as $i => $t) {
+            $newtag[$i] = $t . "_" . $lang;
+        }
+    }
 
     return $newtag;
 }

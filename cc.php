@@ -125,9 +125,14 @@ function deleteAllPosts()
 
 
     $i = 0;
-    $allposts = get_posts( array('post_type' => MFN_POST_TYPE, 'numberposts' => $limit ) );
+    $allposts = get_posts(
+        array(
+            'post_type' => MFN_POST_TYPE,
+            'lang' => '',
+            'numberposts' => $limit
+        )
+    );
     foreach ($allposts as $eachpost) {
-
         if ($eachpost->post_type == MFN_POST_TYPE){
             $i++;
             wp_delete_post( $eachpost->ID, true );

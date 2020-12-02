@@ -210,7 +210,7 @@ function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limi
         $rr->tags = json_decode($r->attachment_meta_value, true)["tags"];
         $rr->url = json_decode($r->attachment_meta_value, true)["url"];
         $rr->lang = $r->lang;
-        $rr->type = $r->report_type;
+        $rr->type = explode('_', $r->report_type)[0];
         $rr->year = substr($r->date_gmt, 0, 4);
 
         if ($fiscal_year_offset !== null) {
@@ -319,7 +319,10 @@ FROM $wpdb->posts p
 INNER JOIN $wpdb->postmeta lang
 ON p.ID = lang.post_id
 INNER JOIN (
-  SELECT po.ID, group_concat(CONCAT(ter.name, ':', ter.slug)) AS tags, group_concat(ter.slug) AS tag_slugs
+  SELECT 
+  po.ID, 
+  group_concat(CONCAT(ter.name, ':', ter.slug) ORDER BY ter.slug LIKE '" . MFN_TAG_PREFIX . "-cus-%', ter.slug) AS tags, 
+  group_concat(ter.slug ORDER BY ter.slug LIKE '" . MFN_TAG_PREFIX . "-cus-%', ter.slug) AS tag_slugs
   FROM $wpdb->posts po
          INNER JOIN $wpdb->term_relationships r
                     ON r.object_id = po.ID
