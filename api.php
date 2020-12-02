@@ -202,13 +202,15 @@ function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limi
 
     $reports = array();
     foreach ($res as $r) {
+        $tags = $r->attachment_meta_value ? json_decode($r->attachment_meta_value, true)["tags"] : [];
+        $url = $r->attachment_meta_value ? json_decode($r->attachment_meta_value, true)["url"] : '';
         $rr = new Report();
         $rr->post_id = $r->post_id;
         $rr->group_id = $r->group_id;
         $rr->timestamp = $r->date_gmt;
         $rr->title = $r->title;
-        $rr->tags = json_decode($r->attachment_meta_value, true)["tags"];
-        $rr->url = json_decode($r->attachment_meta_value, true)["url"];
+        $rr->tags = $tags;
+        $rr->url = $url;
         $rr->lang = $r->lang;
         $rr->type = explode('_', $r->report_type)[0];
         $rr->year = substr($r->date_gmt, 0, 4);
