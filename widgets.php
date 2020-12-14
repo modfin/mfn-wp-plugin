@@ -1068,14 +1068,14 @@ class mfn_news_feed_widget extends WP_Widget
                 $params = http_build_query(array_merge($_GET, array('m-page' => $page - 1)));
                 $url1 = $baseurl . "?" . $params;
                 $word = $l("Previous", $lang);
-                echo "<a href='$url1' class='mfn-next-link'>$word</a>";
+                echo "<a href='$url1' class='mfn-next-link mfn-prev'>$word</a>";
             }
 
             if (count($res) == $pagelen) {
                 $params = http_build_query(array_merge($_GET, array('m-page' => $page + 1)));
                 $url2 = $baseurl . "?" . $params;
                 $word = $l("Next", $lang);
-                echo "<a href='$url2' class='mfn-next-link'>$word</a>";
+                echo "<a href='$url2' class='mfn-next-link mfn-next'>$word</a>";
             }
 
         }
