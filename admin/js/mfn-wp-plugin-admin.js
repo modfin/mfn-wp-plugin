@@ -93,21 +93,21 @@
 
 
     function hubUrlTest(){
-        var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
+        var hubUrl = $('#mfn-wp-plugin-hub_url').val();
         var el =  $('#hub-url-test');
 
 
-        if(!pluginUrl || pluginUrl.trim() === ''){
+        if (!hubUrl || hubUrl.trim() === '') {
             el.text("Invalid, hub url must be provided");
             return
         }
 
-        $.get(pluginUrl + '/cc.php?mode=pinghub', function (data) {
-            if (data === 'ponghub'){
+        $.get(hubUrl, function (data) {
+            if (typeof data === 'string' && data.indexOf('- WebSub hub server, https://www.w3.org/TR/websub') !== -1) {
                 el.text("Valid");
                 return
             }
-            el.text("Invalid, server does not return pong \n\n (make sure php function file_get_contents is allowed to make http requests) \n\n " + data );
+            el.text("Invalid, hub does not return a proper response \n\n (make sure php function file_get_contents is allowed to make http requests) \n\n " + data );
         }).fail(function(err) {
             console.log(err);
             el.text("Invalid, address does not seem to be responding with anything, " + err.status);
