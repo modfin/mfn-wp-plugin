@@ -683,51 +683,9 @@ class mfn_news_feed_widget extends WP_Widget
 
     }
 
-    private function load_filter_dropdown($baseurl, $wp, $l, $lang, $instance_id) {
-
-        // enqueue css and js
-        wp_enqueue_style( MFN_PLUGIN_NAME . '-dropdown-filter-css', plugin_dir_url( __FILE__ ) . 'widgets/mfn_news_feed/css/mfn-dropdown-filter.css', array(), MFN_PLUGIN_NAME_VERSION );
-
-        $params = http_build_query(array_merge($_GET, array('m-tags' => 'regulatory')));
-        $filter_url_regulatory = $baseurl . "?" . $params;
-        $params = http_build_query(array_merge($_GET, array('m-tags' => '-regulatory')));
-        $filter_url_non_regulatory = $baseurl . "?" . $params;
-        $current_url = home_url(add_query_arg(array(), $wp->request));
-
-        echo '
-        <div class="mfn-filter-section">
-            <h4 class="mfn-filter-heading">' . $l('Filter', $lang) . '</h4>
-            <div class="dropdown" id="dropdown-'.  $instance_id . '" data-mfn-id="'.  $instance_id . '">
-                    <span>
-                        <div class="option-text">All</div>
-                    </span>
-                <div class="dropdown-arrow-wrapper">
-                    <i class="dropdown-arrow"></i>
-                </div>
-                <ul>
-                    <li class="option" data-option="regulatory"><a href="' . $filter_url_regulatory . '">Regulatory</a></li>
-                    <li class="option" data-option="-regulatory"><a href="' . $filter_url_non_regulatory . '">Non-Regulatory</a></li>
-                    <li class="option" data-option=""><a href="' . $current_url . '">All</a></li>
-                </ul>
-            </div>
-        </div>
-        ';
-    }
-
-    private function list_news_items($data, $showfilter, $instance_id): int
+    private function list_news_items($data): int
     {
-
         wp_enqueue_style( MFN_PLUGIN_NAME . '-mfn-news-list-css', plugin_dir_url( __FILE__ ) . 'widgets/mfn_news_feed/css/mfn-news-list.css', array(), MFN_PLUGIN_NAME_VERSION );
-
-        // if showfilter is true
-        if($showfilter) {
-            wp_enqueue_script('mfn_news_feed', plugin_dir_url(__FILE__) . 'widgets/mfn_news_feed/js/mfn-news-feed.js', array('jquery'), MFN_PLUGIN_NAME_VERSION);
-            wp_localize_script('mfn_news_feed', 'mfn_news_feed_params', array(
-                'request_url' => plugin_dir_url(__FILE__) . 'widgets/mfn_news_feed/partials/news-feed-display.php?instance=' . $instance_id . date("h:i:s"),
-                'payload' => $data,
-                'instance_id' => $instance_id
-            ));
-        }
 
         $res = MFN_get_feed(
             $data['pmlang'],
@@ -759,8 +717,6 @@ class mfn_news_feed_widget extends WP_Widget
 
     public function widget($args, $instance)
     {
-
-        $instance_id = random_int(1, time());
 
         $query_param = static function ($name, $default) {
             return $_GET[$name] ?? $default;
@@ -937,9 +893,6 @@ class mfn_news_feed_widget extends WP_Widget
 
         echo "<div class=\"mfn-newsfeed\">";
 
-        // if show filter is true
-        if ($showfilter) $this->load_filter_dropdown($baseurl, $wp, $l, $lang, $instance_id);
-
         if ($showyears) {
 
             if (is_object($min_max_years) &&
@@ -962,9 +915,9 @@ class mfn_news_feed_widget extends WP_Widget
 
         }
 
-        echo '<div class="mfn-list" id="mfn-list-' . $instance_id . '">';
+        echo '<div class="mfn-list">';
 
-        $news_items = $this->list_news_items($news_items_params, $showfilter, $instance_id);
+        $news_items = $this->list_news_items($news_items_params);
 
         if ($showpagination) {
             echo "</div><div class='mfn-newsfeed-pagination'>";
@@ -994,7 +947,6 @@ class mfn_news_feed_widget extends WP_Widget
         $pagelen = $instance['pagelen'] ?? '20';
         $previewlen = $instance['previewlen'] ?? '';
         $showpagination = $instance['showpagination'] ?? '1';
-        $showfilter = $instance['showfilter'] ?? '0';
         $showyears = $instance['showyears'] ?? '0';
         $showpreview = $instance['showpreview'] ?? '0';
         $groupbyyear = $instance['groupbyyear'] ?? '0';
@@ -1024,13 +976,6 @@ class mfn_news_feed_widget extends WP_Widget
         $onlytagsallowed = $instance['onlytagsallowed'] ?? "";
 
         ?>
-
-        <p>
-            <input id="<?php echo esc_attr($this->get_field_id('showfilter')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('showfilter')); ?>" type="checkbox"
-                   value="1" <?php checked('1', $showfilter); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('showfilter')); ?>"><?php _e('Show Filter', 'text_domain'); ?></label>
-        </p>
 
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('showyears')); ?>"
@@ -1187,7 +1132,6 @@ class mfn_news_feed_widget extends WP_Widget
         $instance = array();
         $instance['lang'] = (!empty($new_instance['lang'])) ? wp_strip_all_tags($new_instance['lang']) : '';
         $instance['showpagination'] = (!empty($new_instance['showpagination'])) ? strip_tags($new_instance['showpagination']) : '';
-        $instance['showfilter'] = (!empty($new_instance['showfilter'])) ? strip_tags($new_instance['showfilter']) : '';
         $instance['showyears'] = (!empty($new_instance['showyears'])) ? strip_tags($new_instance['showyears']) : '';
         $instance['showpreview'] = (!empty($new_instance['showpreview'])) ? strip_tags($new_instance['showpreview']) : '';
         $instance['groupbyyear'] = (!empty($new_instance['groupbyyear'])) ? strip_tags($new_instance['groupbyyear']) : '';

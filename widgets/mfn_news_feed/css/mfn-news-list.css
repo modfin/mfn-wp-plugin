@@ -57,3 +57,8 @@
 .mfn-title a {
     outline: none;
 }
+
+.mfn-newsfeed-pagination {
+    display: flex;
+    justify-content: space-between;
+}
