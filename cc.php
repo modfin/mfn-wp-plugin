@@ -3,14 +3,12 @@
 require_once(dirname(__FILE__) . '/config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 
-
 $is_admin = current_user_can('manage_options');
 
 if (!$is_admin) {
     echo "you are not admin";
     die();
 }
-
 
 $queries = array();
 parse_str($_SERVER['QUERY_STRING'], $queries);
@@ -19,10 +17,10 @@ if (!isset($queries["mode"])) {
     echo "a mode must be provided [poll, longpoll or sync]";
     die();
 }
+
 $mode = $queries["mode"];
 
-
-function generateRandomString($length = 32)
+function generateRandomString($length = 32): string
 {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $charactersLength = strlen($characters);
@@ -32,7 +30,6 @@ function generateRandomString($length = 32)
     }
     return $randomString;
 }
-
 
 function sync()
 {
@@ -61,8 +58,6 @@ function sync()
         return;
     }
 
-
-
     $url = $sync_url . '/all/s.json?type=all&.author.entity_id=' . $ops['entity_id'] .
         '&limit=' . $limit .
         "&offset=" . $offset .
@@ -85,10 +80,8 @@ function sync()
     echo 0 . ' ' . $acc;
 }
 
-
 function pingHub()
 {
-
     $ops = get_option('mfn-wp-plugin');
     $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
 
@@ -102,22 +95,19 @@ function pingHub()
             return;
         }
 
-        echo "fail, enpoint does not contain websub info";
+        echo "fail, endpoint does not contain WebSub info.";
         return;
     }
-    echo "fail, not a valid url";
-    return;
+    die("fail, not a valid url.");
 }
 
-
-
-function clearSettings()
+function clearSettings(): string
 {
     update_option('mfn-wp-plugin', array());
     return "done";
 }
 
-function deleteAllPosts()
+function deleteAllPosts(): int
 {
     $queries = array();
     parse_str($_SERVER['QUERY_STRING'], $queries);
@@ -140,7 +130,6 @@ function deleteAllPosts()
     }
     return $i;
 }
-
 
 switch ($mode) {
     case "sync-tax":
@@ -178,8 +167,3 @@ switch ($mode) {
         echo "a mode must be provided [sync]";
         die();
 }
-
-
-
-
-

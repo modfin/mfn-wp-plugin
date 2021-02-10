@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . '/api.php');
 require_once(__DIR__ . '/consts.php');
+require_once(__DIR__ . '/config.php');
 
 // Register and load the widget
 function mfn_load_widget()
@@ -76,7 +77,7 @@ class mfn_archive_widget extends WP_Widget
         parent::__construct(
             'mfn_archive_widget',
             __('MFN Report Archive', 'mfn_archive_widget_domain'),
-            array('description' => __('A widget that creates an archive for reports', 'mfn_archive_widget_domain'),)
+            array('description' => __('Creates a report archive from the MFN news feed.', 'mfn_archive_widget_domain'),)
         );
     }
 
@@ -86,7 +87,7 @@ class mfn_archive_widget extends WP_Widget
             return $_GET[$name] ?? $default;
         };
 
-        $w = array(
+        $w = [
             'showdate' => $instance['showdate'] ?? false,
             'showyear' => $instance['showyear'] ?? false,
             'showfilter' => $instance['showfilter'] ?? false,
@@ -100,7 +101,7 @@ class mfn_archive_widget extends WP_Widget
             'limit' => (!empty($instance['limit'])) ? $instance['limit'] : 500,
             'offset' => (!empty($instance['offset'])) ? $instance['offset'] : 0,
             'instance_id' => random_int(1, time())
-        );
+        ];
 
         // force to true, since 'showgenerictitle' depends on 'usefiscalyearoffset' to even show meaningful titles
         if ($w['showgenerictitle']) {
@@ -404,7 +405,7 @@ class mfn_archive_widget extends WP_Widget
         ?>
 
         <p>
-            <label for="<?php echo $this->get_field_id('lang'); ?>"><?php _e('Archive Language', 'text_domain'); ?></label>
+            <label for="<?php echo $this->get_field_id('lang'); ?>"><?php _e('Archive Language', 'text_domain'); ?>:</label>
             <select name="<?php echo $this->get_field_name('lang'); ?>" id="<?php echo $this->get_field_id('lang'); ?>"
                     class="widefat">
                 <?php
@@ -470,25 +471,25 @@ class mfn_archive_widget extends WP_Widget
             <input id="<?php echo esc_attr($this->get_field_id('usefiscalyearoffset')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('usefiscalyearoffset')); ?>" type="checkbox"
                    value="1" <?php checked('1', $usefiscalyearoffset); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('usefiscalyearoffset')); ?>"><?php _e('Use fiscal year for grouping', 'text_domain'); ?></label>
+            <label for="<?php echo esc_attr($this->get_field_id('usefiscalyearoffset')); ?>"><?php _e('Use fiscal year for grouping', 'text_domain'); ?>:</label>
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('fiscalyearoffset')); ?>"><?php _e('Fiscal year offset', 'text_domain'); ?></label>
+            <label for="<?php echo esc_attr($this->get_field_id('fiscalyearoffset')); ?>"><?php _e('Fiscal year offset', 'text_domain'); ?>:</label>
             <input class="widefat" id="<?php echo esc_attr($this->get_field_id('fiscalyearoffset')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('fiscalyearoffset')); ?>" type="text"
                    value="<?php echo esc_attr($fiscalyearoffset); ?>"/>
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('limit')); ?>"><?php _e('Limit: number of items to show', 'text_domain'); ?></label>
+            <label for="<?php echo esc_attr($this->get_field_id('limit')); ?>"><?php _e('Limit: number of items to show', 'text_domain'); ?>:</label>
             <input class="widefat" id="<?php echo esc_attr($this->get_field_id('limit')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('limit')); ?>" type="text"
                    value="<?php echo esc_attr($limit); ?>"/>
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('offset')); ?>"><?php _e('Offset: drop X number of items from start of the list', 'text_domain'); ?></label>
+            <label for="<?php echo esc_attr($this->get_field_id('offset')); ?>"><?php _e('Offset: drop X number of items from start of the list', 'text_domain'); ?>:</label>
             <input class="widefat" id="<?php echo esc_attr($this->get_field_id('offset')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('offset')); ?>" type="text"
                    value="<?php echo esc_attr($offset); ?>"/>
@@ -513,7 +514,7 @@ class mfn_archive_widget extends WP_Widget
         $instance['offset'] = (!empty($new_instance['offset'])) ? strip_tags($new_instance['offset']) : '';
         return $instance;
     }
-} //
+}
 
 // Creating the widget
 class mfn_subscription_widget extends WP_Widget
@@ -523,20 +524,57 @@ class mfn_subscription_widget extends WP_Widget
     {
         parent::__construct(
             'mfn_subscription_widget',
-            __('MFN Subscription Widget', 'mfn_subscription_widget_domain'),
-            array('description' => __('A widget that adds MFN subscription possibilities', 'mfn_subscription_widget_domain'),)
+            __('MFN Subscription', 'mfn_subscription_widget_domain'),
+            array('description' => __('Adds a subscription form for subscribing to MFN news.', 'mfn_subscription_widget_domain'),)
         );
+    }
+
+    private function load_subscription_widget($target_id, $widget_id, $customer_id, $lang) {
+
+        $loaderURL = DATABLOCKS_LOADER_URL;
+        $instance_id = random_int(1, time());
+
+        $widget = new stdClass();
+        $widget->query = isset($target_id) ? $target_id . '-' . $instance_id : '';
+        $widget->widget = 'subscribe';
+        $widget->token = isset($widget_id) ? $widget_id : '';
+        $widget->c = isset($customer_id) ? $customer_id : '';
+        $widget->locale = $lang;
+        $widget->demo = 'false';
+
+        if($widget->token !== '' && $widget->c !== '' && $widget->query !== '') {
+            // inject Datablocks subscription widget
+            echo '
+            <script>        
+                if(!window._MF) {
+                    let b = document.createElement("script");
+                    b.type = "text/javascript";
+                    b.async = true;
+                    b.src =  "' . DATABLOCKS_LOADER_URL . '/assets/js/loader-' . DATABLOOCKS_LOADER_VERSION . '.js' . '";
+                    document.getElementsByTagName("body")[0].appendChild(b);
+    
+                    window._MF = window._MF || {
+                        data: [],
+                        url: "' . $loaderURL . '",
+                        ready: !!0,
+                        render: function() {
+                            window._MF.ready = !0
+                        },
+                        push: function(conf) {
+                            this.data.push(conf);
+                        }
+                    }
+                }
+                window._MF.push(' . json_encode($widget) . ')
+            </script>
+            ';
+
+            echo '<div id="mfn-subscribe-div-' . $instance_id . '" class="mfn-subscribe"></div>';
+        }
     }
 
     public function widget($args, $instance)
     {
-        $l = static function ($word, $lang) {
-            global $mfn_wid_translate;
-            return $mfn_wid_translate($word, $lang);
-        };
-
-        echo $args['before_widget'];
-
         $lang = empty($instance['lang']) ? 'auto' : $instance['lang'];
         $locale = determineLocale();
 
@@ -553,162 +591,26 @@ class mfn_subscription_widget extends WP_Widget
             $lang = "en";
         }
 
-        $langs = strtolower(trim(empty($instance['langs']) ? 'sv,en' : $instance['langs']));
-        $langs = explode(",", $langs);
+        echo $args['before_widget'];
 
-        $privacy_policy = empty($instance['privacy_policy']) ? "https://mfn.se/privacy-policy" : $instance['privacy_policy'];
-
-        $ops = get_option('mfn-wp-plugin');
-        $entity_id = $ops['entity_id'] ?? "bad-entity-id";
-        $hub_url = $ops['hub_url'] ?? "bad-hub-url";
-
-        if (empty($instance['showlangs'])) {
-            echo "<style>.mfn-subscribe .mfn-languages { display: none; }</style>";
-        }
-
-        if (empty($instance['showtypes'])) {
-            echo "<style>.mfn-subscribe .mfn-categories { display: none; }</style>";
-        }
-
-        ?>
-
-        <style>
-            .mfn-subscribe .hidden {
-                display: none;
-            }
-
-            #policy-text {
-                border-bottom: 5px solid transparent;
-            }
-
-            #policy-text.alert {
-                border-bottom-color: red;
-            }
-        </style>
-        <div id="mfn-subscribe-div" class="mfn-subscribe">
-            <input type="hidden" id="sub-hub-entity-id" name="hub.entityid" value="<?php echo $entity_id ?>">
-            <input type="hidden" id="sub-hub-topic" name="hub.topic" value="/s">
-            <input type="hidden" id="sub-hub-url" name="hub.url" value="<?php echo $hub_url ?>">
-            <input type="hidden" id="sub-hub-lang" name="hub.lang" value="<?php echo $lang ?>">
-            <input type="hidden" id="sub-hub-subscribe-to-widget-language" name="hub.subscribe-to-widget-language"
-                   value="{{.Settings.SubscribeToWidgetLanguage}}">
-
-            <div class="mfn-info">
-               <p><?php echo $l("Receive company data continuously to your inbox.", $lang) ?></p>
-            </div>
-
-            <div class="mfn-info mfn-categories">
-                <p>
-                    <?php echo $l("Check the category of messages you would like to subscribe to below.", $lang) ?>
-                </p>
-                <ul>
-                    <li>
-                        <input checked id="sub-ir" type="checkbox">
-                        <label for="sub-ir"><?php echo $l("Press releases", $lang) ?></label>
-                    </li>
-                    <li>
-                        <input checked id="sub-report" type="checkbox">
-                        <label for="sub-report"><?php echo $l("Reports", $lang) ?></label>
-                    </li>
-                    <li>
-                        <input checked id="sub-annual" type="checkbox">
-                        <label for="sub-annual"><?php echo $l("Annual reports", $lang) ?></label>
-                    </li>
-                    <li>
-                        <input checked id="sub-pr" type="checkbox">
-                        <label for="sub-pr"><?php echo $l("Other news", $lang) ?></label>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="mfn-info mfn-languages">
-                <p><?php echo $l("Check the languages you would like to subscribe to.", $lang) ?></p>
-                <ul>
-                    <?php
-                    foreach ($langs as $la) {
-                        $name = $l($la . "-name", $lang);
-                        echo "<li>
-                                 <input class=\"mfn-sub-lang\" id=\"mfn-sub-lang-$la\" type=\"checkbox\" checked>
-                                 <label for=\"mfn-sub-lang-$la\">$name</label>
-                             </li>";
-                    }
-                    ?>
-                </ul>
-            </div>
-
-            <div>
-                <p id="policy-text">
-                    <?php
-                        if ($lang === "sv") {
-                            echo "För att prenumerera på detta behöver du godkänna våra <a href=\"$privacy_policy\" target=\"_blank\">generella villkor</a> i syfte för GDPR.";
-                        }
-                        if ($lang === "en") {
-                            echo "To subscribe, please read and approve our <a href=\"$privacy_policy\" target=\"_blank\">data storage policy</a> to comply with GDPR.";
-                        }
-                        if ($lang === "fi") {
-                            echo "Tilataksesi, lue ja hyväksy <a href=\"$privacy_policy\" target=\"_blank\">tietojen tallennuskäytäntömme</a> noudattamaan GDPR: ää.";
-                        }
-                    ?>
-                    <div class="mfn-approve-container">
-                        <label for="approve">
-                            <?php echo $l("Approve", $lang) ?>
-                        </label>
-                        <input id="approve" onclick="document.getElementById('gdpr-policy-fail').classList.add('hidden');" type="checkbox">
-                    </div>
-                </p>
-            </div>
-
-            <div class="subscription-wrapper">
-                <form onsubmit="event.preventDefault(); return datablocks_SubscribeMail()">
-                    <label for="sub-email"></label><input id="sub-email" type="text" placeholder="Email" name="hub.callback">
-                    <button type="submit">
-                        <?php echo $l("Subscribe", $lang); ?>
-                    </button>
-                </form>
-            </div>
-            <div id="email-bad-input" class="hidden warning mfn-info alert">
-                <?php echo $l("A real email address must be provided.", $lang); ?>
-            </div>
-            <div id="gdpr-policy-fail" class="hidden warning mfn-info alert">
-                <?php echo $l("The GDPR policy must be accepted.", $lang); ?>
-            </div>
-            <div id="email-success" class="hidden success mfn-info">
-                <?php echo $l("An email has been sent to confirm your subscription.", $lang); ?>
-            </div>
-        </div>
-        <?php
-        echo "<script>" . JS_SUB_LIB . "</script>";
-
+        // load subscription widget
+        $this->load_subscription_widget(
+                '#mfn-subscribe-div',
+                $instance['widget_id'],
+                $instance['customer_id'],
+                $lang
+        );
         echo $args['after_widget'];
     }
 
     public function form($instance)
     {
         $lang = $instance['lang'] ?? 'auto';
-        $privacy_policy = $instance['privacy_policy'] ?? "https://mfn.se/privacy-policy";
-
-        if (isset($instance['langs'])) {
-            $langs = strtolower(trim($instance['langs']));
-        } else {
-            $langs = 'sv,en';
-        }
-
-        if (isset($instance['showlangs'])) {
-            $showlangs = strtolower(trim($instance['showlangs']));
-        } else {
-            $showlangs = '1';
-        }
-
-        if (isset($instance['showtypes'])) {
-            $showtypes = strtolower(trim($instance['showtypes']));
-        } else {
-            $showtypes = '1';
-        }
-
         ?>
-
         <p>
-            <label for="<?php echo $this->get_field_id('lang'); ?>"><?php _e('Language', 'text_domain'); ?></label>
+            <label for="<?php echo esc_attr($this->get_field_id('lang')); ?>">
+                <?php _e('Language', 'text_domain'); ?>:
+            </label>
             <select name="<?php echo $this->get_field_name('lang'); ?>" id="<?php echo $this->get_field_id('lang'); ?>"
                     class="widefat">
                 <?php
@@ -723,39 +625,33 @@ class mfn_subscription_widget extends WP_Widget
                 // Loop through options and add each one to the select dropdown
                 foreach ($options as $key => $name) {
                     echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($lang, $key, false) . '>' . $name . '</option>';
-
                 } ?>
             </select>
         </p>
-
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('langs')); ?>"><?php _e('Languages to select (eg sv,en)', 'text_domain'); ?></label>
-            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('langs')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('langs')); ?>" type="text"
-                   value="<?php echo esc_attr($langs); ?>"/>
+            <label for="<?php echo esc_attr($this->get_field_id('widget_id')); ?>">
+                <?php _e('Widget id', 'text_domain'); ?>:
+            </label>
+            <input
+                    id="<?php echo esc_attr($this->get_field_id('widget_id')); ?>"
+                    name="<?php echo esc_attr($this->get_field_name('widget_id')); ?>"
+                    type="text"
+                    value="<?php echo $instance['widget_id']; ?>"
+                    class="widefat"
+            />
         </p>
-
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('privacy_policy')); ?>"><?php _e('GDPR Policy link', 'text_domain'); ?></label>
-            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('privacy_policy')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('privacy_policy')); ?>" type="text"
-                   value="<?php echo esc_attr($privacy_policy); ?>"/>
+            <label for="<?php echo esc_attr($this->get_field_id('customer_id')); ?>">
+                <?php _e('Customer id', 'text_domain'); ?>:
+            </label>
+            <input
+                    id="<?php echo esc_attr($this->get_field_id('customer_id')); ?>"
+                    name="<?php echo esc_attr($this->get_field_name('customer_id')); ?>"
+                    type="text"
+                    value="<?php echo $instance['customer_id']; ?>"
+                    class="widefat"
+            />
         </p>
-
-        <p>
-            <input id="<?php echo esc_attr($this->get_field_id('showtypes')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('showtypes')); ?>" type="checkbox"
-                   value="1" <?php checked('1', $showtypes); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('showtypes')); ?>"><?php _e('Show Categories', 'text_domain'); ?></label>
-        </p>
-
-        <p>
-            <input id="<?php echo esc_attr($this->get_field_id('showlangs')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('showlangs')); ?>" type="checkbox"
-                   value="1" <?php checked('1', $showlangs); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('showlangs')); ?>"><?php _e('Show Languages', 'text_domain'); ?></label>
-        </p>
-
         <?php
     }
 
@@ -763,14 +659,11 @@ class mfn_subscription_widget extends WP_Widget
     {
         $instance = array();
         $instance['lang'] = (!empty($new_instance['lang'])) ? strip_tags($new_instance['lang']) : '';
-        $instance['langs'] = (!empty($new_instance['langs'])) ? strip_tags($new_instance['langs']) : '';
-        $instance['showlangs'] = (!empty($new_instance['showlangs'])) ? strip_tags($new_instance['showlangs']) : '';
-        $instance['showtypes'] = (!empty($new_instance['showtypes'])) ? strip_tags($new_instance['showtypes']) : '';
-        $instance['privacy_policy'] = strtolower(trim((!empty($new_instance['privacy_policy'])) ? strip_tags($new_instance['privacy_policy']) : ''));
-
+        $instance['widget_id'] = (!empty($new_instance['widget_id'])) ? strip_tags($new_instance['widget_id']) : '';
+        $instance['customer_id'] = (!empty($new_instance['lang'])) ? strip_tags($new_instance['customer_id']) : '';
         return $instance;
     }
-} //
+}
 
 // Creating the widget
 class mfn_news_feed_widget extends WP_Widget
@@ -778,128 +671,97 @@ class mfn_news_feed_widget extends WP_Widget
 
     public function __construct()
     {
+
+        wp_enqueue_style( MFN_PLUGIN_NAME . '-mfn-news-list-css', plugin_dir_url( __FILE__ ) . 'widgets/mfn_news_feed/css/mfn-news-list.css', array(), MFN_PLUGIN_NAME_VERSION );
+        require_once(__DIR__ . '/widgets/mfn_news_feed/class-mfn-news-feed.php');
+
         parent::__construct(
             'mfn_news_feed_widget',
             __('MFN News Feed', 'mfn_news_feed_domain'),
-            array('description' => __('A widget that creates a news feed', 'mfn_news_feed_domain'),)
+            array('description' => __('Creates a news feed for MFN press releases.', 'mfn_news_feed_domain'),)
         );
 
     }
 
-    private function list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $showpreview, $previewlen) {
-        $years = [];
-        $group_by_year = $groupbyyear && !empty($res);
+    private function load_filter_dropdown($baseurl, $wp, $l, $lang, $instance_id) {
 
-        foreach ($res as $k => $item) {
-            $year = explode("-", $item->post_date_gmt)[0];
-            if ($k === 0) {
-                $years[] = $year;
+        // enqueue css and js
+        wp_enqueue_style( MFN_PLUGIN_NAME . '-dropdown-filter-css', plugin_dir_url( __FILE__ ) . 'widgets/mfn_news_feed/css/mfn-dropdown-filter.css', array(), MFN_PLUGIN_NAME_VERSION );
 
-                if ($group_by_year) {
-                    $this->parse_year_header($year);
-                }
-            } else if (!in_array($year, $years, true)) {
-                if ($group_by_year) {
-                    $this->parse_year_header($year);
-                }
-                $years[] = $year;
-            }
+        $params = http_build_query(array_merge($_GET, array('m-tags' => 'regulatory')));
+        $filter_url_regulatory = $baseurl . "?" . $params;
+        $params = http_build_query(array_merge($_GET, array('m-tags' => '-regulatory')));
+        $filter_url_non_regulatory = $baseurl . "?" . $params;
+        $current_url = home_url(add_query_arg(array(), $wp->request));
 
-            $date = new DateTime($item->post_date_gmt . "Z");
-            $date->setTimezone(new DateTimeZone($tzLocation));
-            $datestr = date_i18n($timestampFormat,$date->getTimestamp() + $date->getOffset());
-
-            $tags = "";
-            foreach ($item->tags as $tag) {
-                $parts = explode(":", $tag);
-                if (count($parts) < 2) {
-                    continue;
-                }
-                if (count($onlytagsallowed) > 0) {
-                    $base_tag = explode("_", $parts[1])[0];
-                    $key = array_search($base_tag, $onlytagsallowed, true);
-                    if (!is_numeric($key)) {
-                        continue;
-                    }
-                }
-
-                $html = $tagtemplate;
-                $html = str_replace(array("[tag]", "[slug]"), array($parts[0], $parts[1]), $html);
-                $html = str_replace(array("{{tag}}", "{{slug}}"), array($parts[0], $parts[1]), $html);
-                $tags .= $html;
-            }
-
-            $templateData = array(
-                'date' => $datestr,
-                'title' => $item->post_title,
-                'url' => get_home_url() . "/" . MFN_POST_TYPE . "/" . $item->post_name,
-                'tags' => $tags,
-            );
-
-            $templateData['preview'] = '';
-
-            if ($showpreview) {
-                $dom = new DomDocument();
-                $encoding = '<?xml encoding="utf-8" ?>';
-                $post_content = str_replace(array('<br/>', '<br>'), ' ', $item->post_content);
-
-                $appendEllipsis = false;
-                @$dom->loadHTML($encoding . $post_content);
-                $preview = '';
-
-                foreach ($dom->getElementsByTagName('p') as $node) {
-                    if (!$node->textContent) {
-                        continue;
-                    }
-                    $value = str_replace('&nbsp;', ' ', htmlentities($node->textContent));
-                    if (trim($value) === '') {
-                        continue;
-                    }
-                    $preview .= trim($value) . ' ';
-                    if ($previewlen !== '' && strlen($preview) > $previewlen) {
-                        $appendEllipsis = true;
-                        break;
-                    }
-                }
-
-                if ($previewlen !== '') {
-                    $words = explode(' ', $preview);
-                    $preview = '';
-                    foreach ($words as $word) {
-                        $preview .= $word . ' ';
-                        if (strlen($preview) > $previewlen) {
-                            $appendEllipsis = true;
-                            break;
-                        }
-                    }
-                }
-
-                $preview = rtrim($preview);
-
-                if ($appendEllipsis) {
-                    $preview = rtrim($preview, '.,:;!');
-                    $preview .= '<span class="mfn-ellipsis">...</span>';
-                }
-
-                $templateData['preview'] = $preview;
-            }
-
-            $html = $template;
-            foreach ($templateData as $key => $value) {
-                $html = str_replace("[$key]", $value, $html);
-                $html = str_replace("{{" . $key . "}}", $value, $html);
-            }
-
-            echo $html;
-        }
+        echo '
+        <div class="mfn-filter-section">
+            <h4 class="mfn-filter-heading">' . $l('Filter', $lang) . '</h4>
+            <div class="dropdown" id="dropdown-'.  $instance_id . '" data-mfn-id="'.  $instance_id . '">
+                    <span>
+                        <div class="option-text">All</div>
+                    </span>
+                <div class="dropdown-arrow-wrapper">
+                    <i class="dropdown-arrow"></i>
+                </div>
+                <ul>
+                    <li class="option" data-option="regulatory"><a href="' . $filter_url_regulatory . '">Regulatory</a></li>
+                    <li class="option" data-option="-regulatory"><a href="' . $filter_url_non_regulatory . '">Non-Regulatory</a></li>
+                    <li class="option" data-option=""><a href="' . $current_url . '">All</a></li>
+                </ul>
+            </div>
+        </div>
+        ';
     }
 
-    private function parse_year_header($year) {
-        echo "<h4 class='mfn-feed-year-header' id='mfn-feed-year-header-" . $year . "'>$year</h4>";
+    private function list_news_items($data, $showfilter, $instance_id): int
+    {
+
+        wp_enqueue_style( MFN_PLUGIN_NAME . '-mfn-news-list-css', plugin_dir_url( __FILE__ ) . 'widgets/mfn_news_feed/css/mfn-news-list.css', array(), MFN_PLUGIN_NAME_VERSION );
+
+        // if showfilter is true
+        if($showfilter) {
+            wp_enqueue_script('mfn_news_feed', plugin_dir_url(__FILE__) . 'widgets/mfn_news_feed/js/mfn-news-feed.js', array('jquery'), MFN_PLUGIN_NAME_VERSION);
+            wp_localize_script('mfn_news_feed', 'mfn_news_feed_params', array(
+                'request_url' => plugin_dir_url(__FILE__) . 'widgets/mfn_news_feed/partials/news-feed-display.php?instance=' . $instance_id . date("h:i:s"),
+                'payload' => $data,
+                'instance_id' => $instance_id
+            ));
+        }
+
+        $res = MFN_get_feed(
+            $data['pmlang'],
+            $data['year'],
+            json_decode($data['hasTags']),
+            json_decode($data['hasNotTags']),
+            $data['offset'],
+            $data['pagelen'],
+            $data['showpreview']
+        );
+
+        $news_feed = new News_feed;
+
+        echo $news_feed->list_news_items(
+            $res,
+            $data['tzLocation'],
+            $data['timestampFormat'],
+            $data['onlytagsallowed'],
+            base64_decode($data['tagtemplate']),
+            base64_decode($data['template']),
+            $data['groupbyyear'],
+            $data['skipcustomtags'],
+            $data['showpreview'],
+            $data['previewlen']
+        );
+
+        return sizeof($res);
     }
 
     public function widget($args, $instance)
     {
+
+        $instance_id = random_int(1, time());
+
         $query_param = static function ($name, $default) {
             return $_GET[$name] ?? $default;
         };
@@ -914,6 +776,7 @@ class mfn_news_feed_widget extends WP_Widget
         global $wp;
         $baseurl = explode('?', home_url(add_query_arg(array(), $wp->request)))[0];
 
+        // handle widget instance settings
         $tzLocation = empty($instance['tzLocation']) ? 'Europe/Stockholm' : $instance['tzLocation'];
         $timestampFormat = empty($instance['timestampFormat']) ? 'Y-m-d H:i' : $instance['timestampFormat'];
 
@@ -927,10 +790,12 @@ class mfn_news_feed_widget extends WP_Widget
 
         $pagelen = empty($instance['pagelen']) ? 20 : $instance['pagelen'];
         $previewlen = empty($instance['previewlen']) ? '' : $instance['previewlen'];
+        $showfilter = empty($instance['showfilter']) ? false : $instance['showfilter'];
         $showyears = empty($instance['showyears']) ? false : $instance['showyears'];
         $showpreview = empty($instance['showpreview']) ? false : $instance['showpreview'];
         $groupbyyear = empty($instance['groupbyyear']) ? false : $instance['groupbyyear'];
         $showpagination = empty($instance['showpagination']) ? false : $instance['showpagination'];
+        $skipcustomtags = empty($instance['skipcustomtags']) ? false : $instance['skipcustomtags'];
 
         $lang = 'en';
         $locale = determineLocale();
@@ -955,12 +820,15 @@ class mfn_news_feed_widget extends WP_Widget
         if (isset($instance['tags'])) {
             $tagsstr = normalize_whitespace($instance['tags']);
         }
+
         $hasTags = array();
         $hasNotTags = array();
+
         foreach (explode(",", $tagsstr) as $tag) {
             if ($tag === "") {
                 continue;
             }
+
             if (strpos($tag, '-') === 0 || strpos($tag, '!') === 0) {
                 $tag = substr($tag, 1);
                 if (strpos($tag, 'mfn-') !== 0) {
@@ -974,6 +842,7 @@ class mfn_news_feed_widget extends WP_Widget
             if (strpos($tag, 'mfn-') !== 0) {
                 $tag = 'mfn-' . $tag;
             }
+
             $hasTags[] = $tag;
         }
 
@@ -987,24 +856,55 @@ class mfn_news_feed_widget extends WP_Widget
             $y = "";
         }
 
-        $min_max_years = MFN_get_feed_min_max_years($lang);
-        $res = MFN_get_feed($pmlang, $y, $hasTags, $hasNotTags, $page * $pagelen, $pagelen, $showpreview);
+        $params = [];
+        $query_arr = explode("&", http_build_query(array_merge($_GET)));
+        $build_new_query = [];
+
+        foreach($query_arr as $k => $v) {
+            if($v !== '') {
+                $arr = explode("=", $v);
+                $build_new_query[$arr[0]] = $arr[1];
+            }
+        }
+
+        if (sizeof($build_new_query) > 0) {
+            if(isset($build_new_query['m-tags'])) {
+                $params['m-tags'] = $build_new_query['m-tags'];
+            }
+            if (isset($build_new_query['m-year'])) {
+                $params['m-year'] = $build_new_query['m-year'];
+            }
+            if (isset($build_new_query['m-page'])) {
+                $params['m-page'] = $build_new_query['m-page'];
+            }
+
+        }
+
+        $min_max_years = MFN_get_feed_min_max_years($pmlang);
 
         $template = empty($instance['template']) ? "
-        <div class='mfn-item'>
-            <div class='mfn-date'>[date]</div>
-            <div class='mfn-tags'>[tags]</div>
-            <div class='mfn-title'><a href='[url]'>[title]</a></div>
-            <div class='mfn-preview'>[preview]</div>
-        </div>
+            <div class='mfn-item'>
+                <div class='mfn-item-header'>
+                    <span class='mfn-date'>[date]</span>
+                    <span class='mfn-title'>
+                        <a href='[url]'>[title]</a>
+                    </span>
+                    <span class='mfn-tags'>[tags]</span>
+                </div>
+                <div class='mfn-item-body'>
+                    <div class='mfn-preview'>[preview]</div>
+                </div>
+            </div>
         " : $instance['template'];
 
         $tagtemplate = empty($instance['tagtemplate']) ? "
-        <div class='mfn-tag mfn-tag-[slug]'>[tag]</div>
+            <span class='mfn-tag mfn-tag-[slug]'>[tag]</span>
         " : $instance['tagtemplate'];
 
         $yeartemplate = empty($instance['yeartemplate']) ? "
-        <a href='[url]' class='[mfn-year-selected]'>[year]</a>
+            <span class='mfn-year-header mfn-year mfn-year-header-[year]'>
+                <a href='[url]' class='mfn-year-header-link mfn-year-header-link-[year]'>[year]</a>
+            </span>
         " : $instance['yeartemplate'];
 
         $onlytagsallowed = array();
@@ -1013,26 +913,32 @@ class mfn_news_feed_widget extends WP_Widget
             $onlytagsallowed = explode(",", $onlytagsallowedstr);
         }
 
-        echo "
-        <style>
-            .mfn-tags { float: right; }
-            .mfn-tag { display: inline-block; }
-            .mfn-date { display: inline-block; }
-        </style>";
+        $news_items_params =
+            array(
+                    'showpreview' => $showpreview,
+                    'pagelen' => $pagelen,
+                    'offset' => $page * $pagelen,
+                    'hasNotTags' => json_encode($hasNotTags),
+                    'hasTags' => json_encode($hasTags),
+                    'year' => $y,
+                    'pmlang' => $pmlang,
+                    'tzLocation' => $tzLocation,
+                    'timestampFormat' => $timestampFormat,
+                    'onlytagsallowed' => $onlytagsallowed,
+                    'tagtemplate' => base64_encode($tagtemplate),
+                    'template' => base64_encode($template),
+                    'groupbyyear' => $groupbyyear,
+                    'skipcustomtags' => $skipcustomtags,
+                    'showpreview' => $showpreview,
+                    'previewlen' => $previewlen,
+                    'showpagination' => $showpagination,
+                    'query' => json_encode($params),
+                );
 
         echo "<div class=\"mfn-newsfeed\">";
 
-//        echo "<div class='mfn-newsfeed-tag-selector'>";
-//            $params = http_build_query(array_merge($_GET, array('m-tags' => 'regulatory')));
-//            $url1 = $baseurl . "?" . $params;
-//            $params = http_build_query(array_merge($_GET, array('m-tags' => '-regulatory')));
-//            $url2 = $baseurl . "?" . $params;
-//            $params = http_build_query(array_merge($_GET, array('m-tags' => 'report')));
-//            $url3 = $baseurl . "?" . $params;
-//            echo "<a href='$url1'>Regulatory</a>";
-//            echo "<a href='$url2'>Non-Regulatory</a>";
-//            echo "<a href='$url3'>Reports</a>";
-//        echo "</div>";
+        // if show filter is true
+        if ($showfilter) $this->load_filter_dropdown($baseurl, $wp, $l, $lang, $instance_id);
 
         if ($showyears) {
 
@@ -1047,9 +953,8 @@ class mfn_news_feed_widget extends WP_Widget
                     $params = http_build_query(array_merge($_GET, array('m-year' => $i)));
                     $url = $baseurl . "?" . $params;
                     $html = $yeartemplate;
-                    $html = str_replace(array("[url]", "[year]", "[mfn-year-selected]"),
-                        array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
-
+                    $html = str_replace(array("[url]", "[year]", "[mfn-year-selected]"), array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
+                    $html = str_replace(array("{{url}}", "{{year}}", "{{mfn-year-selected}}"), array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
                     echo $html;
                 }
                 echo "</div>";
@@ -1057,9 +962,9 @@ class mfn_news_feed_widget extends WP_Widget
 
         }
 
-        echo "<div class=\"mfn-list\">";
+        echo '<div class="mfn-list" id="mfn-list-' . $instance_id . '">';
 
-        $this->list_news_items($res, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $showpreview, $previewlen);
+        $news_items = $this->list_news_items($news_items_params, $showfilter, $instance_id);
 
         if ($showpagination) {
             echo "</div><div class='mfn-newsfeed-pagination'>";
@@ -1071,7 +976,7 @@ class mfn_news_feed_widget extends WP_Widget
                 echo "<a href='$url1' class='mfn-page-link mfn-page-link-prev'>$word</a>";
             }
 
-            if (count($res) == $pagelen) {
+            if ($news_items == $pagelen) {
                 $params = http_build_query(array_merge($_GET, array('m-page' => $page + 1)));
                 $url2 = $baseurl . "?" . $params;
                 $word = $l("Next", $lang);
@@ -1089,41 +994,43 @@ class mfn_news_feed_widget extends WP_Widget
         $pagelen = $instance['pagelen'] ?? '20';
         $previewlen = $instance['previewlen'] ?? '';
         $showpagination = $instance['showpagination'] ?? '1';
+        $showfilter = $instance['showfilter'] ?? '0';
         $showyears = $instance['showyears'] ?? '0';
         $showpreview = $instance['showpreview'] ?? '0';
         $groupbyyear = $instance['groupbyyear'] ?? '0';
         $tzLocation = $instance['tzLocation'] ?? 'Europe/Stockholm';
         // Format at https://www.php.net/manual/en/function.date.php#refsect1-function.date-parameters
         $timestampFormat = $instance['timestampFormat'] ?? 'Y-m-d H:i';
+        $skipcustomtags = $instance['skipcustomtags'] ?? '0';
 
         if (isset($instance['template']) && $instance['template'] !== "") {
             $template = $instance['template'];
         } else {
-            $template = "
-                <div class='mfn-item'>
-                    <div class='mfn-date'>[date]</div>
-                    <div class='mfn-tags'>[tags]</div>
-                    <div class='mfn-title'><a href='[url]'>[title]</a></div>
-                    <div class='mfn-preview'>[preview]</div>
-                </div>
-            ";
+            $template = "<div class='mfn-item'><div class='mfn-date'>[date]</div><div class='mfn-tags'>[tags]</div><div class='mfn-title'><a href='[url]'>[title]</a></div><div class='mfn-preview'>[preview]</div></div>";
         }
 
         if (isset($instance['tagtemplate']) && $instance['tagtemplate'] !== "") {
             $tagtemplate = $instance['tagtemplate'];
         } else {
-            $tagtemplate = "<div class='mfn-tag mfn-tag-[slug]'>[tag]</div>";
+            $tagtemplate = "<span class='mfn-tag mfn-tag-[slug]'>[tag]</span>";
         }
 
         if (isset($instance['yeartemplate']) && $instance['yeartemplate'] !== "") {
             $yeartemplate = $instance['yeartemplate'];
         } else {
-            $yeartemplate = "<a href='[url]' class='[mfn-year-selected]'>[year]</a>";
+            $yeartemplate = "<span class='mfn-year-header mfn-year mfn-year-header-[year]'><a href='[url]' class='mfn-year-header-link mfn-year-header-link-[year]'>[year]</a></span>";
         }
 
         $onlytagsallowed = $instance['onlytagsallowed'] ?? "";
 
         ?>
+
+        <p>
+            <input id="<?php echo esc_attr($this->get_field_id('showfilter')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('showfilter')); ?>" type="checkbox"
+                   value="1" <?php checked('1', $showfilter); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('showfilter')); ?>"><?php _e('Show Filter', 'text_domain'); ?></label>
+        </p>
 
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('showyears')); ?>"
@@ -1143,7 +1050,7 @@ class mfn_news_feed_widget extends WP_Widget
             if ($showpreview) {
                 echo '
                 <p>
-                    <label for="' . esc_attr($this->get_field_id("previewlen")) . '">' . _e('Preview length (e.g. "250". Default is to leave this field empty)', 'text_domain') . '</label>
+                    <label for="' . esc_attr($this->get_field_id("previewlen")) . '">' . _e('Preview length (e.g. "250". Default is to leave this field empty):', 'text_domain') . '</label>
                     <input class="widefat" id= "' . esc_attr($this->get_field_id('previewlen')) . '"
                            name="' . esc_attr($this->get_field_name('previewlen')) . '" type="number"
                            value="' . esc_attr($previewlen) . '"/>
@@ -1167,9 +1074,8 @@ class mfn_news_feed_widget extends WP_Widget
         </p>
 
         <p>
-            <label for="<?php echo $this->get_field_id('lang'); ?>"><?php _e('Archive Language', 'text_domain'); ?></label>
-            <select name="<?php echo $this->get_field_name('lang'); ?>" id="<?php echo $this->get_field_id('lang'); ?>"
-                    class="widefat">
+            <label for="<?php echo $this->get_field_id('lang'); ?>"><?php _e('Archive Language', 'text_domain'); ?>:</label>
+            <select name="<?php echo $this->get_field_name('lang'); ?>" id="<?php echo $this->get_field_id('lang'); ?>" class="widefat">
                 <?php
                 // Your options array
                 $options = array(
@@ -1188,7 +1094,7 @@ class mfn_news_feed_widget extends WP_Widget
 
         </p>
         <p>
-            <label for="<?php echo $this->get_field_id('tzLocation'); ?>"><?php _e('Timestamp Location', 'text_domain'); ?></label>
+            <label for="<?php echo $this->get_field_id('tzLocation'); ?>"><?php _e('Timestamp Location:', 'text_domain'); ?></label>
             <select name="<?php echo $this->get_field_name('tzLocation'); ?>"
                     id="<?php echo $this->get_field_id('tzLocation'); ?>"
                     class="widefat">
@@ -1226,7 +1132,7 @@ class mfn_news_feed_widget extends WP_Widget
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('template')); ?>">Template</label>
+            <label for="<?php echo esc_attr($this->get_field_id('template')); ?>"><?php _e('Template:', 'text_domain'); ?></label>
             <textarea rows="8" class="widefat" id="<?php echo esc_attr($this->get_field_id('template')); ?>"
                       name="<?php echo esc_attr($this->get_field_name('template')); ?>"><?php echo wp_kses_post($template); ?></textarea>
         </p>
@@ -1249,21 +1155,28 @@ class mfn_news_feed_widget extends WP_Widget
         ?>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('tagtemplate')); ?>">Tag Template</label>
+            <label for="<?php echo esc_attr($this->get_field_id('tagtemplate')); ?>"><?php _e('Tag Template:', 'text_domain'); ?></label>
             <textarea rows="2" class="widefat" id="<?php echo esc_attr($this->get_field_id('tagtemplate')); ?>"
                       name="<?php echo esc_attr($this->get_field_name('tagtemplate')); ?>"><?php echo wp_kses_post($tagtemplate); ?></textarea>
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('yeartemplate')); ?>">Year Template</label>
+            <label for="<?php echo esc_attr($this->get_field_id('yeartemplate')); ?>"><?php _e('Year Template:', 'text_domain'); ?></label>
             <textarea rows="2" class="widefat" id="<?php echo esc_attr($this->get_field_id('yeartemplate')); ?>"
                       name="<?php echo esc_attr($this->get_field_name('yeartemplate')); ?>"><?php echo wp_kses_post($yeartemplate); ?></textarea>
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('onlytagsallowed')); ?>">Show Only tags</label>
+            <label for="<?php echo esc_attr($this->get_field_id('onlytagsallowed')); ?>"><?php _e('Show Only Tags (eg. mfn-regulatory,mfn-regulatory-mar):', 'text_domain'); ?></label>
             <textarea rows="2" class="widefat" id="<?php echo esc_attr($this->get_field_id('onlytagsallowed')); ?>"
                       name="<?php echo esc_attr($this->get_field_name('onlytagsallowed')); ?>"><?php echo wp_kses_post($onlytagsallowed); ?></textarea>
+        </p>
+
+        <p>
+            <input id="<?php echo esc_attr($this->get_field_id('skipcustomtags')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('skipcustomtags')); ?>" type="checkbox"
+                   value="1" <?php checked('1', $skipcustomtags); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('skipcustomtags')); ?>"><?php _e('Skip Custom Tags', 'text_domain'); ?></label>
         </p>
 
         <?php
@@ -1274,6 +1187,7 @@ class mfn_news_feed_widget extends WP_Widget
         $instance = array();
         $instance['lang'] = (!empty($new_instance['lang'])) ? wp_strip_all_tags($new_instance['lang']) : '';
         $instance['showpagination'] = (!empty($new_instance['showpagination'])) ? strip_tags($new_instance['showpagination']) : '';
+        $instance['showfilter'] = (!empty($new_instance['showfilter'])) ? strip_tags($new_instance['showfilter']) : '';
         $instance['showyears'] = (!empty($new_instance['showyears'])) ? strip_tags($new_instance['showyears']) : '';
         $instance['showpreview'] = (!empty($new_instance['showpreview'])) ? strip_tags($new_instance['showpreview']) : '';
         $instance['groupbyyear'] = (!empty($new_instance['groupbyyear'])) ? strip_tags($new_instance['groupbyyear']) : '';
@@ -1285,6 +1199,7 @@ class mfn_news_feed_widget extends WP_Widget
         $instance['tagtemplate'] = (!empty($new_instance['tagtemplate'])) ? wp_kses_post($new_instance['tagtemplate']) : '';
         $instance['yeartemplate'] = (!empty($new_instance['yeartemplate'])) ? wp_kses_post($new_instance['yeartemplate']) : '';
         $instance['onlytagsallowed'] = (!empty($new_instance['onlytagsallowed'])) ? wp_kses_post($new_instance['onlytagsallowed']) : '';
+        $instance['skipcustomtags'] = (!empty($new_instance['skipcustomtags'])) ? strip_tags($new_instance['skipcustomtags']) : '';
         return $instance;
     }
 } //

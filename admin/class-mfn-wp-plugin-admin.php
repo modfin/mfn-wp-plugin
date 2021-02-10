@@ -147,20 +147,40 @@ class Mfn_Wp_Plugin_Admin {
         include_once( 'partials/mfn-wp-plugin-admin-display.php' );
     }
 
-
     public function reg_option() {
         register_setting($this->plugin_name, $this->plugin_name, array($this, 'validate'));
 
     }
 
-    public function validate($input) {
+    private function validate_slug($r): string
+    {
+        $r = strtolower(preg_replace("/[^a-zA-z0-9-_]/", "", $r));
+        $r = trim(isset($r) ? $r : '');
+        $r = preg_replace('/[_]+/', '_', $r);
+        $r = preg_replace('/[-]+/', '-', $r);
+        return $r;
+    }
 
+    public function validate($input) {
         $input['hub_url'] = str_replace(' ', '', trim(isset($input['hub_url']) ? $input['hub_url'] : ''));
         $input['sync_url'] = str_replace(' ', '', trim(isset($input['sync_url']) ? $input['sync_url'] : ''));
         $input['plugin_url'] = str_replace(' ', '', trim(isset($input['plugin_url']) ? $input['plugin_url'] : ''));
-        $input['entity_id'] = str_replace(' ', '', trim(isset($input['entity_id']) ? $input['entity_id'] : ''));
 
+        if(isset($input['rewrite_post_type']) && is_array($input['rewrite_post_type'])) {
+            foreach($input['rewrite_post_type'] as $key => $slug) {
+                $k = explode("_", $key);
+                $k = $k[0];
+
+                if($k === "slug" || $k === "single-slug") {
+                    $input['rewrite_post_type'][$key] = $this->validate_slug($slug);
+                }
+                else {
+                    $input['rewrite_post_type'][$key] = trim(isset($input['rewrite_post_type'][$key]) ? $input['rewrite_post_type'][$key] : '');
+                }
+            }
+            // serialize array before saving
+            $input['rewrite_post_type'] = serialize($input['rewrite_post_type']);
+        }
         return $input;
     }
-
 }

@@ -2,8 +2,6 @@
 
 require_once( WP_PLUGIN_DIR . '/mfn-wp-plugin/config.php');
 
-
-
 /**
  * The file that defines the core plugin class
  *
@@ -157,9 +155,6 @@ class Mfn_Wp_Plugin {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
-
-
-//        $this->loader->add_action('update_option', $plugin_admin, 'options_update');
         $this->loader->add_action('admin_init', $plugin_admin, 'reg_option');
         $this->loader->add_action( 'admin_menu', $plugin_admin, 'add_plugin_admin_menu' );
         $plugin_basename = plugin_basename( plugin_dir_path( __DIR__ ) . $this->plugin_name . '.php' );
@@ -199,7 +194,8 @@ class Mfn_Wp_Plugin {
 	 * @since     1.0.0
 	 * @return    string    The name of the plugin.
 	 */
-	public function get_plugin_name() {
+	public function get_plugin_name(): string
+    {
 		return $this->plugin_name;
 	}
 
@@ -209,7 +205,8 @@ class Mfn_Wp_Plugin {
 	 * @since     1.0.0
 	 * @return    Mfn_Wp_Plugin_Loader    Orchestrates the hooks of the plugin.
 	 */
-	public function get_loader() {
+	public function get_loader(): Mfn_Wp_Plugin_Loader
+    {
 		return $this->loader;
 	}
 
@@ -219,10 +216,9 @@ class Mfn_Wp_Plugin {
 	 * @since     1.0.0
 	 * @return    string    The version number of the plugin.
 	 */
-	public function get_version() {
+	public function get_version(): string
+    {
 		return $this->version;
 	}
-
-
 
 }

@@ -1,0 +1,59 @@
+.mfn-item-header {
+    display: flex;
+    flex-direction: column;
+}
+
+.mfn-feed-year-header {
+    margin-top: 20px;
+    cursor: default;
+}
+
+.mfn-date {
+    display: inline-block;
+    cursor: default;
+}
+
+.mfn-newsfeed-pagination {
+    margin-top: 20px;
+}
+
+.mfn-item {
+    margin-bottom: 40px;
+}
+
+.mfn-tag {
+    margin: 0 5px 5px 0;
+    padding: 5px 10px 5px 0;
+    cursor: default;
+    white-space: nowrap;
+}
+
+.mfn-newsfeed-year-selector {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.mfn-year a {
+    margin: 0 25px 0 0;
+    letter-spacing: -0.6pt;
+    padding: 5px 0 0 0;
+    color: #332d2f;
+    white-space: nowrap;
+    outline: none;
+}
+
+.mfn-tags {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.mfn-title {
+    font-size: 26px;
+    margin-bottom: 10px;
+}
+
+.mfn-title a {
+    outline: none;
+}

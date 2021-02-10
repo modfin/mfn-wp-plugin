@@ -1,17 +1,15 @@
 <?php
+
 require_once(dirname(__FILE__) . '/config.php');
 
-
-function startsWith($haystack, $needle)
+function startsWith($haystack, $needle): bool
 {
     $length = strlen($needle);
     return (substr($haystack, 0, $length) === $needle);
 }
 
-function createTags($item)
+function createTags($item): array
 {
-
-
     $tags = isset($item->properties->tags) ? $item->properties->tags : array();
     $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
     $type = isset($item->properties->type) ? $item->properties->type : 'ir';
@@ -50,10 +48,8 @@ function createTags($item)
             $newtag[$i] = $t . "_" . $lang;
         }
     }
-
     return $newtag;
 }
-
 
 function upsertAttachments($post_id, $attachments)
 {
@@ -71,7 +67,6 @@ function upsertAttachments($post_id, $attachments)
         add_post_meta($post_id, MFN_POST_TYPE . "_attachment_data", json_encode($attachment, JSON_UNESCAPED_UNICODE));
     }
 }
-
 
 function upsertLanguage($post_id, $groupId, $lang)
 {
@@ -110,10 +105,8 @@ function upsertLanguage($post_id, $groupId, $lang)
         pll_save_post_translations( $translations );
     }
 
-
     if ($use_wpml == 'on') {
-
-        // This since WPML has some sort of rais condition when creating a mutiple posts at once
+        // This since WPML has some sort of race condition when creating a multiple posts at once
         // It should really be done in the call wp_insert_post
         do_action( 'wpml_set_element_language_details', array(
             'element_id'    => $post_id,
@@ -135,7 +128,7 @@ function upsertLanguage($post_id, $groupId, $lang)
       ", $groupId);
         $trid = $wpdb->get_var($q);
 
-//        $wpdb->update($tableName, array('language_code' => $lang, 'trid' => $trid), array('element_id' => $post_id));
+        // $wpdb->update($tableName, array('language_code' => $lang, 'trid' => $trid), array('element_id' => $post_id));
         do_action( 'wpml_set_element_language_details', array(
             'element_id'    => $post_id,
             'element_type'  => 'post_' . MFN_POST_TYPE,
@@ -146,8 +139,7 @@ function upsertLanguage($post_id, $groupId, $lang)
     }
 }
 
-
-function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false)
+function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false): int
 {
     do_action('mfn_before_upsertitem', $item);
     global $wpdb;
@@ -155,7 +147,6 @@ function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false
     $newsid = $item->news_id;
     $groupId = $item->group_id;
     $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
-    $entity_id = $item->author->entity_id;
 
     $title = $item->content->title;
     $publish_date = $item->content->publish_date;
@@ -163,20 +154,17 @@ function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false
     $html = $item->content->html;
     $attachments = isset($item->content->attachments) ? $item->content->attachments : array();
 
-
     $post_id = $wpdb->get_var($wpdb->prepare(
         "
-SELECT post_id
-FROM $wpdb->postmeta
-WHERE meta_key = %s
-LIMIT 1
-",
+            SELECT post_id
+            FROM $wpdb->postmeta
+            WHERE meta_key = %s
+            LIMIT 1
+        ",
         MFN_POST_TYPE . "_" . $newsid
     ));
 
-
     $tags = createTags($item);
-
 
     $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags) {
         if ($reset_cache) {
@@ -203,9 +191,8 @@ LIMIT 1
         'post_excerpt' => $preamble,
         'post_status' => 'publish',
         'post_type' => MFN_POST_TYPE,
-        'post_date' => $publish_date,
+        'post_date_gmt' => $publish_date,
     ));
-
 
     if ($post_id != 0) {
         add_post_meta($post_id, MFN_POST_TYPE . "_" . $newsid, $publish_date);
@@ -225,14 +212,12 @@ LIMIT 1
     return 1;
 }
 
-
-function subscribe()
+function subscribe(): string
 {
 
     $ops = get_option('mfn-wp-plugin');
 
     $subscription_id = isset($ops['subscription_id']) ? $ops['subscription_id'] : "N/A";
-
 
     if (strlen($subscription_id) == 36) {
         return "a subscription is already active";
@@ -243,16 +228,13 @@ function subscribe()
     $plugin_url = isset($ops['plugin_url']) ? $ops['plugin_url'] : "";
     $cus_query = isset($ops['cus_query']) ? $ops['cus_query'] : "";
 
-
     $ops['posthook_name'] = isset($ops['posthook_name']) ? $ops['posthook_name'] : generateRandomString();
     $ops['posthook_secret'] = isset($ops['posthook_secret']) ? $ops['posthook_secret'] : generateRandomString();
-
 
     $posthook_name = $ops['posthook_name'];
     $posthook_secret = $ops['posthook_secret'];
 
     update_option(MFN_PLUGIN_NAME, $ops);
-
 
     $args = array(
         'method' => 'POST',
@@ -266,7 +248,6 @@ function subscribe()
         )
     );
 
-
     $response = wp_remote_post($hub_url, $args);
     $result = wp_remote_retrieve_body($response);
 
@@ -274,12 +255,10 @@ function subscribe()
         return "did not work...";
     }
 
-
     return "success";
 }
 
-
-function unsubscribe()
+function unsubscribe(): string
 {
     $ops = get_option('mfn-wp-plugin');
 
@@ -289,9 +268,7 @@ function unsubscribe()
         return "there is no active subscription";
     }
 
-
     $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
-
 
     $request = $hub_url . '/verify/' . $subscription_id . "?hub.mode=unsubscribe";
     $response = wp_remote_get($request);

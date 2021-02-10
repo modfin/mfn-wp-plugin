@@ -1,0 +1,104 @@
+@-webkit-keyframes anim-mfn-open {
+    from {
+        transform: translate3d(0, -5%, 0);
+        opacity: 0;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
+    }
+}
+
+@keyframes anim-mfn-open {
+    from {
+        transform: translate3d(0, -5%, 0);
+        opacity: 0;
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
+    }
+}
+
+.mfn-open {
+    -webkit-animation: anim-mfn-open 0.1s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    animation: anim-mfn-open 0.1s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    display: flex !important;
+    flex-direction: column;
+}
+
+.option-text {
+    display: inline-block;
+}
+
+.dropdown {
+    outline: none;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizelegibility;
+    width: 400px;
+    min-width: 150px;
+    font-size: 14px;
+    border: 1px solid #d1d1cf;
+    border-radius: 2px !important;
+}
+
+.dropdown ul {
+    display: none;
+    width: 100%;
+    padding-left: 0;
+    margin: 0;
+    list-style: none;
+}
+.dropdown ul li a {
+    box-shadow: 0 4px 2px -2px rgba(0,0,0,0.06);
+    transition: box-shadow .2s ease-in-out;
+    outline: none;
+    cursor: pointer;
+    display: flex;
+    font-weight: 400;
+    padding: 12px 12px 10px 16px;
+    position: relative;
+    background: #ffffff;
+    border-top: 1px solid #d8d8d8;
+}
+
+.dropdown-arrow {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAzUlEQVRIS+2TwQnCQBREXyxAxJOC4NEqBD3aiwVYggXYi0cFq/AoCHoSsYAgH3YhLhvn55CDktzydzOPmfkpaPkpWtanA8iE/zOiHtAHntL/54UB8ALK6jgX0RrYAivg5ITMgT2wAXYKMAKOwMQJieJXYAHcFcDOx8DBAamKL4Fb6vjbFimIFDeYWtM6iEvcA8jFZTMr1DLPxuLpII0yOpmGg4tH3OsgwgxyDi+zXKG5lVYdpN8Mw+Dh/D9kyV6d2ntNHTQGdgAZ2e9H9AYc/CUZt3oGTQAAAABJRU5ErkJggg==);
+    background-size: 17px;
+    background-repeat: no-repeat;
+    margin-left: auto;
+    background-position: center;
+    height: 17px;
+    width: 17px;
+}
+
+.dropdown ul li a:hover {
+    background-color: #f5f5f5;
+    transition: background-color .3s ease-in-out;
+}
+
+.dropdown span {
+    padding: 12px 16px;
+    border-radius: 4px;
+    display: inline;
+    width: max-content;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dropdown-arrow-wrapper {
+    display: flex;
+    align-self: flex-end;
+    padding: 8px;
+    margin: 8px 4px 8px 8px;
+    position: absolute;
+}
+
+.rotate-arrow {
+    transform: rotate(180deg);
+    transition: transform .1s ease-in-out;
+}

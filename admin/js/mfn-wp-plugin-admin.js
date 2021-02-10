@@ -29,6 +29,41 @@
      * practising this, we should strive to set a better example in our own work.
      */
 
+    var errorClass = 'highlight-input-error';
+
+    $( document ).ready(function() {
+        $('a.mfn-nav-tab').first().addClass('mfn-nav-tab-active');
+        $('.mfn-lang-table').first().removeClass('mfn-hide').addClass("do-fade");
+
+        if ($('#mfn-wp-plugin-entity_id').val() === '') {
+            $('#mfn-wp-plugin-entity_id').addClass(errorClass);
+        }
+        $('#mfn-wp-plugin-entity_id').keyup(function () {
+            if ($(this).val() === '') {
+                $('#mfn-wp-plugin-entity_id').addClass(errorClass);
+            }
+            else {
+                $('#mfn-wp-plugin-entity_id').removeClass(errorClass);
+            }
+        });
+
+        $('span.mfn-info-icon-wrapper').hover(function() {
+            $('.mfn-info').addClass('mfn-info-box');
+        }, function() {
+            $('.mfn-info').removeClass('mfn-info-box');
+        });
+
+        $('a.mfn-nav-tab').click(function (e) {
+            e.preventDefault();
+            var lang = $(this).attr('data-lang');
+            $('a.mfn-nav-tab').removeClass('mfn-nav-tab-active');
+            $(this).addClass('mfn-nav-tab-active');
+
+            $('.mfn-lang-table').addClass('mfn-hide do-fade');
+            $('.mfn-lang-table-' + lang).removeClass('mfn-hide');
+        });
+    });
+
     function sync(all, limit, offset, insertedAgg) {
 
         insertedAgg = insertedAgg || 0;
@@ -42,91 +77,98 @@
             var inserted = parseInt(data.split(' ')[1]);
             insertedAgg += inserted;
 
-
-            $('#sync-status').text('Status: ' + (offset+fetched) + " fetched, " + insertedAgg + " added");
-
-            if (all && fetched === limit) {
-                sync(all, limit, offset + limit, insertedAgg);
-                return
+            if (isNaN(fetched)) {
+                $('#sync-status').html("<div class='do-fade mfn-error-entity-id'><span class=\"dashicons dashicons-dismiss mfn-error-icon\"></span> <span class='mfn-error-entity-id-text'>Failed (Check Entity ID and Sync URL)</span></div>");
+                return;
             }
 
-            $('#sync-status').append(", Done!")
+            $('#sync-status').html('<b>Status</b>: <span class="do-fade">' + (offset+fetched) + '</span> fetched <span class="do-fade"><b>' + insertedAgg + "</b></span> added");
 
+            if (all && fetched === limit) {
+                $('#sync-status').append("<span class='mfn-spinner'></span>");
+                sync(all, limit, offset + limit, insertedAgg);
+                return;
+            }
+
+            if (all) {
+                registerSyncAllClick();
+                // also sync taxonomy
+                syncTax();
+            } else {
+                registerSyncLatestClick();
+            }
+
+            $('#sync-status').append("<span class=\"dashicons dashicons-yes mfn-success-icon\"></span>Done!");
         });
-    }
 
+    }
 
     function syncTax() {
+        $('#sync-tax-status').html("<span class='mfn-spinner'></span>");
 
-
-        $.get(window.PLUGIN_URL + '/cc.php?mode=sync-tax', function (data) {
-
-            console.log(data)
-
+        $.get(window.PLUGIN_URL + '/cc.php?mode=sync-tax', function () {
+            registerSyncTaxClick();
+            $('#sync-tax-status').html("<span class=\"dashicons dashicons-yes mfn-success-icon do-fade\"></span>Done!");
         });
     }
 
-
-
-    function pluginUrlTest(){
+    function pluginUrlTest() {
         var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
         var el =  $('#plugin-url-test');
 
-
-        if(!pluginUrl || pluginUrl.trim() === ''){
-            el.text("Invalid, plugin url must be provided");
-            return
+        if(!pluginUrl || pluginUrl.trim() === '') {
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, plugin url must be provided");
+            return;
         }
 
         $.get(pluginUrl + '/cc.php?mode=ping', function (data) {
-            if (data === 'pong'){
-                el.text("Valid");
-                return
+            if (data === 'pong') {
+                el.html("<span class=\"dashicons dashicons-yes mfn-success-icon do-fade\"></span>Valid");
+                return;
             }
-            el.text("Invalid, server does not return pong");
+            $('#mfn-wp-plugin-plugin_url').addClass(errorClass);
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, server does not return pong");
         }).fail(function(err) {
-            console.log(err);
-            el.text("Invalid, address does not seem to be responding with anything, " + err.status);
+            console.error(err);
+            $('#mfn-wp-plugin-plugin_url').addClass(errorClass);
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, address does not seem to be responding with anything " + "(" + err.status + ")");
         })
     }
-
-
 
     function hubUrlTest(){
-        var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
+        var hubUrl = $('#mfn-wp-plugin-hub_url').val();
         var el =  $('#hub-url-test');
 
-
-        if(!pluginUrl || pluginUrl.trim() === ''){
-            el.text("Invalid, hub url must be provided");
-            return
+        if(!hubUrl || hubUrl.trim() === '') {
+            $('#mfn-wp-plugin-hub_url').addClass(errorClass);
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, hub url must be provided");
+            return;
         }
 
-        $.get(pluginUrl + '/cc.php?mode=pinghub', function (data) {
-            if (data === 'ponghub'){
-                el.text("Valid");
-                return
+        $.get(hubUrl, function (data) {
+            if (typeof data === 'string' && data.indexOf('- WebSub hub server, https://www.w3.org/TR/websub') !== -1) {
+                el.html("<span class=\"dashicons dashicons-yes mfn-success-icon do-fade\"></span>Valid");
+                return;
             }
-            el.text("Invalid, server does not return pong \n\n (make sure php function file_get_contents is allowed to make http requests) \n\n " + data );
+            $('#mfn-wp-plugin-hub_url').addClass(errorClass);
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, server does not return pong \n\n - make sure php function <i>file_get_contents</i> is allowed to make http requests \n\n (" + data + ")");
         }).fail(function(err) {
-            console.log(err);
-            el.text("Invalid, address does not seem to be responding with anything, " + err.status);
+            console.error(err);
+            $('#mfn-wp-plugin-hub_url').addClass(errorClass);
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Ping to hub url failed " + "(" + err.status + ")");
         })
     }
-
-
 
     function tests() {
         pluginUrlTest();
         hubUrlTest();
     }
 
-
     function subscribe(){
         var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
-        $.get(pluginUrl + '/cc.php?mode=subscribe', function (data) {
-            setTimeout(function (){
-                location.reload()
+        $.get(pluginUrl + '/cc.php?mode=subscribe', function () {
+            setTimeout(function () {
+                location.reload();
             }, 100);
         })
 
@@ -134,23 +176,21 @@
 
     function unsubscribe(){
         var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
-        $.get(pluginUrl + '/cc.php?mode=unsubscribe', function (data) {
-            setTimeout(function (){
-                location.reload()
+        $.get(pluginUrl + '/cc.php?mode=unsubscribe', function () {
+            setTimeout(function () {
+                location.reload();
             }, 100);
 
         })
     }
-
-
 
     function clearSettings(){
 
         var command = $('#clear-settings-input').val().trim().toLowerCase();
 
         if (command !== 'clear'){
-            alert("You must write the word \"clear\" in the input field next to the button to show intent for this action")
-            return
+            alert("You must write the word \"clear\" in the input field next to the button to show intent for this action");
+            return;
         }
 
         var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
@@ -159,27 +199,23 @@
             pluginUrl = "/wp-content/plugins/mfn-wp-plugin";
         }
 
-        $.get(pluginUrl + '/cc.php?mode=clear-settings', function (data) {
-            setTimeout(function (){
-                location.reload()
+        $.get(pluginUrl + '/cc.php?mode=clear-settings', function () {
+            setTimeout(function () {
+                location.reload();
             }, 100);
         })
 
     }
 
-
-    function deletePosts(total){
-
-
-
+    function deletePosts(total) {
 
         total = total || 0;
 
         var command = $('#delete-posts-input').val().trim().toLowerCase();
 
-        if (command !== 'delete'){
+        if (command !== 'delete') {
             alert("You must write the word \"delete\" in the input field next to the button to show intent for this action");
-            return
+            return;
         }
 
         $('#delete-posts-btn').prop('disabled', true);
@@ -187,7 +223,7 @@
 
         var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
 
-        if(pluginUrl.length < 3){
+        if(pluginUrl.length < 3) {
             pluginUrl = "/wp-content/plugins/mfn-wp-plugin";
         }
 
@@ -196,57 +232,62 @@
             var deleted = parseInt(data);
             total += deleted;
             if (deleted === 10){
-                $('#delete-posts-nfo').text(total + " deleted");
+                $('#delete-posts-info').html(total + " deleted");
                 deletePosts(total);
-                return
+                return;
             }
 
-            $('#delete-posts-nfo').text(total + " deleted, done");
+            $('#delete-posts-info').html('<span class="do-fade">' + total + '</span>' + " deleted <span class=\"dashicons dashicons-yes mfn-success-icon do-fade\"></span>Done!");
             $('#delete-posts-btn').prop('disabled', false);
             $('#delete-posts-input').prop('disabled', false);
-            $('#delete-posts-input').val('')
+            $('#delete-posts-input').val('');
 
-        })
+        });
 
     }
 
-
+    function registerSyncAllClick() {
+        $("#sync-all").one("click", function (event) {
+            event.stopPropagation();
+            sync(true);
+        });
+    }
+    function registerSyncLatestClick() {
+        $("#sync-latest").one("click", function (event) {
+            event.stopPropagation();
+            sync(false);
+        });
+    }
+    function registerSyncTaxClick() {
+        $("#sync-tax").one("click", function () {
+            syncTax();
+        });
+    }
 
     function init() {
-        $("#sync-all").click(function () {
-            sync(true)
-        });
-        $("#sync-latest").click(function () {
-            sync(false)
-        });
 
-        $("#sync-tax").click(function () {
-            syncTax()
-        });
-
+        registerSyncAllClick();
+        registerSyncLatestClick();
+        registerSyncTaxClick();
 
         $("#sub-button").click(function () {
-            subscribe()
+            subscribe();
         });
         $("#unsub-button").click(function () {
-            unsubscribe()
+            unsubscribe();
         });
 
-
         $("#clear-settings-btn").click(function () {
-            clearSettings()
+            clearSettings();
         });
 
         $("#delete-posts-btn").click(function () {
-            deletePosts()
+            deletePosts();
         });
 
-        tests()
-
-
+        tests();
 
     }
-
 
     $(document).ready(init);
 

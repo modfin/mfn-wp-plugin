@@ -197,8 +197,11 @@ function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limi
         $params[] = $lang;
     }
 
+    $wpdb->show_errors();
     $q = $wpdb->prepare($query, $params);
+
     $res = $wpdb->get_results($q);
+    $wpdb->print_error();
 
     $reports = array();
     foreach ($res as $r) {
@@ -281,26 +284,29 @@ function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limi
     return array_slice($filtered_reports, $offset, $limit);
 }
 
-function MFN_get_feed_min_max_years($lang = 'all'){
+function MFN_get_feed_min_max_years($lang = 'all') {
     global $wpdb;
     $params = array();
     $query = "
-    SELECT max(YEAR(post_date_gmt)) max_year, min(YEAR(post_date_gmt)) min_year, lang.meta_value lang
+    SELECT 
+           max(YEAR(post_date_gmt)) max_year, 
+           min(YEAR(post_date_gmt)) min_year, 
+           count(distinct p.ID) post_count
     FROM $wpdb->posts p
-    INNER JOIN $wpdb->postmeta lang
-    ON p.ID = lang.post_id
+    INNER JOIN $wpdb->postmeta pm
+    ON p.ID = pm.post_id
     WHERE post_type = '" . MFN_POST_TYPE . "'
       AND post_date_gmt IS NOT NULL
       AND post_date_gmt <> 0
     ";
 
-    if($lang !== "all") {
-        $query .= " AND lang.meta_value = %s ";
+    if ($lang !== "all") {
+        $query .= " AND pm.meta_value = %s ";
         $params[] = $lang;
+        $query = $wpdb->prepare($query, $params);
     }
 
-    $q = $wpdb->prepare($query, $params);
-    $res = $wpdb->get_results($q);
+    $res = $wpdb->get_results($query);
 
     if (sizeof($res) > 0) {
         return $res[0];
@@ -324,7 +330,7 @@ INNER JOIN (
   SELECT 
   po.ID, 
   group_concat(CONCAT(ter.name, ':', ter.slug) ORDER BY ter.slug LIKE '" . MFN_TAG_PREFIX . "-cus-%', ter.slug) AS tags, 
-  group_concat(ter.slug ORDER BY ter.slug LIKE '" . MFN_TAG_PREFIX . "-cus-%', ter.slug) AS tag_slugs
+  group_concat(SUBSTRING_INDEX(ter.slug, '_', 1) ORDER BY ter.slug LIKE '" . MFN_TAG_PREFIX . "-cus-%', ter.slug) AS tag_slugs
   FROM $wpdb->posts po
          INNER JOIN $wpdb->term_relationships r
                     ON r.object_id = po.ID
@@ -342,12 +348,15 @@ INNER JOIN (
     AND p.post_status = 'publish'
  ";
 
-    if($lang != "all") {
+    if ($lang != "all") {
         $query .= " AND lang.meta_value = %s ";
         array_push($params, $lang);
     }
 
     foreach ($hasTags as $tag) {
+//        if(strpos($tag, '_') === false) {
+//            $tag = $tag . '_' . $lang;
+//        }
         $query .= " AND FIND_IN_SET(%s, t.tag_slugs) > 0 ";
         array_push($params, $tag);
     }
@@ -357,7 +366,7 @@ INNER JOIN (
         array_push($params, $tag);
     }
 
-    if($year != ""){
+    if ($year != "") {
         $query .= " AND YEAR(p.post_date_gmt) = %s ";
         array_push($params, $year);
     }

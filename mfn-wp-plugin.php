@@ -28,7 +28,6 @@
 require_once(dirname(__FILE__) . '/config.php');
 require_once(dirname(__FILE__) . '/widgets.php');
 
-
 // If this file is called directly, abort.
 if (!defined('WPINC')) {
     die;
@@ -48,8 +47,6 @@ function activate_mfn_wp_plugin()
 {
     require_once plugin_dir_path(__FILE__) . 'includes/class-mfn-wp-plugin-activator.php';
     Mfn_Wp_Plugin_Activator::activate();
-
-
 }
 
 /**
@@ -88,12 +85,10 @@ function mfn_news_post_type()
 
 add_action('init', 'mfn_news_post_type');
 
-
 function run_mfn_wp_plugin()
 {
     $plugin = new Mfn_Wp_Plugin();
     $plugin->run();
-
 }
 
 run_mfn_wp_plugin();
