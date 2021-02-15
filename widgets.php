@@ -787,16 +787,16 @@ class mfn_news_feed_widget extends WP_Widget
 
             if (strpos($tag, '-') === 0 || strpos($tag, '!') === 0) {
                 $tag = substr($tag, 1);
-                if (strpos($tag, 'mfn-') !== 0) {
-                    $tag = 'mfn-' . $tag;
+                if (strpos($tag, MFN_TAG_PREFIX . '-') !== 0) {
+                    $tag = MFN_TAG_PREFIX . '-' . $tag;
                 }
 
                 $hasNotTags[] = $tag;
                 continue;
             }
 
-            if (strpos($tag, 'mfn-') !== 0) {
-                $tag = 'mfn-' . $tag;
+            if (strpos($tag, MFN_TAG_PREFIX . '-') !== 0) {
+                $tag = MFN_TAG_PREFIX . '-' . $tag;
             }
 
             $hasTags[] = $tag;

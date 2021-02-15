@@ -562,7 +562,6 @@ function sync_mfn_taxonomy()
 
             pll_set_term_language($term->term_id, $lang);
             $translations[$lang] = $term->term_id;
-            echo $term->term_id;
         }
         pll_save_term_translations($translations);
     };
@@ -589,8 +588,7 @@ function sync_mfn_taxonomy()
                 'lang' => ''
             ));
         }
-        echo print_r($terms);
-        if (sizeof($terms) == 0){
+        if (sizeof($terms) == 0) {
             return false;
         }
         return $terms[0];

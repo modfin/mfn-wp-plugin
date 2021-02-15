@@ -192,18 +192,21 @@ function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limi
             AND tax.taxonomy = '" . MFN_TAXONOMY_NAME . "'
     ";
 
-    if($lang !== "all") {
+    if ($lang !== "all") {
         $query .= " AND lang.meta_value = %s ";
         $params[] = $lang;
     }
 
-    $wpdb->show_errors();
     $q = $wpdb->prepare($query, $params);
 
     $res = $wpdb->get_results($q);
-    $wpdb->print_error();
 
     $reports = array();
+
+    if (!isset($res) || !is_array($res)) {
+        $res = [];
+    }
+
     foreach ($res as $r) {
         $tags = $r->attachment_meta_value ? json_decode($r->attachment_meta_value, true)["tags"] : [];
         $url = $r->attachment_meta_value ? json_decode($r->attachment_meta_value, true)["url"] : '';
@@ -354,9 +357,6 @@ INNER JOIN (
     }
 
     foreach ($hasTags as $tag) {
-//        if(strpos($tag, '_') === false) {
-//            $tag = $tag . '_' . $lang;
-//        }
         $query .= " AND FIND_IN_SET(%s, t.tag_slugs) > 0 ";
         array_push($params, $tag);
     }
@@ -381,7 +381,11 @@ INNER JOIN (
     $q = $wpdb->prepare($query, $params);
     $res = $wpdb->get_results($q);
 
-    foreach ($res as $r){
+    if (!isset($res) || !is_array($res)) {
+        $res = [];
+    }
+
+    foreach ($res as $r) {
         $r->tags = explode(",", $r->tags);
     }
 

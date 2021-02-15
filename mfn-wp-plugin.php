@@ -13,9 +13,9 @@
  * @package           Mfn_Wp_Plugin
  *
  * @wordpress-plugin
- * Plugin Name:       MFN Company Feed
+ * Plugin Name:       MFN Feed
  * Plugin URI:        https://github.com/modfin/mfn-wp-plugin
- * Description:       The MFN Company Feed plugin enables syncing of a news items feed for a particular company from mfn.se into Wordpress.
+ * Description:       The MFN Feed plugin enables syncing of a news items feed for a particular company from mfn.se into Wordpress.
  * Version:           0.0.44
  * Author:            Rasmus Holm
  * Author URI:        https://github.com/crholm

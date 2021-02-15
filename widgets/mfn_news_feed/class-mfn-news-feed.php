@@ -96,7 +96,12 @@ class News_feed {
                 $tags .= $html;
             }
 
-            $item_url = get_home_url() . '/' . get_post_type_object('mfn_news')->rewrite['slug'] . '/' . $item->post_name;
+            if (isset(get_post_type_object('mfn_news')->rewrite['slug'])) {
+                $item_url = get_home_url() . '/' . get_post_type_object('mfn_news')->rewrite['slug'] . '/' . $item->post_name;
+            }
+            else {
+                $item_url = get_home_url() . "/" . MFN_POST_TYPE . "/" . $item->post_name;
+            }
 
             $templateData = array(
                 'date' => $datestr,
