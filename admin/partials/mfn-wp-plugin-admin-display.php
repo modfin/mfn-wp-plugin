@@ -232,7 +232,7 @@
                                 <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][slug_' . $lang . ']' . '" value="' . $slug . '" ' . $is_disabled . '>
                                 <div class="mfn-tooltip-box">
                                     <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                                    <span class="mfn-tooltip-text">Rewrite the slug (' . MFN_POST_TYPE . ') in the URL - eg. "press-releases"</span>
+                                    <span class="mfn-tooltip-text">Rewrite the slug (' . MFN_POST_TYPE . ') in the URL - eg. "press-release"</span>
                                 </div>
                             </td>
                         </tr>

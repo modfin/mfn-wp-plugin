@@ -24,24 +24,9 @@ function create_mfn_wid_translate()
         'Filter' => ['sv' => "Filter", 'fi' => "Suodattaa"],
         'Next' => ['sv' => "Nästa", 'fi' => "Seuraava"],
         'Previous' => ['sv' => "Föregående", 'fi' => "Edellinen"],
-        'Press releases' => ['sv' => "Pressmeddelanden", 'fi' => "Lehdistötiedotteet"],
-        'Reports' => ['sv' => "Rapporter", 'fi' => "Raportit"],
-        'Annual reports' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
-        'Other news' => ['sv' => "Övriga nyheter", 'fi' => "Muut uutiset"],
-        'Subscribe' => ['sv' => "Prenumerera", 'fi' => "Tilaa"],
-        'Approve' => ['sv' => "Godkänn", 'fi' => "Hyväksy"],
-        'A real email address must be provided.' => ['sv' => "Välj en korrekt emailadress.", 'fi' => "Oikea sähköpostiosoite on annettava."],
-        'The GDPR policy must be accepted.' => ['sv' => "GDPR policyn måste godkännas", 'fi' => "GDPR-politiikka on hyväksyttävä"],
-        'An email has been sent to confirm your subscription.' => ['sv' => "Ett email har skickats till adressen, bekräfta det för att slutföra prenumerationen.", 'fi' => "Sähköposti on lähetetty osoitteeseen, vahvista se tilauksen loppuun saattamiseksi."],
-        'Check the languages you would like to subscribe to.' => ['sv' => "Välj vilka språk du vill prenumerera på.", 'fi' => "Valitse kielet, jotka haluat tilata."],
-        'Receive company data continuously to your inbox.' => ['sv' => "Få kontinuerlig information från bolaget via email.", 'fi' => "Saa säännöllisesti tietoja yritykseltä sähköpostitse."],
-        'Check the category of messages you would like to subscribe to below.' => ['sv' => "Välj vilka typer av meddelanden du vill prenumerera på genom att fylla i checkboxen för respektive typ.", 'fi' => "Valitse tilaamasi viestityypit täyttämällä kunkin tyypin valintaruutu."],
-        'sv-name' => ['sv' => "Svenska", 'en' => "Swedish", 'fi' => 'Ruotsi'],
-        'en-name' => ['sv' => "Engelska", 'en' => "English", 'fi' => 'Englanti'],
-        'fi-name' => ['sv' => "Finska", 'en' => "Finnish", 'fi' => 'Suomi'],
         'Interim Report' => ['sv' => "Kvartalsrapport", 'fi' => "Osavuosikatsaukset"],
         'Year-end Report' => ['sv' => "Bokslutskommuniké", 'fi' => "Tilinpäätöstiedote"],
-        'Annual Report' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
+        'Annual Report' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"]
     );
 
     return static function ($word, $lang) use ($l10n) {
@@ -74,6 +59,10 @@ class mfn_archive_widget extends WP_Widget
 
     public function __construct()
     {
+
+        // load css
+        wp_enqueue_style( MFN_PLUGIN_NAME . '-mfn-archive-css', plugin_dir_url( __FILE__ ) . 'widgets/mfn_archive/css/mfn-archive.css', array(), MFN_PLUGIN_NAME_VERSION );
+
         parent::__construct(
             'mfn_archive_widget',
             __('MFN Report Archive', 'mfn_archive_widget_domain'),
@@ -432,6 +421,7 @@ class mfn_archive_widget extends WP_Widget
                    value="1" <?php checked('1', $showheading); ?> />
             <label for="<?php echo esc_attr($this->get_field_id('showheading')); ?>"><?php _e('Show heading', 'text_domain'); ?></label>
         </p>
+
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('showfilter')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('showfilter')); ?>" type="checkbox"
@@ -529,7 +519,7 @@ class mfn_subscription_widget extends WP_Widget
         );
     }
 
-    private function load_subscription_widget($target_id, $widget_id, $customer_id, $lang) {
+    private function load_subscription_widget($target_id, $widget_id, $lang) {
 
         $loaderURL = DATABLOCKS_LOADER_URL;
         $instance_id = random_int(1, time());
@@ -538,11 +528,10 @@ class mfn_subscription_widget extends WP_Widget
         $widget->query = isset($target_id) ? $target_id . '-' . $instance_id : '';
         $widget->widget = 'subscribe';
         $widget->token = isset($widget_id) ? $widget_id : '';
-        $widget->c = isset($customer_id) ? $customer_id : '';
         $widget->locale = $lang;
         $widget->demo = 'false';
 
-        if($widget->token !== '' && $widget->c !== '' && $widget->query !== '') {
+        if($widget->token !== '' && $widget->query !== '') {
             // inject Datablocks subscription widget
             echo '
             <script>        
@@ -597,7 +586,6 @@ class mfn_subscription_widget extends WP_Widget
         $this->load_subscription_widget(
                 '#mfn-subscribe-div',
                 $instance['widget_id'],
-                $instance['customer_id'],
                 $lang
         );
         echo $args['after_widget'];
@@ -640,18 +628,6 @@ class mfn_subscription_widget extends WP_Widget
                     class="widefat"
             />
         </p>
-        <p>
-            <label for="<?php echo esc_attr($this->get_field_id('customer_id')); ?>">
-                <?php _e('Customer id', 'text_domain'); ?>:
-            </label>
-            <input
-                    id="<?php echo esc_attr($this->get_field_id('customer_id')); ?>"
-                    name="<?php echo esc_attr($this->get_field_name('customer_id')); ?>"
-                    type="text"
-                    value="<?php echo $instance['customer_id']; ?>"
-                    class="widefat"
-            />
-        </p>
         <?php
     }
 
@@ -660,7 +636,6 @@ class mfn_subscription_widget extends WP_Widget
         $instance = array();
         $instance['lang'] = (!empty($new_instance['lang'])) ? strip_tags($new_instance['lang']) : '';
         $instance['widget_id'] = (!empty($new_instance['widget_id'])) ? strip_tags($new_instance['widget_id']) : '';
-        $instance['customer_id'] = (!empty($new_instance['lang'])) ? strip_tags($new_instance['customer_id']) : '';
         return $instance;
     }
 }
@@ -671,8 +646,9 @@ class mfn_news_feed_widget extends WP_Widget
 
     public function __construct()
     {
-
-        wp_enqueue_style( MFN_PLUGIN_NAME . '-mfn-news-list-css', plugin_dir_url( __FILE__ ) . 'widgets/mfn_news_feed/css/mfn-news-list.css', array(), MFN_PLUGIN_NAME_VERSION );
+        // load css
+        wp_enqueue_style( MFN_PLUGIN_NAME . '-mfn-news-list-css', plugin_dir_url( __FILE__ ) . 'widgets/mfn_news_feed/css/mfn-news-feed.css', array(), MFN_PLUGIN_NAME_VERSION );
+        // require news feed class
         require_once(__DIR__ . '/widgets/mfn_news_feed/class-mfn-news-feed.php');
 
         parent::__construct(
@@ -690,8 +666,8 @@ class mfn_news_feed_widget extends WP_Widget
         $res = MFN_get_feed(
             $data['pmlang'],
             $data['year'],
-            json_decode($data['hasTags']),
-            json_decode($data['hasNotTags']),
+            $data['hasTags'],
+            $data['hasNotTags'],
             $data['offset'],
             $data['pagelen'],
             $data['showpreview']
@@ -704,8 +680,8 @@ class mfn_news_feed_widget extends WP_Widget
             $data['tzLocation'],
             $data['timestampFormat'],
             $data['onlytagsallowed'],
-            base64_decode($data['tagtemplate']),
-            base64_decode($data['template']),
+            $data['tagtemplate'],
+            $data['template'],
             $data['groupbyyear'],
             $data['skipcustomtags'],
             $data['showpreview'],
@@ -746,7 +722,6 @@ class mfn_news_feed_widget extends WP_Widget
 
         $pagelen = empty($instance['pagelen']) ? 20 : $instance['pagelen'];
         $previewlen = empty($instance['previewlen']) ? '' : $instance['previewlen'];
-        $showfilter = empty($instance['showfilter']) ? false : $instance['showfilter'];
         $showyears = empty($instance['showyears']) ? false : $instance['showyears'];
         $showpreview = empty($instance['showpreview']) ? false : $instance['showpreview'];
         $groupbyyear = empty($instance['groupbyyear']) ? false : $instance['groupbyyear'];
@@ -869,28 +844,6 @@ class mfn_news_feed_widget extends WP_Widget
             $onlytagsallowed = explode(",", $onlytagsallowedstr);
         }
 
-        $news_items_params =
-            array(
-                    'showpreview' => $showpreview,
-                    'pagelen' => $pagelen,
-                    'offset' => $page * $pagelen,
-                    'hasNotTags' => json_encode($hasNotTags),
-                    'hasTags' => json_encode($hasTags),
-                    'year' => $y,
-                    'pmlang' => $pmlang,
-                    'tzLocation' => $tzLocation,
-                    'timestampFormat' => $timestampFormat,
-                    'onlytagsallowed' => $onlytagsallowed,
-                    'tagtemplate' => base64_encode($tagtemplate),
-                    'template' => base64_encode($template),
-                    'groupbyyear' => $groupbyyear,
-                    'skipcustomtags' => $skipcustomtags,
-                    'showpreview' => $showpreview,
-                    'previewlen' => $previewlen,
-                    'showpagination' => $showpagination,
-                    'query' => json_encode($params),
-                );
-
         echo "<div class=\"mfn-newsfeed\">";
 
         if ($showyears) {
@@ -917,7 +870,26 @@ class mfn_news_feed_widget extends WP_Widget
 
         echo '<div class="mfn-list">';
 
-        $news_items = $this->list_news_items($news_items_params);
+        $news_items = $this->list_news_items(array(
+            'showpreview' => $showpreview,
+            'pagelen' => $pagelen,
+            'offset' => $page * $pagelen,
+            'hasNotTags' => $hasNotTags,
+            'hasTags' => $hasTags,
+            'year' => $y,
+            'pmlang' => $pmlang,
+            'tzLocation' => $tzLocation,
+            'timestampFormat' => $timestampFormat,
+            'onlytagsallowed' => $onlytagsallowed,
+            'tagtemplate' => $tagtemplate,
+            'template' => $template,
+            'groupbyyear' => $groupbyyear,
+            'skipcustomtags' => $skipcustomtags,
+            'showpreview' => $showpreview,
+            'previewlen' => $previewlen,
+            'showpagination' => $showpagination,
+            'query' => $params,
+        ));
 
         if ($showpagination) {
             echo "</div><div class='mfn-newsfeed-pagination'>";
