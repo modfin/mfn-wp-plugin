@@ -547,7 +547,7 @@
 
         <div>
             <button class="button mfn-button" id="sub-button" <?php echo $is_disabled; ?>><?php _e('Subscribe', $this->plugin_name); ?></button>
-            <button class="button mfn-button" id="unsub-button" <?php echo $is_disabled; ?>><?php _e('Unsubscribe', $this->plugin_name); ?></button>
+            <button class="button mfn-button" id="unsub-button"><?php _e('Unsubscribe', $this->plugin_name); ?></button>
             <span id="sync-status"></span>
         </div>
     </div>
