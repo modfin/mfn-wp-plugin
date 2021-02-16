@@ -507,6 +507,10 @@
                     </td>
                 </tr>
                 <tr>
+                    <th><?php _e('Sync URL', $this->plugin_name); ?>:</th>
+                    <td id="sync-url-test"></td>
+                </tr>
+                <tr>
                     <th><?php _e('Hub URL', $this->plugin_name); ?>:</th>
                     <td id="hub-url-test"></td>
                 </tr>

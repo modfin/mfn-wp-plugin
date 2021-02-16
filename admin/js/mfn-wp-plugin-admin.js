@@ -112,27 +112,32 @@
         });
     }
 
-    function pluginUrlTest() {
-        var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
-        var el =  $('#plugin-url-test');
+    function syncUrlTest(){
+        var syncUrl = $('#mfn-wp-plugin-sync_url').val();
+        var entityId = $('#mfn-wp-plugin-entity_id').val();
 
-        if(!pluginUrl || pluginUrl.trim() === '') {
-            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, plugin url must be provided");
+        // if is localhost
+        if (syncUrl === 'https://mfn.se' && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+            syncUrl = 'https://widget.datablocks.se/api/rose/proxy/mfn';
+        }
+
+        var el =  $('#sync-url-test');
+
+        if(!syncUrl || syncUrl.trim() === '') {
+            $('#mfn-wp-plugin-sync_url').addClass(errorClass);
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, sync url must be provided");
             return;
         }
 
-        $.get(pluginUrl + '/cc.php?mode=ping', function (data) {
-            if (data === 'pong') {
+        $.get(syncUrl + '/all/s.json?type=all&.author.entity_id=' + entityId, function (data) {
+            if ('items' in data && 'version' in data) {
                 el.html("<span class=\"dashicons dashicons-yes mfn-success-icon do-fade\"></span>Valid");
-                return;
             }
-            $('#mfn-wp-plugin-plugin_url').addClass(errorClass);
-            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, server does not return pong");
         }).fail(function(err) {
             console.error(err);
-            $('#mfn-wp-plugin-plugin_url').addClass(errorClass);
-            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, address does not seem to be responding with anything " + "(" + err.status + ")");
-        })
+            $('#mfn-wp-plugin-sync_url').addClass(errorClass);
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Ping to sync url failed " + "(" + err.status + ")");
+        });
     }
 
     function hubUrlTest(){
@@ -156,12 +161,36 @@
             console.error(err);
             $('#mfn-wp-plugin-hub_url').addClass(errorClass);
             el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Ping to hub url failed " + "(" + err.status + ")");
-        })
+        });
+    }
+
+    function pluginUrlTest() {
+        var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
+        var el =  $('#plugin-url-test');
+
+        if(!pluginUrl || pluginUrl.trim() === '') {
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, plugin url must be provided");
+            return;
+        }
+
+        $.get(pluginUrl + '/cc.php?mode=ping', function (data) {
+            if (data === 'pong') {
+                el.html("<span class=\"dashicons dashicons-yes mfn-success-icon do-fade\"></span>Valid");
+                return;
+            }
+            $('#mfn-wp-plugin-plugin_url').addClass(errorClass);
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, server does not return pong");
+        }).fail(function(err) {
+            console.error(err);
+            $('#mfn-wp-plugin-plugin_url').addClass(errorClass);
+            el.html("<span class=\"dashicons dashicons-warning mfn-warning-icon do-fade\"></span> Invalid, address does not seem to be responding with anything " + "(" + err.status + ")");
+        });
     }
 
     function tests() {
-        pluginUrlTest();
+        syncUrlTest();
         hubUrlTest();
+        pluginUrlTest();
     }
 
     function subscribe(){
