@@ -721,7 +721,7 @@ class mfn_news_feed_widget extends WP_Widget
         }
 
         $pagelen = empty($instance['pagelen']) ? 20 : $instance['pagelen'];
-        $previewlen = empty($instance['previewlen']) ? '' : $instance['previewlen'];
+        $previewlen = empty($instance['previewlen']) ? 250 : $instance['previewlen'];
         $showyears = empty($instance['showyears']) ? false : $instance['showyears'];
         $showpreview = empty($instance['showpreview']) ? false : $instance['showpreview'];
         $groupbyyear = empty($instance['groupbyyear']) ? false : $instance['groupbyyear'];

@@ -151,12 +151,6 @@ class News_feed {
 
                 $preview = rtrim($preview);
 
-                // add failsafe in cases where the paragraph is very long
-                if(strlen($preview) > 600) {
-                    $preview = substr($preview, 0, 600);
-                    $appendEllipsis = true;
-                }
-
                 // append ellipsis
                 if ($appendEllipsis) {
                     $preview = rtrim($preview, '.,:;!');
