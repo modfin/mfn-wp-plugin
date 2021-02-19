@@ -116,8 +116,7 @@
         var syncUrl = $('#mfn-wp-plugin-sync_url').val();
         var entityId = $('#mfn-wp-plugin-entity_id').val();
 
-        // if is localhost
-        if (syncUrl === 'https://mfn.se' && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+        if (syncUrl === 'https://mfn.se') {
             syncUrl = 'https://widget.datablocks.se/api/rose/proxy/mfn';
         }
 
