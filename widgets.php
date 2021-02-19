@@ -42,14 +42,16 @@ function create_mfn_wid_translate()
 $mfn_wid_translate = create_mfn_wid_translate();
 
 // Determine locale
-function determineLocale() {
+function determineLocale(): string
+{
     if (function_exists('determine_locale')) {
         return determine_locale();
     }
     return get_locale();
 }
 
-function yearClass($year) {
+function yearClass($year): string
+{
     return trim(str_replace('/', '-', str_replace('*', '', $year)));
 }
 
@@ -967,7 +969,7 @@ class mfn_news_feed_widget extends WP_Widget
             if ($showpreview) {
                 echo '
                 <p>
-                    <label for="' . esc_attr($this->get_field_id("previewlen")) . '">' . _e('Preview length (e.g. "250". Default is to leave this field empty):', 'text_domain') . '</label>
+                    <label for="' . esc_attr($this->get_field_id("previewlen")) . '">' . _e('Preview length (e.g. "150". Default is to leave this field empty):', 'text_domain') . '</label>
                     <input class="widefat" id= "' . esc_attr($this->get_field_id('previewlen')) . '"
                            name="' . esc_attr($this->get_field_name('previewlen')) . '" type="number"
                            value="' . esc_attr($previewlen) . '"/>
