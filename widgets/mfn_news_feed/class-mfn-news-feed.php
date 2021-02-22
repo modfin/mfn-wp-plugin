@@ -67,7 +67,13 @@ class News_feed {
             }
 
             $date = new DateTime($item->post_date_gmt . "Z");
-            $date->setTimezone(new DateTimeZone($tzLocation));
+
+            try {
+                $date->setTimezone(new DateTimeZone($tzLocation));
+            } catch(Exception $e) {
+                echo $e->getMessage();
+            }
+
             $datestr = date_i18n($timestampFormat,$date->getTimestamp() + $date->getOffset());
 
             $tags = "";
