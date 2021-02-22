@@ -873,7 +873,6 @@ class mfn_news_feed_widget extends WP_Widget
         echo '<div class="mfn-list">';
 
         $news_items = $this->list_news_items(array(
-            'showpreview' => $showpreview,
             'pagelen' => $pagelen,
             'offset' => $page * $pagelen,
             'hasNotTags' => $hasNotTags,
@@ -890,7 +889,7 @@ class mfn_news_feed_widget extends WP_Widget
             'showpreview' => $showpreview,
             'previewlen' => $previewlen,
             'showpagination' => $showpagination,
-            'query' => $params,
+            'query' => $params
         ));
 
         if ($showpagination) {
