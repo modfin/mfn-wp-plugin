@@ -2,8 +2,6 @@
 
 require_once( WP_PLUGIN_DIR . '/mfn-wp-plugin/config.php');
 
-
-
 /**
  * Fired during plugin activation
  *
@@ -34,9 +32,6 @@ class Mfn_Wp_Plugin_Activator
      *
      * @since    1.0.0
      */
-
-
-
 
     public static function activate()
     {
