@@ -587,7 +587,7 @@ class mfn_subscription_widget extends WP_Widget
         // load subscription widget
         $this->load_subscription_widget(
                 '#mfn-subscribe-div',
-                $instance['widget_id'],
+                $instance['widget_id'] ?? '',
                 $lang
         );
         echo $args['after_widget'];
