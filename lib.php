@@ -212,7 +212,7 @@ function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false
     return 1;
 }
 
-function subscribe(): string
+function MFN_subscribe(): string
 {
 
     $ops = get_option('mfn-wp-plugin');
@@ -228,8 +228,8 @@ function subscribe(): string
     $plugin_url = isset($ops['plugin_url']) ? $ops['plugin_url'] : "";
     $cus_query = isset($ops['cus_query']) ? $ops['cus_query'] : "";
 
-    $ops['posthook_name'] = isset($ops['posthook_name']) ? $ops['posthook_name'] : generateRandomString();
-    $ops['posthook_secret'] = isset($ops['posthook_secret']) ? $ops['posthook_secret'] : generateRandomString();
+    $ops['posthook_name'] = isset($ops['posthook_name']) ? $ops['posthook_name'] : MFN_generate_random_string();
+    $ops['posthook_secret'] = isset($ops['posthook_secret']) ? $ops['posthook_secret'] : MFN_generate_random_string();
 
     $posthook_name = $ops['posthook_name'];
     $posthook_secret = $ops['posthook_secret'];
@@ -258,7 +258,7 @@ function subscribe(): string
     return "success";
 }
 
-function unsubscribe(): string
+function MFN_unsubscribe(): string
 {
     $ops = get_option('mfn-wp-plugin');
 

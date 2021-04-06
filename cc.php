@@ -20,7 +20,7 @@ if (!isset($queries["mode"])) {
 
 $mode = $queries["mode"];
 
-function generateRandomString($length = 32): string
+function MFN_generate_random_string($length = 32): string
 {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $charactersLength = strlen($characters);
@@ -31,7 +31,7 @@ function generateRandomString($length = 32): string
     return $randomString;
 }
 
-function sync()
+function MFN_sync()
 {
     $ops = get_option('mfn-wp-plugin');
     $queries = array();
@@ -80,7 +80,7 @@ function sync()
     echo 0 . ' ' . $acc;
 }
 
-function pingHub()
+function MFN_ping_hub()
 {
     $ops = get_option('mfn-wp-plugin');
     $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
@@ -101,13 +101,13 @@ function pingHub()
     die("fail, not a valid url.");
 }
 
-function clearSettings(): string
+function MFN_clear_settings(): string
 {
     update_option('mfn-wp-plugin', array());
     return "done";
 }
 
-function deleteAllPosts(): int
+function MFN_delete_all_posts(): int
 {
     $queries = array();
     parse_str($_SERVER['QUERY_STRING'], $queries);
@@ -137,7 +137,7 @@ switch ($mode) {
         die();
 
     case "sync":
-        sync();
+        MFN_sync();
         die();
 
     case "ping";
@@ -145,22 +145,22 @@ switch ($mode) {
         die();
 
     case "pinghub";
-        pingHub();
+        MFN_ping_hub();
         die();
 
     case "subscribe":
-        subscribe();
+        MFN_subscribe();
         die();
 
     case "unsubscribe":
-        echo unsubscribe();
+        echo MFN_unsubscribe();
         die();
 
     case "clear-settings":
-        echo clearSettings();
+        echo MFN_clear_settings();
         die();
     case "delete-all-posts":
-        echo deleteAllPosts();
+        echo MFN_delete_all_posts();
         die();
 
     default:

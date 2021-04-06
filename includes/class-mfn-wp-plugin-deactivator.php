@@ -34,7 +34,7 @@ class Mfn_Wp_Plugin_Deactivator
      */
     public static function deactivate()
     {
-        unsubscribe();
+        MFN_unsubscribe();
     }
 
 }
