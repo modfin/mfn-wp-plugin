@@ -232,7 +232,7 @@
                                 <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][slug_' . $lang . ']' . '" value="' . $slug . '" ' . $is_disabled . '>
                                 <div class="mfn-tooltip-box">
                                     <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                                    <span class="mfn-tooltip-text">Rewrite the slug (' . MFN_POST_TYPE . ') in the URL - eg. "press-release"</span>
+                                    <span class="mfn-tooltip-text">Rewrite the slug (' . MFN_POST_TYPE . ') in the URL - eg. "press-releases"</span>
                                 </div>
                             </td>
                         </tr>
@@ -550,8 +550,8 @@
         </div>
 
         <div>
-            <button class="button mfn-button" id="sub-button" <?php echo $is_disabled; ?>><?php _e('Subscribe', $this->plugin_name); ?></button>
-            <button class="button mfn-button" id="unsub-button"><?php _e('Unsubscribe', $this->plugin_name); ?></button>
+            <button class="button mfn-button" id="sub-button" <?php echo $is_subscribed == true ? 'disabled' : ''?>><?php _e('Subscribe', $this->plugin_name); ?></button>
+            <button class="button mfn-button" id="unsub-button" <?php echo $is_subscribed == false ? 'disabled' : ''?>><?php _e('Unsubscribe', $this->plugin_name); ?></button>
             <span id="sync-status"></span>
         </div>
     </div>

@@ -194,10 +194,11 @@
 
     function subscribe(){
         var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
+        $('#sub-button').attr("disabled", true);
         $.get(pluginUrl + '/cc.php?mode=subscribe', function () {
             setTimeout(function () {
                 location.reload();
-            }, 100);
+            }, 1000);
         })
 
     }
