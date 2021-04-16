@@ -114,6 +114,7 @@ class News_feed {
                 'title' => $item->post_title,
                 'url' => $item_url,
                 'tags' => $tags,
+                'year' => $year
             );
 
             $templateData['preview'] = '';
