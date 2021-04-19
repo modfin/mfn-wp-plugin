@@ -780,13 +780,12 @@ class mfn_news_feed_widget extends WP_Widget
         }
 
         $year = $query_param('m-year', "");
-        $y = $year;
 
         if (isset($instance['year'])) {
             $year = normalize_whitespace($instance['year']);
         }
-        else if (empty($year)) {
-            $y = "";
+        if (empty($year)) {
+            $year = "";
         }
 
         $params = [];
@@ -877,7 +876,7 @@ class mfn_news_feed_widget extends WP_Widget
             'offset' => $page * $pagelen,
             'hasNotTags' => $hasNotTags,
             'hasTags' => $hasTags,
-            'year' => $y,
+            'year' => $year,
             'pmlang' => $pmlang,
             'tzLocation' => $tzLocation,
             'timestampFormat' => $timestampFormat,
