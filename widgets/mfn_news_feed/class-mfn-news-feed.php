@@ -44,7 +44,7 @@ class News_feed {
         );
     }
 
-    public function list_news_items($feed, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $skipcustomtags, $showpreview, $previewlen) {
+    public function list_news_items($feed, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $skipcustomtags, $showpreview, $previewlen, $disclaimerurl, $disclaimertag) {
 
         $result = '';
         $years = [];
@@ -77,10 +77,17 @@ class News_feed {
             $datestr = date_i18n($timestampFormat,$date->getTimestamp() + $date->getOffset());
 
             $tags = "";
+            $is_disclaimer = false;
             foreach ($item->tags as $tag) {
                 $parts = explode(":", $tag);
                 if (count($parts) < 2 || strlen($parts[1]) === 2) {
                     continue;
+                }
+                if ($disclaimertag) {
+                    $base_tag = explode("_", $parts[1])[0];
+                    if ($base_tag === $disclaimertag && strpos($parts[0], 'pll_') === false) {
+                        $is_disclaimer = true;
+                    }
                 }
                 if ($skipcustomtags && strpos($parts[0], 'mfn-cus-') !== false) {
                     continue;
@@ -107,6 +114,12 @@ class News_feed {
             }
             else {
                 $item_url = get_home_url() . "/" . MFN_POST_TYPE . "/" . $item->post_name;
+            }
+
+            if ($is_disclaimer) {
+                $name_query_param = strpos($disclaimerurl, '?') === false ? '?' : '&';
+                $name_query_param .= 'post-name=' . $item->post_name;
+                $item_url = $disclaimerurl . $name_query_param;
             }
 
             $templateData = array(
