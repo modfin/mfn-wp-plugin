@@ -149,6 +149,8 @@ class mfn_archive_widget extends WP_Widget
         $reports = MFN_get_reports($pmlang, $from_year, $to_year, $w['offset'], $w['limit'], 'DESC', $fiscal_year_offset);
 
         if (count($reports) < 1) {
+            echo "</div>";
+            echo $args['after_widget'];
             return;
         }
 
