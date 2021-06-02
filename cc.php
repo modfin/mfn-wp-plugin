@@ -58,8 +58,15 @@ function MFN_sync()
         return;
     }
 
-    $url = $sync_url . '/all/s.json?type=all&.author.entity_id=' . $ops['entity_id'] .
-        '&limit=' . $limit .
+    $base_url = $sync_url . '/all/s.json?type=all&.author.entity_id=';
+    $query_param_start = '&';
+    if (strpos($sync_url, 'https://feed.mfn.') === 0) {
+        $base_url = $sync_url . '/feed/';
+        $query_param_start = '?';
+    }
+
+    $url = $base_url . $ops['entity_id'] . $query_param_start .
+        'limit=' . $limit .
         "&offset=" . $offset .
         "&" . $cus_query;
 
@@ -149,7 +156,7 @@ switch ($mode) {
         die();
 
     case "subscribe":
-        MFN_subscribe();
+        echo MFN_subscribe();
         die();
 
     case "unsubscribe":

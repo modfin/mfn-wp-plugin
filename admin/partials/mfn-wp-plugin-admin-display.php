@@ -43,7 +43,7 @@
         $cus_query = isset($options['cus_query']) ? $options['cus_query'] : "";
 
         $disable_archive =  isset($options['disable_archive']) ? $options['disable_archive'] : 'off';
-        $verify_signature =  isset($options['verify_signature']) ? $options['verify_signature'] : 'off';
+        $verify_signature =  isset($options['verify_signature']) ? $options['verify_signature'] : 'on';
         $use_wpml =  isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
         $use_pll =  isset($options['use_pll']) ? $options['use_pll'] : 'off';
 

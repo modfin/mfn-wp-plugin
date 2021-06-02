@@ -48,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
     }
     $mode = $queries["hub_mode"];
 
-    if($mode != 'subscribe'){
-        echo "mode must be subscribe";
+    if ($mode != 'subscribe' && $mode != 'unsubscribe') {
+        echo "mode must be subscribe or unsubscribe";
         http_response_code(400);
         die();
     }
@@ -76,6 +76,54 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
     die();
 }
 
+$hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
+
+if (strpos($hub_url, 'https://feed.mfn.') === 0) {
+    $method = $_SERVER['REQUEST_METHOD'];
+    if ($method !== 'POST' && $method !== 'PUT' && $method !== 'DELETE') {
+        http_response_code(400);
+        echo "bad method";
+        die();
+    }
+    $signature = $_SERVER['HTTP_X_HUB_SIGNATURE'];
+    $content = file_get_contents("php://input");
+
+    $verify_signature = isset($ops['verify_signature']) ? $ops['verify_signature'] : 'off';
+    $reset_cache = isset($ops['reset_cache']) ? ($ops['reset_cache'] == 'on') : false;
+
+    if ($verify_signature == 'on') {
+        $parts = explode('=', $signature);
+        $alg = $parts[0];
+        $hmac = $parts[1];
+        $key = $ops['posthook_secret'];
+
+        $res = hash_hmac($alg, $content, $key);
+        if ($hmac != $res){
+            error_log("[MFN Post hook]: hmac: " . $hmac . " that was provided but does not match expected value");
+            http_response_code(400);
+            echo "could not verify hmac as correct";
+            die();
+        }
+    }
+    $news_item = json_decode($content);
+
+//    // TODO Add ping
+//    if ($queries["ping"])
+
+    if ($method == 'DELETE') {
+        if (!isset($news_item->news_id)) {
+            http_response_code(400);
+            echo "delete request without news_id";
+            die();
+        }
+        unpublishItem($news_item->news_id);
+    } else {
+        upsertItemFull($news_item, $signature, $content, $reset_cache);
+        do_action( 'mfn_after_posthook', $news_item);
+    }
+
+    die();
+}
 
 
 
