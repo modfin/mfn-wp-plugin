@@ -128,7 +128,12 @@
             return;
         }
 
-        $.get(syncUrl + '/all/s.json?type=all&.author.entity_id=' + entityId, function (data) {
+        var baseUrl = syncUrl + '/all/s.json?type=all&.author.entity_id='
+        if (syncUrl && syncUrl.startsWith('https://feed.mfn.')) {
+            baseUrl = syncUrl + '/feed/'
+        }
+
+        $.get(baseUrl + entityId, function (data) {
             if ('items' in data && 'version' in data) {
                 el.html("<span class=\"dashicons dashicons-yes mfn-success-icon do-fade\"></span>Valid");
             }
@@ -195,7 +200,8 @@
     function subscribe(){
         var pluginUrl = $('#mfn-wp-plugin-plugin_url').val();
         $('#sub-button').attr("disabled", true);
-        $.get(pluginUrl + '/cc.php?mode=subscribe', function () {
+        $.get(pluginUrl + '/cc.php?mode=subscribe', function (msg) {
+            if (msg) console.log(msg);
             setTimeout(function () {
                 location.reload();
             }, 1000);

@@ -190,6 +190,7 @@ function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limi
                 OR t.slug like '" . $interim_slug . "_%'
             )
             AND tax.taxonomy = '" . MFN_TAXONOMY_NAME . "'
+            AND posts.post_status = 'publish'
     ";
 
     if ($lang !== "all") {
@@ -301,6 +302,7 @@ function MFN_get_feed_min_max_years($lang = 'all') {
     WHERE post_type = '" . MFN_POST_TYPE . "'
       AND post_date_gmt IS NOT NULL
       AND post_date_gmt <> 0
+      AND post_status = 'publish'
     ";
 
     if ($lang !== "all") {

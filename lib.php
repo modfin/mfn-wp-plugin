@@ -212,6 +212,101 @@ function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false
     return 1;
 }
 
+function upsertItemFull($item, $signature = '', $raw_data = '', $reset_cache = false): int
+{
+    do_action('mfn_before_upsertitem', $item);
+    global $wpdb;
+
+    $newsid = $item->news_id;
+    $groupId = $item->group_id;
+    $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
+
+    $title = $item->content->title;
+    $publish_date = $item->content->publish_date;
+    $preamble = isset($item->content->preamble) ? $item->content->preamble : '';
+    $html = $item->content->html;
+    $attachments = isset($item->content->attachments) ? $item->content->attachments : array();
+
+    $post_id = $wpdb->get_var($wpdb->prepare(
+        "
+            SELECT post_id
+            FROM $wpdb->postmeta
+            WHERE meta_key = %s
+            LIMIT 1
+        ",
+        MFN_POST_TYPE . "_" . $newsid
+    ));
+
+    $tags = createTags($item);
+
+    $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags) {
+        if ($reset_cache) {
+            wp_cache_flush();
+        }
+
+        wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
+        upsertLanguage($post_id, $groupId, $lang);
+        upsertAttachments($post_id, $attachments);
+
+        if ($reset_cache) {
+            wp_cache_flush();
+        }
+
+    };
+
+    if ($post_id) {
+        $post = get_post($post_id);
+        if ($post !== null && $post->post_type === MFN_POST_TYPE) {
+            $post_id = wp_update_post(array(
+                'ID' => $post_id,
+                'post_content' => $html,
+                'post_title' => $title,
+                'post_excerpt' => $preamble,
+                'post_status' => 'publish',
+                'post_date_gmt' => $publish_date,
+            ));
+        }
+    } else {
+        $post_id = wp_insert_post(array(
+            'post_content' => $html,
+            'post_title' => $title,
+            'post_excerpt' => $preamble,
+            'post_status' => 'publish',
+            'post_type' => MFN_POST_TYPE,
+            'post_date_gmt' => $publish_date,
+        ));
+    }
+
+    if ($post_id != 0) {
+        add_post_meta($post_id, MFN_POST_TYPE . "_" . $newsid, $publish_date);
+
+        if ($signature != '') {
+            add_post_meta($post_id, MFN_POST_TYPE . "_signature_" . $newsid, $signature);
+        }
+        if ($raw_data != '') {
+            add_post_meta($post_id, MFN_POST_TYPE . "_data_" . $newsid, $raw_data);
+        }
+        $outro($post_id);
+    }
+
+    // run callback
+    do_action('mfn_after_upsertitem', $post_id);
+
+    return 1;
+}
+
+function unpublishItem($news_id) {
+    $mfn_post_type = MFN_POST_TYPE;
+    global $wpdb;
+    echo $wpdb->query($wpdb->prepare(
+        "UPDATE $wpdb->posts p
+         JOIN $wpdb->postmeta pm ON p.ID = pm.post_id
+         SET p.post_status = 'trash'
+         WHERE pm.meta_key = %s;",
+        $mfn_post_type . "_" . $news_id
+    ));
+}
+
 function MFN_subscribe(): string
 {
 
@@ -236,12 +331,18 @@ function MFN_subscribe(): string
 
     update_option(MFN_PLUGIN_NAME, $ops);
 
+    $topic = '/mfn/s.json?type=all&.author.entity_id=' . $entity_id .  "&" . $cus_query;
+
+    if (strpos($hub_url, 'https://feed.mfn.') === 0) {
+        $topic = '/feed/' . $entity_id .  "?" . $cus_query;
+    }
+
     $args = array(
         'method' => 'POST',
         'headers' => array("content-type" => "application/x-www-form-urlencoded"),
         'body' => array(
             'hub.mode' => 'subscribe',
-            'hub.topic' => '/mfn/s.json?type=all&.author.entity_id=' . $entity_id .  "&" . $cus_query,
+            'hub.topic' => $topic,
             'hub.callback' => $plugin_url . '/posthook.php?wp-name=' . $posthook_name,
             'hub.secret' => $posthook_secret,
             'hub.metadata' => '{"synchronize": true}'
@@ -249,13 +350,11 @@ function MFN_subscribe(): string
     );
 
     $response = wp_remote_post($hub_url, $args);
-    $result = wp_remote_retrieve_body($response);
-
-    if ($result === FALSE) {
-        return "did not work...";
+    $code = wp_remote_retrieve_response_code($response);
+    if ($code >= 200 && $code <= 299) {
+        return "";
     }
-
-    return "success";
+    return $code . ' ' .  wp_remote_retrieve_body($response);
 }
 
 function MFN_unsubscribe(): string
