@@ -252,7 +252,12 @@ class mfn_archive_widget extends WP_Widget
             }
 
             $ops = get_option('mfn-wp-plugin');
-            $storage_url = isset($ops['sync_url']) ? str_replace('//mfn', '//storage.mfn', $ops['sync_url']) : null;
+
+            $storage_url = isset($ops['sync_url'])
+                ? ((strpos($ops['sync_url'], 'https://feed.mfn.') === 0)
+                    ? str_replace('//feed.mfn', '//storage.mfn', str_replace('/v1', '', $ops['sync_url']))
+                    : str_replace('//mfn', '//storage.mfn', $ops['sync_url']))
+                : null;
 
             $proxiedUrl = $storage_url !== null && $storage_url !== '' && (strpos($r->url, $storage_url) !== 0)
                 ? "$storage_url/proxy?url=" . urlencode($r->url)
