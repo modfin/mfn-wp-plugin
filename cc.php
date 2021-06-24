@@ -114,13 +114,36 @@ function MFN_clear_settings(): string
     return "done";
 }
 
+function MFN_delete_attachments($post_id) {
+    $existing_attachments = get_posts(array(
+        'post_type' => 'attachment',
+        'posts_per_page' => -1,
+        'post_parent' => $post_id,
+    ));
+
+    $attachment_data = get_post_meta($post_id, MFN_POST_TYPE . "_attachment_data", false);
+
+    $existing_meta_urls = array();
+    foreach ($attachment_data as $d) {
+        $a = json_decode($d);
+        if (isset($a->url)) {
+            $existing_meta_urls[] = $a->url;
+        }
+    }
+    foreach ($existing_attachments as $a) {
+        $u = get_post_meta($a->ID, MFN_POST_TYPE . "_attachment_url", true);
+        if (in_array($u, $existing_meta_urls)) {
+            wp_delete_attachment($a->ID, true);
+        }
+    }
+}
+
 function MFN_delete_all_posts(): int
 {
     $queries = array();
     parse_str($_SERVER['QUERY_STRING'], $queries);
     $limit = isset($queries["limit"]) ? $queries["limit"] : -1;
-
-
+    $delete_attachments = isset(get_option(MFN_PLUGIN_NAME)['thumbnail_allow_delete']);
     $i = 0;
     $allposts = get_posts(
         array(
@@ -131,6 +154,9 @@ function MFN_delete_all_posts(): int
     );
     foreach ($allposts as $eachpost) {
         if ($eachpost->post_type == MFN_POST_TYPE){
+            if ($delete_attachments) {
+                MFN_delete_attachments($eachpost->ID);
+            }
             $i++;
             wp_delete_post( $eachpost->ID, true );
         }

@@ -461,7 +461,7 @@
                         <label for="<?php echo $this->plugin_name; ?>-thumbnail_on"><?php _e('Thumbnail support', $this->plugin_name); ?></label>
                         <legend class="screen-reader-text"><?php _e('Thumbnail support', $this->plugin_name); ?></legend>
                         <br>
-                        <small>(<?php _e('Experimental: Upload image attachments to media library and set post thumbnail'); ?>)</small>
+                        <small>(<?php _e('Experimental: Upload image attachments to the Media Library and set post thumbnail. Makes insertion slower'); ?>)</small>
                     </p>
                 <td>
             </tr>
@@ -472,7 +472,7 @@
                         <label for="<?php echo $this->plugin_name; ?>-thumbnail_allow_delete"><?php _e('Delete images with posts', $this->plugin_name); ?></label>
                         <legend class="screen-reader-text"><?php _e('Delete images with posts', $this->plugin_name); ?></legend>
                         <br>
-                        <small>(<?php _e('Experimental: Deletes attached images in media library'); ?>)</small>
+                        <small>(<?php _e('Delete all MFN posts: also delete all attached images from the Media Library'); ?>)</small>
                     </p>
                 <td>
             </tr>
@@ -510,7 +510,6 @@
                         <span id="delete-posts-info"></span>
                     </td>
                 </tr>
-
             </tbody>
         </table>
     </div>
