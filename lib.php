@@ -129,7 +129,9 @@ function upsertThumbnails($post_id, $attachments)
         }
 
         if ($attachment_id === 0) {
-            $attachment_id = media_sideload_image($a->proxied_url, $post_id, $a->file_title, 'id');
+            $file_title = $a->file_title;
+            $file_title = apply_filters( 'mfn_attachment_file_title', $file_title, $post_id);
+            $attachment_id = media_sideload_image($a->proxied_url, $post_id, $file_title, 'id');
             if (is_wp_error($attachment_id)) {
                 continue;
             }
