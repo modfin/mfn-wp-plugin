@@ -49,6 +49,10 @@
 
         $reset_cache =  isset($options['reset_cache']) ? $options['reset_cache'] : 'off';
 
+        $thumbnail_on =  isset($options['thumbnail_on']) ? $options['thumbnail_on'] : 'off';
+        $thumbnail_allow_delete =  isset($options['thumbnail_allow_delete']) ? $options['thumbnail_allow_delete'] : 'off';
+
+
         $subscription_id = isset($options['subscription_id']) ? $options['subscription_id'] : "N/A";
         $posthook_secret = isset($options['posthook_secret']) ? $options['posthook_secret'] : "N/A";
         $posthook_name = isset($options['posthook_name']) ? $options['posthook_name'] : "N/A";
@@ -445,6 +449,33 @@
                         </p>
                     <td>
                 </tr>
+            </tbody>
+        </table>
+        <hr>
+        <table>
+            <tbody>
+            <tr>
+                <td>
+                    <p>
+                        <input type="checkbox" id="<?php echo $this->plugin_name; ?>-thumbnail_on" name="<?php echo $this->plugin_name; ?>[thumbnail_on]" <?php checked($thumbnail_on, "on"); ?> value="on" <?php echo $is_disabled; ?>>
+                        <label for="<?php echo $this->plugin_name; ?>-thumbnail_on"><?php _e('Thumbnail support', $this->plugin_name); ?></label>
+                        <legend class="screen-reader-text"><?php _e('Thumbnail support', $this->plugin_name); ?></legend>
+                        <br>
+                        <small>(<?php _e('Experimental: Upload image attachments to media library and set post thumbnail'); ?>)</small>
+                    </p>
+                <td>
+            </tr>
+            <tr>
+                <td>
+                    <p>
+                        <input type="checkbox" id="<?php echo $this->plugin_name; ?>-thumbnail_allow_delete" name="<?php echo $this->plugin_name; ?>[thumbnail_allow_delete]" <?php checked($thumbnail_allow_delete, "on"); ?> value="on" <?php echo $is_disabled; ?>>
+                        <label for="<?php echo $this->plugin_name; ?>-thumbnail_allow_delete"><?php _e('Delete images with posts', $this->plugin_name); ?></label>
+                        <legend class="screen-reader-text"><?php _e('Delete images with posts', $this->plugin_name); ?></legend>
+                        <br>
+                        <small>(<?php _e('Experimental: Deletes attached images in media library'); ?>)</small>
+                    </p>
+                <td>
+            </tr>
             </tbody>
         </table>
 

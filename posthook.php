@@ -128,7 +128,7 @@ if (strpos($hub_url, 'https://feed.mfn.') === 0) {
 
 
 
-// News item being posted
+// News item being posted (old code path)
 if ($_SERVER['REQUEST_METHOD'] == 'POST')
 {
     $signature = $_SERVER['HTTP_X_HUB_SIGNATURE'];

@@ -51,6 +51,104 @@ function createTags($item): array
     return $newtag;
 }
 
+function getProxiedUrl($url, $vanityFileName) {
+    $ops = get_option('mfn-wp-plugin');
+    $storageUrl = isset($ops['sync_url'])
+        ? ((strpos($ops['sync_url'], 'https://feed.mfn.') === 0)
+            ? str_replace('//feed.mfn', '//storage.mfn', str_replace('/v1', '', $ops['sync_url']))
+            : str_replace('//mfn', '//storage.mfn', $ops['sync_url']))
+        : null;
+
+    return $storageUrl !== null && $storageUrl !== '' && (strpos($url, $storageUrl) !== 0)
+        ? "$storageUrl/proxy/$vanityFileName?url=" . urlencode($url) . "&size=w-2560"
+        : $url;
+}
+
+$upsert_thumbnails_dependencies_included = false;
+
+function upsertThumbnails($post_id, $attachments)
+{
+
+    $image_attachments = array();
+
+    foreach ($attachments as $a) {
+        if (strpos($a->content_type, 'image/') !== 0) {
+            continue;
+        }
+
+        $mime_to_ext = array(
+            "image/jpg" => "jpg",
+            "image/jpeg" => "jpg",
+            "image/png" => "png"
+        );
+
+        $ext = $mime_to_ext[$a->content_type];
+        if (!isset($ext)) {
+            $ext = "jpg";
+        }
+        $filename = sanitize_title($a->file_title) . "." . $ext;
+
+        $image = clone($a);
+        $image->proxied_url = getProxiedUrl($a->url, $filename);
+
+        $image_attachments[] = $image;
+    }
+
+    if (count($image_attachments) === 0) {
+        return;
+    }
+
+    global $upsert_thumbnails_dependencies_included;
+    if (!$upsert_thumbnails_dependencies_included) {
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        $upsert_thumbnails_dependencies_included = true;
+    }
+
+    $existing_attachments = get_posts(array(
+        'post_type' => 'attachment',
+        'posts_per_page' => -1,
+        'post_parent' => $post_id,
+    ));
+
+    $existing_urls = array();
+    foreach ($existing_attachments as $a) {
+        $u = get_post_meta($a->ID, MFN_POST_TYPE . "_attachment_url", true);
+        if (isset($u)) {
+            $existing_urls[$u] = $a->ID;
+        }
+    }
+
+    $thumbnail_attachment_id = 0;
+
+    foreach ($image_attachments as $a) {
+        $attachment_id = 0;
+        if (isset($existing_urls[$a->url])) {
+            $attachment_id = $existing_urls[$a->url];
+        }
+
+        if ($attachment_id === 0) {
+            $attachment_id = media_sideload_image($a->proxied_url, $post_id, $a->file_title, 'id');
+            if (is_wp_error($attachment_id)) {
+                continue;
+            }
+            add_post_meta($attachment_id, MFN_POST_TYPE . "_attachment_url", $a->url);
+            add_post_meta($attachment_id, MFN_POST_TYPE . "_attachment_proxied_url", $a->proxied_url);
+        }
+        if ($thumbnail_attachment_id === 0) {
+            $thumbnail_attachment_id = $attachment_id;
+        }
+
+        if (isset($a->tags) && in_array('image:header', $a->tags)) {
+            $thumbnail_attachment_id = $attachment_id;
+        }
+    }
+    if ($thumbnail_attachment_id !== 0) {
+        set_post_thumbnail($post_id, $thumbnail_attachment_id);
+    }
+}
+
 function upsertAttachments($post_id, $attachments)
 {
     delete_post_meta($post_id,  MFN_POST_TYPE . "_attachment_link");
@@ -65,6 +163,9 @@ function upsertAttachments($post_id, $attachments)
 
         add_post_meta($post_id, MFN_POST_TYPE . "_attachment_link", $a);
         add_post_meta($post_id, MFN_POST_TYPE . "_attachment_data", json_encode($attachment, JSON_UNESCAPED_UNICODE));
+    }
+    if (isset(get_option(MFN_PLUGIN_NAME)['thumbnail_on'])) {
+        upsertThumbnails($post_id, $attachments);
     }
 }
 
