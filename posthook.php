@@ -86,6 +86,7 @@ if (strpos($hub_url, 'https://feed.mfn.') === 0) {
         die();
     }
     $signature = $_SERVER['HTTP_X_HUB_SIGNATURE'];
+    $hub_ext_ping = $_SERVER['HTTP_X_HUB_EXT_PING'];
     $content = file_get_contents("php://input");
 
     $verify_signature = isset($ops['verify_signature']) ? $ops['verify_signature'] : 'off';
@@ -107,8 +108,27 @@ if (strpos($hub_url, 'https://feed.mfn.') === 0) {
     }
     $news_item = json_decode($content);
 
-//    // TODO Add ping
-//    if ($queries["ping"])
+    if (isset($hub_ext_ping) && (strtolower($hub_ext_ping) === 'true' || $hub_ext_ping === '1')) {
+        list ($pingResponse, $pingSignatureHeader, $err) = verifyPingItem($method, $news_item);
+        if ($pingResponse) {
+            if ($pingSignatureHeader) {
+                header('X-Hub-Signature:' . $pingSignatureHeader);
+            }
+            echo $pingResponse;
+            die();
+        } else {
+            http_response_code(400);
+            echo "could not verify ping: " . $err ;
+            die();
+        }
+    }
+
+
+    if (isset($news_item->properties) && isset($news_item->properties->type) && $news_item->properties->type === 'ping') {
+        http_response_code(500);
+        echo "ping item, but incorrect X-Hub-Ext-Ping header";
+        die();
+    }
 
     if ($method == 'DELETE') {
         if (!isset($news_item->news_id)) {

@@ -410,6 +410,45 @@ function unpublishItem($news_id) {
     ));
 }
 
+function verifyPingItem($method, $item) {
+    $valid = isset($item->properties->type) && $item->properties->type === 'ping' &&
+        isset($item->news_id) && $item->news_id === '00000000-0000-0000-0000-000000000000' &&
+        isset($item->source) && $item->source === 'mfn' &&
+        isset($item->content->slug);
+
+    if (!$valid) {
+        return array (null, null, 'structure of item not valid');
+    }
+
+    $challenge = str_replace('ping-challenge-', '', $item->content->slug);
+
+    $resp = new stdClass();
+    $resp->pong = new stdClass();
+    $resp->pong->method = $method;
+    $resp->pong->challenge = $challenge;
+    $resp->metadata = new stdClass();
+    $resp->metadata->user_agent = MFN_PLUGIN_NAME;
+    $resp->metadata->version = MFN_PLUGIN_NAME_VERSION;
+
+    $content = json_encode($resp, JSON_UNESCAPED_UNICODE);
+    if (!$content) {
+        return array (null, null, 'json_encode failed');
+    }
+
+    $ops = get_option('mfn-wp-plugin');
+    if (!$ops) {
+        return array (null, null, '"mfn-wp-plugin" option missing');
+    }
+    if (empty($ops['posthook_secret'])) {
+        return array (null, null, '"posthook_secret" is empty');
+    }
+    $key = $ops['posthook_secret'];
+
+    $pingSignatureHeader = 'sha256=' . hash_hmac('sha256', $content, $key);
+
+    return array ($content, $pingSignatureHeader, null);
+}
+
 function MFN_subscribe(): string
 {
 
@@ -448,7 +487,8 @@ function MFN_subscribe(): string
             'hub.topic' => $topic,
             'hub.callback' => $plugin_url . '/posthook.php?wp-name=' . $posthook_name,
             'hub.secret' => $posthook_secret,
-            'hub.metadata' => '{"synchronize": true}'
+            'hub.metadata' => '{"synchronize": true}',
+            'hub.ext.ping' => true
         )
     );
 
