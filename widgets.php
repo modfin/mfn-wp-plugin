@@ -535,10 +535,9 @@ class mfn_subscription_widget extends WP_Widget
 
         $widget = new stdClass();
         $widget->query = isset($target_id) ? $target_id . '-' . $instance_id : '';
-        $widget->widget = 'subscribe';
+        $widget->widget = 'subscribe-v2';
         $widget->token = isset($widget_id) ? $widget_id : '';
         $widget->locale = $lang;
-        $widget->demo = 'false';
 
         if($widget->token !== '' && $widget->query !== '') {
             // inject Datablocks subscription widget
