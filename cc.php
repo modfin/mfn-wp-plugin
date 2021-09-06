@@ -33,6 +33,7 @@ function MFN_generate_random_string($length = 32): string
 
 function MFN_sync()
 {
+    set_time_limit(300);
     $ops = get_option('mfn-wp-plugin');
     $queries = array();
     parse_str($_SERVER['QUERY_STRING'], $queries);
@@ -71,10 +72,23 @@ function MFN_sync()
         "&" . $cus_query;
 
     $response = wp_remote_get($url);
+    if (is_wp_error($response)) {
+        die("sync-url-error:" . $response->get_error_message());
+    }
     $json = wp_remote_retrieve_body($response);
+    if (is_wp_error($json)) {
+        die("sync-url-error:" . $json->get_error_message());
+    }
     $obj = json_decode($json);
+    if (is_wp_error($obj)) {
+        die("sync-url-error:" . $obj->get_error_message());
+    }
 
     $acc = 0;
+
+    if (!isset($obj) || !isset($obj->version)) {
+        die("sync-url-error:Check Sync URL");
+    }
 
     if (is_array($obj->items)) {
         foreach ($obj->items as $i => $item) {

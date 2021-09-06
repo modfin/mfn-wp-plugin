@@ -15,26 +15,23 @@ parse_str($_SERVER['QUERY_STRING'], $queries);
 $ops = get_option('mfn-wp-plugin');
 
 if ( !isset($queries["wp-name"]) ){
-    echo "wp-name must be provided";
     http_response_code(400);
-    die();
+    die("wp-name must be provided");
 }
 
 
 
 if ( !isset($ops['posthook_name']) ){
-    echo "posthook name must exist in settings";
     http_response_code(400);
-    die();
+    die("posthook name must exist in settings");
 }
 
 $posthook_name = $ops['posthook_name'];
 $wp_name = $queries["wp-name"];
 
 if ( $posthook_name != $wp_name){
-    echo "post hook name must be the same as in options";
     http_response_code(400);
-    die();
+    die("post hook name must be the same as in options");
 }
 
 
@@ -42,29 +39,25 @@ if ( $posthook_name != $wp_name){
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
 {
     if (!isset($queries["hub_mode"])){
-        echo "mode must be set";
         http_response_code(400);
-        die();
+        die("mode must be set");
     }
     $mode = $queries["hub_mode"];
 
     if ($mode != 'subscribe' && $mode != 'unsubscribe') {
-        echo "mode must be subscribe or unsubscribe";
         http_response_code(400);
-        die();
+        die("mode must be subscribe or unsubscribe");
     }
 
     if (!isset($queries["hub_challenge"])){
-        echo "challenge must be set";
         http_response_code(400);
-        die();
+        die("challenge must be set");
     }
     $challenge = $queries["hub_challenge"];
 
     if (!isset($queries["hub_topic"])){
-        echo "topic topic be set";
         http_response_code(400);
-        die();
+        die("topic topic be set");
     }
     $topic = $queries["hub_topic"];
 
@@ -175,6 +168,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
     }
 
     $news_item = json_decode($content);
+
+    if (isset($news_item->properties) && isset($news_item->properties->type) && $news_item->properties->type === 'ping') {
+        http_response_code(500);
+        echo "unexpected ping item, incorrect hub_url in wp_options";
+        die();
+    }
+
     upsertItem($news_item, $signature, $content, $reset_cache);
     do_action( 'mfn_after_posthook', $news_item);
 

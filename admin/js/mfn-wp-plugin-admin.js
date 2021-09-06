@@ -78,7 +78,11 @@
             insertedAgg += inserted;
 
             if (isNaN(fetched)) {
-                $('#sync-status').html("<div class='do-fade mfn-error-entity-id'><span class=\"dashicons dashicons-dismiss mfn-error-icon\"></span> <span class='mfn-error-entity-id-text'>Failed (Check Entity ID and Sync URL)</span></div>");
+                var error = data.split("sync-url-error:")[1];
+                if (!error) {
+                    error = data;
+                }
+                $('#sync-status').html("<div class='do-fade mfn-error-entity-id'><span class=\"dashicons dashicons-dismiss mfn-error-icon\"></span> <span class='mfn-error-entity-id-text'>Failed (<em>"+error+"</em>)</span></div>");
                 return;
             }
 

@@ -458,10 +458,12 @@
                 <td>
                     <p>
                         <input type="checkbox" id="<?php echo $this->plugin_name; ?>-thumbnail_on" name="<?php echo $this->plugin_name; ?>[thumbnail_on]" <?php checked($thumbnail_on, "on"); ?> value="on" <?php echo $is_disabled; ?>>
-                        <label for="<?php echo $this->plugin_name; ?>-thumbnail_on"><?php _e('Thumbnail support', $this->plugin_name); ?></label>
-                        <legend class="screen-reader-text"><?php _e('Thumbnail support', $this->plugin_name); ?></legend>
+                        <label for="<?php echo $this->plugin_name; ?>-thumbnail_on"><?php _e('Thumbnail Support (Requires Wordpress 4.8)', $this->plugin_name); ?></label>
+                        <legend class="screen-reader-text"><?php _e('Thumbnail Support', $this->plugin_name); ?></legend>
                         <br>
-                        <small>(<?php _e('Experimental: Upload image attachments to the Media Library and set post thumbnail. Makes insertion slower'); ?>)</small>
+                        <small>(Experimental: Upload image attachments to the Media Library and set post thumbnail. Warning: Makes insertion/syncing slower and requires a lot of disk space)</small>
+                        <br>
+                        <small>(Can make integration into certain themes easier)</small>
                     </p>
                 <td>
             </tr>
@@ -469,10 +471,10 @@
                 <td>
                     <p>
                         <input type="checkbox" id="<?php echo $this->plugin_name; ?>-thumbnail_allow_delete" name="<?php echo $this->plugin_name; ?>[thumbnail_allow_delete]" <?php checked($thumbnail_allow_delete, "on"); ?> value="on" <?php echo $is_disabled; ?>>
-                        <label for="<?php echo $this->plugin_name; ?>-thumbnail_allow_delete"><?php _e('Delete images with posts', $this->plugin_name); ?></label>
-                        <legend class="screen-reader-text"><?php _e('Delete images with posts', $this->plugin_name); ?></legend>
+                        <label for="<?php echo $this->plugin_name; ?>-thumbnail_allow_delete"><?php _e('Thumbnail Support: delete images with posts', $this->plugin_name); ?></label>
+                        <legend class="screen-reader-text"><?php _e('Thumbnail Support: delete images with posts', $this->plugin_name); ?></legend>
                         <br>
-                        <small>(<?php _e('Delete all MFN posts: also delete all attached images from the Media Library'); ?>)</small>
+                        <small>("Delete all MFN posts" will also delete all attached images from the Media Library) <strong>Recommended.</strong></small>
                     </p>
                 <td>
             </tr>
