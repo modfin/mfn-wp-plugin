@@ -116,8 +116,9 @@ function mfn_news_post_saved($post_id)
     // do not interfere with upsert item
     if (did_action('mfn_before_upsertitem')) return;
 
-    $lang_slug = mfn_get_post_language($post_id);
+    if (get_post_meta($post_id, MFN_POST_TYPE . "_group_id", true)) return;
 
+    $lang_slug = mfn_get_post_language($post_id);
 
     $terms = wp_get_object_terms($post_id, MFN_TAXONOMY_NAME);
     $needle = MFN_TAG_PREFIX . '-lang-';
@@ -129,6 +130,9 @@ function mfn_news_post_saved($post_id)
     foreach ($terms as $term) {
         foreach ($needles as $needle) {
             if (strpos($term->slug, $needle) === 0) {
+                if ($needle === 'mfn' && !($term->slug === 'mfn' || strpos($term->slug, 'mfn_') === 0)) {
+                    continue;
+                }
                 array_push($matching_terms, $term->slug);
             }
         }
@@ -138,12 +142,13 @@ function mfn_news_post_saved($post_id)
     }
 
     if (empty($lang_slug) && empty($lang_by_terms)) {
+        delete_post_meta($post_id, MFN_POST_TYPE . "_lang");
         return;
     }
 
-    $primary_lang = 'en'; // todo
+    $primary_lang = 'en'; // TODO? main WPML/polylang language that doesn't have slug lang-suffix for wp_terms
 
-    $mode_normal = !empty($lang_by_terms);
+    $mode_normal = empty($lang_slug) && !empty($lang_by_terms);
 
     if ($mode_normal) {
         $lang_slug = $lang_by_terms;
@@ -155,16 +160,11 @@ function mfn_news_post_saved($post_id)
         $lang_slug
     );
 
-
-    if (!$mode_normal) {
-        wp_remove_object_terms($post_id, $matching_terms, MFN_TAXONOMY_NAME);
-    }
-
     $lang_suffix = ($mode_normal || $primary_lang === $lang_slug) ? '' : $lang_slug;
     $tags_to_insert = mfn_create_tags($lang_slug, $lang_suffix);
 
+    wp_remove_object_terms($post_id, $matching_terms, MFN_TAXONOMY_NAME);
     wp_set_object_terms($post_id, $tags_to_insert, MFN_TAXONOMY_NAME, true);
-
 }
 
 function run_mfn_wp_plugin()
