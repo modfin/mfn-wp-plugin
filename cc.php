@@ -114,7 +114,7 @@ function MFN_clear_settings(): string
     return "done";
 }
 
-function MFN_delete_all_posts(): int
+function MFN_delete_all_posts()
 {
     $queries = array();
     parse_str($_SERVER['QUERY_STRING'], $queries);
@@ -122,6 +122,7 @@ function MFN_delete_all_posts(): int
 
 
     $i = 0;
+    $num_deleted = 0;
     $allposts = get_posts(
         array(
             'post_type' => MFN_POST_TYPE,
@@ -130,12 +131,15 @@ function MFN_delete_all_posts(): int
         )
     );
     foreach ($allposts as $eachpost) {
-        if ($eachpost->post_type == MFN_POST_TYPE){
+        if ($eachpost->post_type == MFN_POST_TYPE) {
+            if (get_post_meta($eachpost->ID, MFN_POST_TYPE . "_group_id", true)) {
+                wp_delete_post( $eachpost->ID, true );
+                $num_deleted++;
+            }
             $i++;
-            wp_delete_post( $eachpost->ID, true );
         }
     }
-    return $i;
+    return array($i, $num_deleted);
 }
 
 switch ($mode) {
@@ -167,7 +171,8 @@ switch ($mode) {
         echo MFN_clear_settings();
         die();
     case "delete-all-posts":
-        echo MFN_delete_all_posts();
+        $a = MFN_delete_all_posts();
+        echo $a[0] . ';' . $a[1];
         die();
 
     default:
