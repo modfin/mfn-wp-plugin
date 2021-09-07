@@ -35,8 +35,8 @@
         $options = get_option($this->plugin_name);
 
         // Cleanup
-        $hub_url = isset($options['hub_url']) && $options['hub_url'] !== "" ? $options['hub_url'] : "https://hub.mfn.se";
-        $sync_url = isset($options['sync_url']) && $options['sync_url'] !== "" ? $options['sync_url'] : "https://mfn.se";
+        $hub_url = isset($options['hub_url']) && $options['hub_url'] !== "" ? $options['hub_url'] : "https://feed.mfn.se/v1";
+        $sync_url = isset($options['sync_url']) && $options['sync_url'] !== "" ? $options['sync_url'] : "https://feed.mfn.se/v1";
         $plugin_url = isset($options['plugin_url']) && $options['plugin_url'] !== "" ? $options['plugin_url'] : plugins_url() . "/mfn-wp-plugin";
         $entity_id = isset($options['entity_id']) ? $options['entity_id'] : "";
 
@@ -111,7 +111,7 @@
                         <p>
                             <label for="<?php echo $this->plugin_name; ?>-sync_url"><?php _e('Sync URL', $this->plugin_name); ?></label>
                             <legend class="screen-reader-text"><?php _e('Sync URL', $this->plugin_name); ?></legend>
-                            <small>(probably https://mfn.se)</small>
+                            <small>(probably https://feed.mfn.se/v1)</small>
                         </p>
                     </th>
                 </tr>
@@ -125,7 +125,7 @@
                         <p>
                             <label for="<?php echo $this->plugin_name; ?>-hub_url"><?php _e('Hub URL', $this->plugin_name); ?></label>
                             <legend class="screen-reader-text"><?php _e('Hub URL', $this->plugin_name); ?></legend>
-                            <small>(<?php _e('probably https://hub.mfn.se', $this->plugin_name); ?>)</small>
+                            <small>(<?php _e('probably https://feed.mfn.se/v1', $this->plugin_name); ?>)</small>
                         </p>
                     </th>
                 </tr>
