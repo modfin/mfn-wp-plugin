@@ -127,6 +127,8 @@ function mfn_news_post_saved($post_id)
 
     $matching_terms = array();
     $lang_by_terms = '';
+    $has_ir = false;
+
     foreach ($terms as $term) {
         foreach ($needles as $needle) {
             if (strpos($term->slug, $needle) === 0) {
@@ -138,6 +140,9 @@ function mfn_news_post_saved($post_id)
         }
         if (strpos($term->slug, MFN_TAG_PREFIX . "-lang-") === 0) {
             $lang_by_terms = explode($needle, $term->slug)[1];
+        }
+        if (strpos($term->slug, MFN_TAG_PREFIX . "-type-ir") === 0) {
+            $has_ir = true;
         }
     }
 
@@ -162,6 +167,14 @@ function mfn_news_post_saved($post_id)
 
     $lang_suffix = ($mode_normal || $primary_lang === $lang_slug) ? '' : $lang_slug;
     $tags_to_insert = mfn_create_tags($lang_slug, $lang_suffix);
+
+    if ($has_ir) {
+        foreach($tags_to_insert as $k => $v) {
+            if (strpos($v, MFN_TAG_PREFIX . "-type-pr") === 0) {
+                array_splice($tags_to_insert, $k, 1);
+            }
+        }
+    }
 
     wp_remove_object_terms($post_id, $matching_terms, MFN_TAXONOMY_NAME);
     wp_set_object_terms($post_id, $tags_to_insert, MFN_TAXONOMY_NAME, true);
