@@ -6,7 +6,7 @@
  *    Reason being that when you use functions like Sync press releases, taxonomy or when press releases
  *    are received through the post hook, data is written into the database using the following constants
  */
-const MFN_PLUGIN_NAME_VERSION = '0.0.53';
+const MFN_PLUGIN_NAME_VERSION = '0.0.54';
 const MFN_PLUGIN_NAME = 'mfn-wp-plugin';
 const MFN_TAXONOMY_NAME = 'mfn-news-tag';
 const MFN_TAG_PREFIX = 'mfn';

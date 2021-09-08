@@ -267,10 +267,11 @@
         }
 
         $.get(pluginUrl + '/cc.php?mode=delete-all-posts&limit=10', function (data) {
-
-            var deleted = parseInt(data);
+            var parts = data.split(';');
+            var i = parseInt(parts[0]);
+            var deleted = parseInt(parts[1]);
             total += deleted;
-            if (deleted === 10){
+            if (i === 10){
                 $('#delete-posts-info').html(total + " deleted");
                 deletePosts(total);
                 return;

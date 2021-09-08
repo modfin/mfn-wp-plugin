@@ -128,6 +128,7 @@ function MFN_clear_settings(): string
     return "done";
 }
 
+
 function MFN_delete_attachments($post_id) {
     $existing_attachments = get_posts(array(
         'post_type' => 'attachment',
@@ -152,13 +153,14 @@ function MFN_delete_attachments($post_id) {
     }
 }
 
-function MFN_delete_all_posts(): int
+function MFN_delete_all_posts()
 {
     $queries = array();
     parse_str($_SERVER['QUERY_STRING'], $queries);
     $limit = isset($queries["limit"]) ? $queries["limit"] : -1;
     $delete_attachments = isset(get_option(MFN_PLUGIN_NAME)['thumbnail_allow_delete']);
     $i = 0;
+    $num_deleted = 0;
     $allposts = get_posts(
         array(
             'post_type' => MFN_POST_TYPE,
@@ -167,15 +169,18 @@ function MFN_delete_all_posts(): int
         )
     );
     foreach ($allposts as $eachpost) {
-        if ($eachpost->post_type == MFN_POST_TYPE){
-            if ($delete_attachments) {
-                MFN_delete_attachments($eachpost->ID);
+        if ($eachpost->post_type == MFN_POST_TYPE) {
+            if (get_post_meta($eachpost->ID, MFN_POST_TYPE . "_group_id", true)) {
+                if ($delete_attachments) {
+                    MFN_delete_attachments($eachpost->ID);
+                }
+                wp_delete_post( $eachpost->ID, true );
+                $num_deleted++;
             }
             $i++;
-            wp_delete_post( $eachpost->ID, true );
         }
     }
-    return $i;
+    return array($i, $num_deleted);
 }
 
 switch ($mode) {
@@ -207,7 +212,8 @@ switch ($mode) {
         echo MFN_clear_settings();
         die();
     case "delete-all-posts":
-        echo MFN_delete_all_posts();
+        $a = MFN_delete_all_posts();
+        echo $a[0] . ';' . $a[1];
         die();
 
     default:
