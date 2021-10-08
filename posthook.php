@@ -78,8 +78,14 @@ if (strpos($hub_url, 'https://feed.mfn.') === 0) {
         echo "bad method";
         die();
     }
-    $signature = $_SERVER['HTTP_X_HUB_SIGNATURE'];
-    $hub_ext_ping = $_SERVER['HTTP_X_HUB_EXT_PING'];
+    $signature = null;
+    if (isset($_SERVER['HTTP_X_HUB_SIGNATURE'])) {
+        $signature = $_SERVER['HTTP_X_HUB_SIGNATURE'];
+    }
+    $hub_ext_ping = null;
+    if (isset($_SERVER['HTTP_X_HUB_EXT_PING'])) {
+        $hub_ext_ping = $_SERVER['HTTP_X_HUB_EXT_PING'];
+    }
     $content = file_get_contents("php://input");
 
     $verify_signature = isset($ops['verify_signature']) ? $ops['verify_signature'] : 'off';
