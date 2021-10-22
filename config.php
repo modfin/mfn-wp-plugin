@@ -73,7 +73,7 @@ global $pagenow;
 if (isset(get_option(MFN_PLUGIN_NAME)['rewrite_post_type'])) {
 
     // adding filter for rewriting the post_type from settings
-   add_filter('register_post_type_args', 'rewrite_post_type', 10, 2);
+    add_filter('register_post_type_args', 'rewrite_post_type', 10, 2);
 
     function rewrite_post_type($args, $post_type) {
         if ($post_type === 'mfn_news') {
@@ -496,7 +496,7 @@ function sync_mfn_taxonomy()
         }
     };
 
-    $upsert_pll = function ($enItem, $enTerm, $prefix = '') {
+    $upsert_pll = function ($enItem, $enTerm, $prefix = '', $pllLangMapping) {
 
         $enParentTerm = null;
         if ($enTerm->parent > 0) {
@@ -508,7 +508,10 @@ function sync_mfn_taxonomy()
 
         $allowed = pll_the_languages( array( 'raw' => true));
 
-        foreach ($enItem['i10n'] as $lang => $name) {
+        foreach ($enItem['i10n'] as $i10nLang => $name) {
+
+            $lang = $pllLangMapping[$i10nLang];
+
             if(!array_key_exists($lang, $allowed)){
                 continue;
             }
@@ -624,8 +627,13 @@ function sync_mfn_taxonomy()
             $upsert_wpml($item, $term, $prefix);
         }
         if ($has_pll && $use_pll == 'on') {
+            $pllLangMapping = array();
+            foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
+                $l = explode('_', $pll_lang->locale)[0];
+                $pllLangMapping[$l] = $pll_lang->slug;
+            };
             pll_set_term_language($term->term_id, 'en');
-            $upsert_pll($item, $term, $prefix);
+            $upsert_pll($item, $term, $prefix, $pllLangMapping);
         }
 
         if (isset($item['children'])) {

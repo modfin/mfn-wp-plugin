@@ -100,6 +100,8 @@
                 syncTax();
             } else {
                 registerSyncLatestClick();
+                // also sync taxonomy
+                syncTax();
             }
 
             $('#sync-status').append("<span class=\"dashicons dashicons-yes mfn-success-icon\"></span>Done!");

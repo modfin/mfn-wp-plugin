@@ -10,6 +10,8 @@ function mfn_load_widget()
     register_widget('mfn_archive_widget');
     register_widget('mfn_subscription_widget');
     register_widget('mfn_news_feed_widget');
+    register_widget('mfn_before_post');
+    register_widget('mfn_after_post');
 }
 
 add_action('widgets_init', 'mfn_load_widget');
@@ -53,6 +55,141 @@ function determineLocale(): string
 function yearClass($year): string
 {
     return trim(str_replace('/', '-', str_replace('*', '', $year)));
+}
+
+class mfn_before_post extends WP_Widget
+{
+    public function __construct()
+    {
+        parent::__construct(
+            'mfn_before_post',
+            __('MFN Before Post', 'mfn_before_post_domain'),
+            array('description' => __('Adds additional data before post.', 'mfn_before_post_domain'),)
+        );
+    }
+    function widget() {
+        // currently does nothing
+    }
+}
+
+// Creating the widget
+class mfn_after_post extends WP_Widget
+{
+    public function __construct()
+    {
+        parent::__construct(
+            'mfn_after_post',
+            __('MFN After Post', 'mfn_after_post_domain'),
+            array('description' => __('Adds additional data after post.', 'mfn_after_post_domain'),)
+        );
+    }
+
+    private function fetch_attachments(): array
+    {
+        $attachments = array();
+        foreach (get_post_meta(get_the_ID(), MFN_POST_TYPE . '_attachment_data') as $data)
+        {
+            $d = json_decode($data);
+            array_push($attachments, $d);
+        }
+        return $attachments;
+    }
+
+    private function remove_attachment_footer()
+    {
+        echo '
+            <script>
+                Array.prototype.slice.call(document.querySelectorAll(".mfn-attachment")).forEach(function (el) { el.remove() });
+            </script>
+        ';
+    }
+
+    private function getProxiedUrl($url, $file_title, $content_type) {
+
+        $mime_to_ext = array(
+            "application/pdf" => "pdf",
+            "image/jpg" => "jpg",
+            "image/jpeg" => "jpg",
+            "image/png" => "png",
+            "image/tiff" => "tiff",
+            'audio/mpeg' => 'mp3',
+            'audio/mpeg3' => 'mp3',
+            'audio/mp3' => 'mp3',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
+            'application/x-zip' => 'zip',
+            'application/zip' => 'zip',
+            'application/x-zip-compressed' => 'zip',
+            'application/s-compressed' => 'zip',
+            'multipart/x-zip' => 'zip',
+            'video/mp4' => 'mp4',
+            'video/mpeg' => 'mpeg',
+            'video/quicktime' => 'mov',
+        );
+
+        $vanity_part = '';
+        if (isset($mime_to_ext[$content_type])) {
+            $ext = $mime_to_ext[$content_type];
+            $vanity_part = '/' . sanitize_title($file_title) . "." . $ext;
+        }
+
+        $ops = get_option('mfn-wp-plugin');
+        $storageUrl = isset($ops['sync_url'])
+            ? ((strpos($ops['sync_url'], 'https://feed.mfn.') === 0)
+                ? str_replace('//feed.mfn', '//storage.mfn', str_replace('/v1', '', $ops['sync_url']))
+                : str_replace('//mfn', '//storage.mfn', $ops['sync_url']))
+            : null;
+
+        if ($storageUrl === null || $storageUrl === '' || $content_type === null || $content_type === '') {
+            return array($url, '');
+        }
+
+        $isStorageAttachment = strpos($url, $storageUrl) === 0;
+
+        $outUrl = $isStorageAttachment
+            ? $url
+            : "$storageUrl/proxy$vanity_part?url=" . urlencode($url);
+
+        $previewUrl = '';
+        if ($content_type === 'application/pdf') {
+            $previewUrl = $isStorageAttachment
+                ? $url . '?type=jpg'
+                : $outUrl . '&type=jpg';
+        }
+        if (strpos($content_type, 'image/') === 0) {
+            $previewUrl = $isStorageAttachment
+                ? $url . '?size=w-512'
+                : $outUrl . '&size=w-512';
+        }
+
+        return array($outUrl, $previewUrl);
+    }
+
+    private function list_attachments() {
+        echo '<div class="mfn-attachments-container">';
+        foreach ($this->fetch_attachments() as $attachment) {
+            $icon_type_slug = empty($attachment->content_type) ? 'admin-links' : 'media-default';
+
+            list ($url, $preview_url) = $this->getProxiedUrl($attachment->url, $attachment->file_title, $attachment->content_type);
+            if (empty($preview_url)) {
+                $icon = '<span class="mfn-attachment-icon"><span class="dash dashicons dashicons-' . $icon_type_slug . '"></span></span>';
+            } else {
+                $icon = '<span class="mfn-attachment-icon"><img src="' . $preview_url. '"></span>';
+            }
+            $link = '<a class="mfn-attachment-link" href="' . $url . '">' . $icon . $attachment->file_title . '</a>';
+            echo '<div class="mfn-attachment">' . $link . '</div>';
+        }
+        echo  '</div>';
+    }
+
+    function widget() {
+        $ops = get_option('mfn-wp-plugin');
+        if (isset($ops['enable_attachments'])) {
+            $this->remove_attachment_footer();
+            $this->list_attachments();
+        }
+    }
 }
 
 // Creating the widget
@@ -1131,6 +1268,24 @@ class mfn_news_feed_widget extends WP_Widget
         return $instance;
     }
 } //
+
+function load_shortcode_mfn_before_post($atts)
+{
+    ob_start();
+    the_widget('mfn_before_post', $atts);
+    return ob_get_clean();
+}
+
+add_shortcode('mfn_before_post', 'load_shortcode_mfn_before_post');
+
+function load_shortcode_mfn_after_post($atts)
+{
+    ob_start();
+    the_widget('mfn_after_post', $atts);
+    return ob_get_clean();
+}
+
+add_shortcode('mfn_after_post', 'load_shortcode_mfn_after_post');
 
 function load_shortcode_mfn_archive_widget($atts)
 {

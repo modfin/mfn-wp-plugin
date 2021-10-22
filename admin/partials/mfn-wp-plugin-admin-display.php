@@ -34,6 +34,11 @@
         // Grab all options
         $options = get_option($this->plugin_name);
 
+        if ($options === false || (is_array($options) && sizeof($options) === 0)) {
+            $options['verify_signature'] = 'on';
+            $options['enable_attachments'] = 'on';
+        }
+
         // Cleanup
         $hub_url = isset($options['hub_url']) && $options['hub_url'] !== "" ? $options['hub_url'] : "https://feed.mfn.se/v1";
         $sync_url = isset($options['sync_url']) && $options['sync_url'] !== "" ? $options['sync_url'] : "https://feed.mfn.se/v1";
@@ -43,7 +48,7 @@
         $cus_query = isset($options['cus_query']) ? $options['cus_query'] : "";
 
         $disable_archive =  isset($options['disable_archive']) ? $options['disable_archive'] : 'off';
-        $verify_signature =  isset($options['verify_signature']) ? $options['verify_signature'] : 'on';
+        $verify_signature =  isset($options['verify_signature']) ? $options['verify_signature'] : 'off';
         $use_wpml =  isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
         $use_pll =  isset($options['use_pll']) ? $options['use_pll'] : 'off';
 
@@ -52,6 +57,7 @@
         $thumbnail_on =  isset($options['thumbnail_on']) ? $options['thumbnail_on'] : 'off';
         $thumbnail_allow_delete =  isset($options['thumbnail_allow_delete']) ? $options['thumbnail_allow_delete'] : 'off';
 
+        $enable_attachments =  isset($options['enable_attachments']) ? $options['enable_attachments'] : 'off';
 
         $subscription_id = isset($options['subscription_id']) ? $options['subscription_id'] : "N/A";
         $posthook_secret = isset($options['posthook_secret']) ? $options['posthook_secret'] : "N/A";
@@ -408,7 +414,7 @@
                 <tr>
                     <td>
                         <p>
-                            <input type="checkbox" id="<?php echo $this->plugin_name; ?>-verify_signature" name="<?php echo $this->plugin_name; ?>[verify_signature]" <?php checked($verify_signature, "on"); ?> value="on" <?php echo $is_disabled; ?>>
+                            <input type="checkbox" id="<?php echo $this->plugin_name; ?>-verify_signature" name="<?php echo $this->plugin_name; ?>[verify_signature]" <?php checked("on", $verify_signature); ?> value="on" <?php echo $is_disabled; ?>>
                             <label for="<?php echo $this->plugin_name; ?>-verify_signature"><?php _e('Verify Signature', $this->plugin_name); ?></label>
                             <legend class="screen-reader-text"><?php _e('Verify Signature', $this->plugin_name); ?></legend>
                             <br>
@@ -446,6 +452,17 @@
                             <legend class="screen-reader-text"><?php _e('Reset Cache', $this->plugin_name); ?></legend>
                             <br>
                             <small>(<?php _e('On every new item insert, if checked, this will reset the db cache', $this->plugin_name); ?>)</small>
+                        </p>
+                    <td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <input type="checkbox" id="<?php echo $this->plugin_name; ?>-enable_attachments" name="<?php echo $this->plugin_name; ?>[enable_attachments]" <?php checked("on", $enable_attachments); ?> value="on" <?php echo $is_disabled; ?>>
+                            <label for="<?php echo $this->plugin_name; ?>-enable_attachments"><?php _e('Enable Attachments Widget', $this->plugin_name); ?></label>
+                            <legend class="screen-reader-text"><?php _e('Enable Attachments Widget', $this->plugin_name); ?></legend>
+                            <br>
+                            <small>(<?php _e('If enabled, our plugin will handle the listing of attachments and will bypass the default mfn-attachment footer', $this->plugin_name); ?>) <strong>Enabled by default.</strong></small>
                         </p>
                     <td>
                 </tr>
