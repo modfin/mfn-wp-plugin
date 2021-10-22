@@ -44,8 +44,13 @@ function createTags($item): array
         }
     }
     if ($use_pll == 'on' && $lang != 'en') {
+        $pllLangMapping = array();
+        foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
+            $l = explode('_', $pll_lang->locale)[0];
+            $pllLangMapping[$l] = $pll_lang->slug;
+        };
         foreach ($newtag as $i => $t) {
-            $newtag[$i] = $t . "_" . $lang;
+            $newtag[$i] = $t . "_" . $pllLangMapping[$lang];
         }
     }
     return $newtag;
@@ -192,7 +197,12 @@ function upsertLanguage($post_id, $groupId, $lang)
     $use_pll = isset($options['use_pll']) ? $options['use_pll'] : 'off';
 
     if ($use_pll == 'on') {
-        pll_set_post_language($post_id, $lang);
+        $pllLangMapping = array();
+        foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
+            $l = explode('_', $pll_lang->locale)[0];
+            $pllLangMapping[$l] = $pll_lang->slug;
+        };
+        pll_set_post_language($post_id, $pllLangMapping[$lang]);
 
         global $wpdb;
         $q = $wpdb->prepare("
@@ -210,7 +220,7 @@ function upsertLanguage($post_id, $groupId, $lang)
         foreach ($res as $i => $post){
             $_post_id= $post->post_id;
             $_lang = $post->lang;
-            $translations[$_lang] = $_post_id;
+            $translations[$pllLangMapping[$_lang]] = $_post_id;
         }
         pll_save_post_translations( $translations );
     }
@@ -295,6 +305,12 @@ function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false
         $outro($post_id);
         return 0;
     }
+
+    if (empty($html)) {
+        $html = '';
+    }
+    $html = "[mfn_before_post]\n" . $html . "\n[mfn_after_post]";
+
     $post_id = wp_insert_post(array(
         'post_content' => $html,
         'post_title' => $title,
@@ -363,6 +379,11 @@ function upsertItemFull($item, $signature = '', $raw_data = '', $reset_cache = f
         }
 
     };
+
+    if (empty($html)) {
+        $html = '';
+    }
+    $html = "[mfn_before_post]\n" . $html . "\n[mfn_after_post]";
 
     if ($post_id) {
         $post = get_post($post_id);

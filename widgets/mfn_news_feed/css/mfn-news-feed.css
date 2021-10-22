@@ -62,3 +62,30 @@
     display: flex;
     justify-content: space-between;
 }
+
+.mfn-attachments-container .mfn-attachment {
+    display: flex;
+    align-items: center;
+    min-height: 80px;
+    height: 80px;
+}
+
+.mfn-attachments-container .mfn-attachment .mfn-attachment-link {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.mfn-attachments-container .mfn-attachment .mfn-attachment-icon {
+    margin-right: 20px;
+}
+
+.mfn-attachments-container .mfn-attachment .mfn-attachment-icon img {
+    width: 55px;
+    border: 1px solid #eee;
+}
+
+.mfn-attachments-container .mfn-attachment .mfn-attachment-icon .dash {
+    width: 55px;
+    font-size: 30px;
+    text-align: center;
+}

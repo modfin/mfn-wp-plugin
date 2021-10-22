@@ -109,12 +109,7 @@ class News_feed {
                 $tags .= $html;
             }
 
-            if (isset(get_post_type_object('mfn_news')->rewrite['slug'])) {
-                $item_url = get_home_url() . '/' . get_post_type_object('mfn_news')->rewrite['slug'] . '/' . $item->post_name;
-            }
-            else {
-                $item_url = get_home_url() . "/" . MFN_POST_TYPE . "/" . $item->post_name;
-            }
+            $item_url = get_permalink($item->post_id);
 
             if ($is_disclaimer) {
                 $name_query_param = strpos($disclaimerurl, '?') === false ? '?' : '&';
