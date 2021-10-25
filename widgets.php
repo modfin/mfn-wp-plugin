@@ -67,7 +67,7 @@ class mfn_before_post extends WP_Widget
             array('description' => __('Adds additional data before post.', 'mfn_before_post_domain'),)
         );
     }
-    function widget() {
+    function widget($args, $instance) {
         // currently does nothing
     }
 }
@@ -183,7 +183,7 @@ class mfn_after_post extends WP_Widget
         echo  '</div>';
     }
 
-    function widget() {
+    function widget($args, $instance) {
         $ops = get_option('mfn-wp-plugin');
         if (isset($ops['enable_attachments'])) {
             $this->remove_attachment_footer();
