@@ -131,7 +131,14 @@ class News_feed {
 
                 $dom = new DomDocument();
                 $encoding = '<?xml encoding="utf-8" ?>';
-                $post_content = str_replace(array('<br/>', '<br>'), ' ', $item->post_content);
+
+                $prefix = "[mfn_before_post]";
+                $post_html = $item->post_content;
+                if (substr($post_html, 0, strlen($prefix)) === $prefix) {
+                    $post_html = substr($post_html, strlen($prefix));
+                }
+
+                $post_content = str_replace(array('<br/>', '<br>'), ' ', $post_html);
 
                 $appendEllipsis = false;
                 @$dom->loadHTML($encoding . $post_content);
