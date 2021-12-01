@@ -107,7 +107,7 @@ class mfn_before_post extends WP_Widget
     {
         parent::__construct(
             'mfn_before_post',
-            array(),
+            '',
             array()
         );
     }
@@ -123,7 +123,7 @@ class mfn_after_post extends WP_Widget
     {
         parent::__construct(
             'mfn_after_post',
-            array(),
+            '',
             array()
         );
     }
