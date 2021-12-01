@@ -8,6 +8,7 @@ require_once(__DIR__ . '/config.php');
 function mfn_load_widget()
 {
     register_widget('mfn_archive_widget');
+    register_widget('mfn_archive_v2_widget');
     register_widget('mfn_subscription_widget');
     register_widget('mfn_news_feed_widget');
     register_widget('mfn_before_post');
@@ -57,14 +58,57 @@ function yearClass($year): string
     return trim(str_replace('/', '-', str_replace('*', '', $year)));
 }
 
+function load_datablocks_widget($widget_id, $widget_type, $lang) {
+
+    $loaderURL = DATABLOCKS_LOADER_URL;
+    $instance_id = random_int(1, time());
+
+    $widget = new stdClass();
+    $q =  $widget_type . '-wrapper-' . $instance_id;
+    $widget->query = '#' . $q;
+    $widget->widget = $widget_type ?? '';
+    $widget->token = $widget_id ?? '';
+    $widget->locale = $lang;
+
+    if($widget->token !== '' && $widget->query !== '') {
+        // inject Datablocks widget
+        echo '
+            <script>        
+                if(!window._MF) {
+                    let b = document.createElement("script");
+                    b.type = "text/javascript";
+                    b.async = true;
+                    b.src =  "' . DATABLOCKS_LOADER_URL . '/assets/js/loader-' . DATABLOOCKS_LOADER_VERSION . '.js' . '";
+                    document.getElementsByTagName("body")[0].appendChild(b);
+    
+                    window._MF = window._MF || {
+                        data: [],
+                        url: "' . $loaderURL . '",
+                        ready: !!0,
+                        render: function() {
+                            window._MF.ready = !0
+                        },
+                        push: function(conf) {
+                            this.data.push(conf);
+                        }
+                    }
+                }
+                window._MF.push(' . json_encode($widget) . ')
+            </script>
+            ';
+
+        echo '<div id="' . $q . '" class="mfn-' . $widget_type . '"></div>';
+    }
+}
+
 class mfn_before_post extends WP_Widget
 {
     public function __construct()
     {
         parent::__construct(
             'mfn_before_post',
-            __('MFN Before Post', 'mfn_before_post_domain'),
-            array('description' => __('Adds additional data before post.', 'mfn_before_post_domain'),)
+            array(),
+            array()
         );
     }
     function widget($args, $instance) {
@@ -79,8 +123,8 @@ class mfn_after_post extends WP_Widget
     {
         parent::__construct(
             'mfn_after_post',
-            __('MFN After Post', 'mfn_after_post_domain'),
-            array('description' => __('Adds additional data after post.', 'mfn_after_post_domain'),)
+            array(),
+            array()
         );
     }
 
@@ -665,46 +709,95 @@ class mfn_subscription_widget extends WP_Widget
         );
     }
 
-    private function load_subscription_widget($target_id, $widget_id, $lang) {
+    public function widget($args, $instance)
+    {
+        $lang = empty($instance['lang']) ? 'auto' : $instance['lang'];
+        $locale = determineLocale();
 
-        $loaderURL = DATABLOCKS_LOADER_URL;
-        $instance_id = random_int(1, time());
-
-        $widget = new stdClass();
-        $widget->query = isset($target_id) ? $target_id . '-' . $instance_id : '';
-        $widget->widget = 'subscribe-v2';
-        $widget->token = isset($widget_id) ? $widget_id : '';
-        $widget->locale = $lang;
-
-        if($widget->token !== '' && $widget->query !== '') {
-            // inject Datablocks subscription widget
-            echo '
-            <script>        
-                if(!window._MF) {
-                    let b = document.createElement("script");
-                    b.type = "text/javascript";
-                    b.async = true;
-                    b.src =  "' . DATABLOCKS_LOADER_URL . '/assets/js/loader-' . DATABLOOCKS_LOADER_VERSION . '.js' . '";
-                    document.getElementsByTagName("body")[0].appendChild(b);
-    
-                    window._MF = window._MF || {
-                        data: [],
-                        url: "' . $loaderURL . '",
-                        ready: !!0,
-                        render: function() {
-                            window._MF.ready = !0
-                        },
-                        push: function(conf) {
-                            this.data.push(conf);
-                        }
-                    }
+        if ($lang === "auto") {
+            if (is_string($locale)) {
+                $parts = explode("_", $locale);
+                if (strlen($parts[0]) === 2) {
+                    $lang = $parts[0];
                 }
-                window._MF.push(' . json_encode($widget) . ')
-            </script>
-            ';
-
-            echo '<div id="mfn-subscribe-div-' . $instance_id . '" class="mfn-subscribe"></div>';
+            }
         }
+
+        if ($lang === "auto") {
+            $lang = "en";
+        }
+
+        echo $args['before_widget'];
+
+        // load subscription widget
+        load_datablocks_widget(
+            $instance['widget_id'] ?? '',
+            "subscribe-v2",
+            $lang
+        );
+        echo $args['after_widget'];
+    }
+
+    public function form($instance)
+    {
+        $lang = $instance['lang'] ?? 'auto';
+        ?>
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('lang')); ?>">
+                <?php _e('Language', 'text_domain'); ?>:
+            </label>
+            <select name="<?php echo $this->get_field_name('lang'); ?>" id="<?php echo $this->get_field_id('lang'); ?>"
+                    class="widefat">
+                <?php
+                // Your options array
+                $options = array(
+                    'auto' => __('Auto (best effort to figure out what lang is used)', 'text_domain'),
+                    'sv' => __('Swedish', 'text_domain'),
+                    'en' => __('English', 'text_domain'),
+                    'fi' => __('Finnish', 'text_domain'),
+                );
+
+                // Loop through options and add each one to the select dropdown
+                foreach ($options as $key => $name) {
+                    echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($lang, $key, false) . '>' . $name . '</option>';
+                } ?>
+            </select>
+        </p>
+        <p>
+            <label for="<?php echo esc_attr($this->get_field_id('widget_id')); ?>">
+                <?php _e('Widget id', 'text_domain'); ?>:
+            </label>
+            <input
+                    id="<?php echo esc_attr($this->get_field_id('widget_id')); ?>"
+                    name="<?php echo esc_attr($this->get_field_name('widget_id')); ?>"
+                    type="text"
+                    value="<?php echo $instance['widget_id']; ?>"
+                    class="widefat"
+            />
+        </p>
+        <?php
+    }
+
+    public function update($new_instance, $old_instance)
+    {
+        $instance = array();
+        $instance['lang'] = (!empty($new_instance['lang'])) ? strip_tags($new_instance['lang']) : '';
+        $instance['widget_id'] = (!empty($new_instance['widget_id'])) ? strip_tags($new_instance['widget_id']) : '';
+        return $instance;
+    }
+}
+
+// Creating the widget
+class mfn_archive_v2_widget extends WP_Widget
+{
+
+    public function __construct()
+    {
+        parent::__construct(
+            'mfn_archive_v2_widget',
+            __('MFN Report Archive (V2)', 'mfn_archive_v2_widget_domain'),
+            array('description' => __('Creates a report archive from the MFN news feed.', 'mfn_archive_v2_widget_domain'),)
+        );
     }
 
     public function widget($args, $instance)
@@ -727,11 +820,11 @@ class mfn_subscription_widget extends WP_Widget
 
         echo $args['before_widget'];
 
-        // load subscription widget
-        $this->load_subscription_widget(
-                '#mfn-subscribe-div',
-                $instance['widget_id'] ?? '',
-                $lang
+        // load archive widget
+        load_datablocks_widget(
+            $instance['widget_id'] ?? '',
+            "archive",
+            $lang
         );
         echo $args['after_widget'];
     }
@@ -1291,6 +1384,15 @@ function load_shortcode_mfn_archive_widget($atts)
 {
     ob_start();
     the_widget('mfn_archive_widget', $atts);
+    return ob_get_clean();
+}
+
+add_shortcode('mfn_archive_v2_widget', 'load_shortcode_mfn_archive_v2_widget');
+
+function load_shortcode_mfn_archive_v2_widget($atts)
+{
+    ob_start();
+    the_widget('mfn_archive_v2_widget', $atts);
     return ob_get_clean();
 }
 
