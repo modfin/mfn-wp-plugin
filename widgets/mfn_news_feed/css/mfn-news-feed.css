@@ -89,3 +89,7 @@
     font-size: 30px;
     text-align: center;
 }
+
+.mfn-filter-select {
+    display: block;
+}

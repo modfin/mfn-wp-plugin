@@ -1022,7 +1022,7 @@ class mfn_news_feed_widget extends WP_Widget
             echo '<form method="GET">';
             echo '<div class="mfn-filter-select-container">';
             if ($showfilterlabel) {
-                echo '<label for="m-tags" style="display: block;">Filter</label>';
+                echo '<label for="mfn-filter-select" class="mfn-filter-select">' . $l('Filter', $lang) . '</label>';
             }
             echo '    <select name="mfn-filter-select" id="mfn-filter-select" onchange="filterByCategory(this);">
                         <option value="" ' . $all_sel . '>' . $l("All", $lang) . '</option>
