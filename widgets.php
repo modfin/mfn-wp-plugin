@@ -28,7 +28,9 @@ function create_mfn_wid_translate()
         'Previous' => ['sv' => "Föregående", 'fi' => "Edellinen"],
         'Interim Report' => ['sv' => "Kvartalsrapport", 'fi' => "Osavuosikatsaukset"],
         'Year-end Report' => ['sv' => "Bokslutskommuniké", 'fi' => "Tilinpäätöstiedote"],
-        'Annual Report' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"]
+        'Annual Report' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
+        'Regulatory' => ['sv' => "Regulatorisk", 'fi' => '...'],
+        'Non-Regulatory' => ['sv' => "Icke-Regulatorisk", 'fi' => '...'],
     );
 
     return static function ($word, $lang) use ($l10n) {
@@ -640,6 +642,7 @@ class mfn_archive_widget extends WP_Widget
         $instance['lang'] = (!empty($new_instance['lang'])) ? strip_tags($new_instance['lang']) : '';
         $instance['showheading'] = (!empty($new_instance['showheading'])) ? strip_tags($new_instance['showheading']) : '';
         $instance['showfilter'] = (!empty($new_instance['showfilter'])) ? strip_tags($new_instance['showfilter']) : '';
+        $instance['showfilterlabel'] = (!empty($new_instance['showfilterlabel'])) ? strip_tags($new_instance['showfilterlabel']) : '';
         $instance['showyear'] = (!empty($new_instance['showyear'])) ? strip_tags($new_instance['showyear']) : '';
         $instance['showdate'] = (!empty($new_instance['showdate'])) ? strip_tags($new_instance['showdate']) : '';
         $instance['showgenerictitle'] = (!empty($new_instance['showgenerictitle'])) ? strip_tags($new_instance['showgenerictitle']) : '';
@@ -871,6 +874,8 @@ class mfn_news_feed_widget extends WP_Widget
         $previewlen = empty($instance['previewlen']) ? 250 : $instance['previewlen'];
         $showyears = empty($instance['showyears']) ? false : $instance['showyears'];
         $showpreview = empty($instance['showpreview']) ? false : $instance['showpreview'];
+        $showfilter = empty($instance['showfilter']) ? false : $instance['showfilter'];
+        $showfilterlabel = empty($instance['showfilterlabel']) ? false : $instance['showfilterlabel'];
         $groupbyyear = empty($instance['groupbyyear']) ? false : $instance['groupbyyear'];
         $showpagination = empty($instance['showpagination']) ? false : $instance['showpagination'];
         $skipcustomtags = empty($instance['skipcustomtags']) ? false : $instance['skipcustomtags'];
@@ -903,6 +908,42 @@ class mfn_news_feed_widget extends WP_Widget
 
         $hasTags = array();
         $hasNotTags = array();
+
+        if ($showfilter) {
+            $filterTag = $_GET['m-tags'] ?? '';
+            $q = $_GET;
+            unset($q['m-tags']);
+            echo '<script>
+                    function filterByCategory(e) {
+                        var q = document.getElementById("current_query").value;
+                        var el = document.getElementById("mfn-filter-select");
+                        if (e.value !== "") q += "&m-tags=" + e.value;
+                        el.value = document.getElementById("filter_tag").value;
+                        window.location.href = q;
+                        return false;
+                    }
+                 </script>
+                 ';
+            $all_sel = $filterTag === '' ? 'selected' : '';
+            $regulatory_sel = $filterTag === 'regulatory' || $filterTag === 'mfn-regulatory' ? 'selected' : '';
+            $nonRegulatory_sel = $filterTag === '-regulatory' || $filterTag === '-mfn-regulatory' ? 'selected' : '';
+
+            echo '<form method="GET">';
+            echo '<div class="mfn-filter-select-container">';
+            if ($showfilterlabel) {
+                echo '<label for="m-tags" style="display: block;">Filter</label>';
+            }
+            echo '    <select name="mfn-filter-select" id="mfn-filter-select" onchange="filterByCategory(this);">
+                        <option value="" ' . $all_sel . '>' . $l("All", $lang) . '</option>
+                        <option value="regulatory" ' . $regulatory_sel . '>' . $l("Regulatory", $lang) . '</option>
+                        <option value="-regulatory" ' . $nonRegulatory_sel . '>' . $l("Non-Regulatory", $lang) . '</option>
+                      </select>
+                      <input type="hidden" id="current_query" value="?' . http_build_query($q). '" />
+                      <input type="hidden" id="filter_tag" value="' . $filterTag . '" />
+                    </div>
+                </form>     
+            ';
+        }
 
         foreach (explode(",", $tagsstr) as $tag) {
             if ($tag === "") {
