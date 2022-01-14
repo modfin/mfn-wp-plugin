@@ -154,7 +154,7 @@ function upsertThumbnails($post_id, $attachments)
             $thumbnail_attachment_id = $attachment_id;
         }
 
-        if (isset($a->tags) && in_array('image:header', $a->tags)) {
+        if (isset($a->tags) && in_array('image:primary', $a->tags)) {
             $thumbnail_attachment_id = $attachment_id;
         }
     }
