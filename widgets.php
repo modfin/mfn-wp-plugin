@@ -1180,7 +1180,6 @@ class mfn_news_feed_widget extends WP_Widget
                         {                           
                         var q = document.getElementById("current_year_query").value;
                         var instance_id = document.getElementById("instance_id").value;
-                        console.log(instance_id)
                         var el = document.getElementById("mfn-year-filter-"  + instance_id);
                         if (e.value !== "") q += "&m-year=" + e.value;
                             el.value = document.getElementById("current_year").value;
