@@ -17,6 +17,11 @@ function mfn_load_widget()
 
 add_action('widgets_init', 'mfn_load_widget');
 
+function bool_check($value): bool
+{
+    return ($value === 'true') || $value === "1";
+}
+
 function create_mfn_wid_translate()
 {
     $l10n = array(
@@ -25,6 +30,8 @@ function create_mfn_wid_translate()
         'Interim reports' => ['sv' => "Kvartalsrapport", 'fi' => "Osavuosikatsaukset"],
         'Annual Reports' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
         'Filter' => ['sv' => "Filter", 'fi' => "Suodattaa"],
+        'Category' => ['sv' => "Kategori", 'fi' => "Kategoria"],
+        'Year' => ['sv' => "År", 'fi' => "Vuosi"],
         'Next' => ['sv' => "Nästa", 'fi' => "Seuraava"],
         'Previous' => ['sv' => "Föregående", 'fi' => "Edellinen"],
         'Interim Report' => ['sv' => "Kvartalsrapport", 'fi' => "Osavuosikatsaukset"],
@@ -685,6 +692,7 @@ class mfn_archive_widget extends WP_Widget
         $instance['showheading'] = (!empty($new_instance['showheading'])) ? strip_tags($new_instance['showheading']) : '';
         $instance['showfilter'] = (!empty($new_instance['showfilter'])) ? strip_tags($new_instance['showfilter']) : '';
         $instance['showfilterlabel'] = (!empty($new_instance['showfilterlabel'])) ? strip_tags($new_instance['showfilterlabel']) : '';
+        $instance['filtertype'] = (!empty($new_instance['filtertype'])) ? strip_tags($new_instance['filtertype']) : 'dropdown';
         $instance['showyear'] = (!empty($new_instance['showyear'])) ? strip_tags($new_instance['showyear']) : '';
         $instance['showdate'] = (!empty($new_instance['showdate'])) ? strip_tags($new_instance['showdate']) : '';
         $instance['showgenerictitle'] = (!empty($new_instance['showgenerictitle'])) ? strip_tags($new_instance['showgenerictitle']) : '';
@@ -961,15 +969,24 @@ class mfn_news_feed_widget extends WP_Widget
             $timestampFormat = normalize_whitespace($instance['timestampformat']);
         }
 
+        $instance_id = random_int(1, time());
+
         $pagelen = empty($instance['pagelen']) ? 20 : $instance['pagelen'];
         $previewlen = empty($instance['previewlen']) ? 250 : $instance['previewlen'];
-        $showyears = empty($instance['showyears']) ? false : $instance['showyears'];
-        $showpreview = empty($instance['showpreview']) ? false : $instance['showpreview'];
-        $showfilter = empty($instance['showfilter']) ? false : $instance['showfilter'];
-        $showfilterlabel = empty($instance['showfilterlabel']) ? false : $instance['showfilterlabel'];
-        $groupbyyear = empty($instance['groupbyyear']) ? false : $instance['groupbyyear'];
-        $showpagination = empty($instance['showpagination']) ? false : $instance['showpagination'];
-        $skipcustomtags = empty($instance['skipcustomtags']) ? false : $instance['skipcustomtags'];
+        $showpreview = isset($instance['showpreview']) && bool_check($instance['showpreview']);
+
+        $showyears = isset($instance['showyears']) && bool_check($instance['showyears']);
+        $showyearslabel = !isset($instance['showyearslabel']) || bool_check($instance['showyearslabel']);
+        $yearstype = empty($instance['yearstype']) ? 'dropdown' : $instance['yearstype'];
+
+        $showfilter = isset($instance['showfilter']) && bool_check($instance['showfilter']);
+        $showfilterlabel = !isset($instance['showfilterlabel']) || bool_check($instance['showfilterlabel']);
+        $filtertype = empty($instance['filtertype']) ? 'dropdown' : $instance['filtertype'];
+
+        $groupbyyear = isset($instance['groupbyyear']) && bool_check($instance['groupbyyear']);
+        $showpagination = isset($instance['showpagination']) && bool_check($instance['showpagination']);
+        $skipcustomtags = isset($instance['skipcustomtags']) && bool_check($instance['skipcustomtags']);
+
         $disclaimerurl = empty($instance['disclaimerurl']) ? null : $instance['disclaimerurl'];
         $disclaimertag = empty($instance['disclaimertag']) ? null : $instance['disclaimertag'];
 
@@ -999,42 +1016,6 @@ class mfn_news_feed_widget extends WP_Widget
 
         $hasTags = array();
         $hasNotTags = array();
-
-        if ($showfilter) {
-            $filterTag = $_GET['m-tags'] ?? '';
-            $q = $_GET;
-            unset($q['m-tags']);
-            echo '<script>
-                    function filterByCategory(e) {
-                        var q = document.getElementById("current_query").value;
-                        var el = document.getElementById("mfn-filter-select");
-                        if (e.value !== "") q += "&m-tags=" + e.value;
-                        el.value = document.getElementById("filter_tag").value;
-                        window.location.href = q;
-                        return false;
-                    }
-                 </script>
-                 ';
-            $all_sel = $filterTag === '' ? 'selected' : '';
-            $regulatory_sel = $filterTag === 'regulatory' || $filterTag === 'mfn-regulatory' ? 'selected' : '';
-            $nonRegulatory_sel = $filterTag === '-regulatory' || $filterTag === '-mfn-regulatory' ? 'selected' : '';
-
-            echo '<form method="GET">';
-            echo '<div class="mfn-filter-select-container">';
-            if ($showfilterlabel) {
-                echo '<label for="mfn-filter-select" class="mfn-filter-select">' . $l('Filter', $lang) . '</label>';
-            }
-            echo '    <select name="mfn-filter-select" id="mfn-filter-select" onchange="filterByCategory(this);">
-                        <option value="" ' . $all_sel . '>' . $l("All", $lang) . '</option>
-                        <option value="regulatory" ' . $regulatory_sel . '>' . $l("Regulatory", $lang) . '</option>
-                        <option value="-regulatory" ' . $nonRegulatory_sel . '>' . $l("Non-Regulatory", $lang) . '</option>
-                      </select>
-                      <input type="hidden" id="current_query" value="?' . http_build_query($q). '" />
-                      <input type="hidden" id="filter_tag" value="' . $filterTag . '" />
-                    </div>
-                </form>     
-            ';
-        }
 
         foreach (explode(",", $tagsstr) as $tag) {
             if ($tag === "") {
@@ -1113,7 +1094,7 @@ class mfn_news_feed_widget extends WP_Widget
         " : $instance['tagtemplate'];
 
         $yeartemplate = empty($instance['yeartemplate']) ? "
-            <span class='mfn-year-header mfn-year mfn-year-header-[year]'>
+            <span class='mfn-year-header mfn-year mfn-year-header-[year][active]'>
                 <a href='[url]' class='mfn-year-header-link mfn-year-header-link-[year]'>[year]</a>
             </span>
         " : $instance['yeartemplate'];
@@ -1126,26 +1107,126 @@ class mfn_news_feed_widget extends WP_Widget
 
         echo "<div class=\"mfn-newsfeed\">";
 
-        if ($showyears) {
+        if ($showfilter || $showyears) {
+            echo '<form method="GET" id="mfn-filter-form">';
+            echo '<div class="mfn-filter-container">';
+        }
 
+        if ($showfilter) {
+            $categoryTag = $_GET['m-tags'] ?? '';
+            $q = $_GET;
+            unset($q['m-tags']);
+            echo '<div class="mfn-newsfeed-category-selector">';
+            echo '<script>
+                    function filterByCategory(e)
+                    {
+                        var type = e.getAttribute("filtertype");
+                        var instance_id = document.getElementById("instance_id").value;
+                        var q = document.getElementById("current_category_query").value;
+                        if (type === "dropdown") {
+                            var el = document.getElementById("mfn-category-filter-"  + instance_id);
+                            if (e.value !== "") q += "&m-tags=" + e.value;
+                            el.value = document.getElementById("category_tag").value;
+                        } else if (type === "buttons") {
+                            if (e.value !== "") q += "&m-tags=" + e.value;
+                        }
+                        window.location.href = q;
+                        return false;
+                    }
+                 </script>
+                 ';
+
+            if ($showfilterlabel) {
+                echo '<label for="mfn-category-filter-' . $instance_id  . '" class="mfn-category-label">' . $l('Category', $lang) . '</label>';
+            }
+            if ($filtertype === 'dropdown') {
+                $all_sel = $categoryTag === '' ? 'selected' : '';
+                $regulatory_sel = $categoryTag === 'regulatory' || $categoryTag === 'mfn-regulatory' ? 'selected' : '';
+                $nonRegulatory_sel = $categoryTag === '-regulatory' || $categoryTag === '-mfn-regulatory' ? 'selected' : '';
+                echo '    <select name="mfn-category-filter" id="mfn-category-filter-' . $instance_id  . '" class="mfn-category-filter" filtertype="dropdown" onchange="filterByCategory(this);">
+                            <option value="" ' . $all_sel . '>' . $l("All", $lang) . '</option>
+                            <option value="regulatory" ' . $regulatory_sel . '>' . $l("Regulatory", $lang) . '</option>
+                            <option value="-regulatory" ' . $nonRegulatory_sel . '>' . $l("Non-Regulatory", $lang) . '</option>
+                          </select>
+                ';
+            } else if ($filtertype === 'buttons') {
+                $all_act = $categoryTag === '' ? ' mfn-filter-button-active' : '';
+                $regulatory_act = $categoryTag === 'regulatory' || $categoryTag === 'mfn-regulatory' ? ' mfn-filter-button-active' : '';
+                $nonRegulatory_act = $categoryTag === '-regulatory' || $categoryTag === '-mfn-regulatory' ? ' mfn-filter-button-active' : '';
+                echo '    <div id="mfn-category-filter-' . $instance_id  . '" class="mfn-category-filter">';
+                echo '    <button type="button" value="" class="mfn-category-button-all' . $all_act . '" filtertype="buttons" onclick="filterByCategory(this);">' . $l("All", $lang) . '</button>';
+                echo '    <button type="button" value="regulatory" class="mfn-category-button-regulatory' . $regulatory_act . '" filtertype="buttons" onclick="filterByCategory(this);">' . $l("Regulatory", $lang) . '</button>';
+                echo '    <button type="button" value="-regulatory" class="mfn-category-button-non-regulatory' . $nonRegulatory_act . '" filtertype="buttons" onclick="filterByCategory(this);">' . $l("Non-Regulatory", $lang) . '</button>';
+                echo '    </div>';
+            }
+            echo '  <input type="hidden" id="current_category_query" value="?' . http_build_query($q) . '" />';
+            echo '  <input type="hidden" id="category_tag" value="' . $categoryTag . '" />';
+            echo '</div>';
+        }
+
+        if ($showyears) {
+            echo "<div class='mfn-newsfeed-year-selector'>";
+            $current_year = $_GET['m-year'] ?? '';
             if (is_object($min_max_years) &&
                 isset($min_max_years->max_year) &&
                 isset($min_max_years->min_year) &&
                 is_numeric($min_max_years->max_year) &&
                 is_numeric($min_max_years->min_year)) {
+                if ($yearstype === 'dropdown') {
+                    $q = $_GET;
+                    unset($q['m-year']);
+                    echo '<script>
+                        function filterByYear(e)
+                        {                           
+                        var q = document.getElementById("current_year_query").value;
+                        var instance_id = document.getElementById("instance_id").value;
+                        console.log(instance_id)
+                        var el = document.getElementById("mfn-year-filter-"  + instance_id);
+                        if (e.value !== "") q += "&m-year=" + e.value;
+                            el.value = document.getElementById("current_year").value;
+                            window.location.href = q;
+                            return false;
+                        }
+                     </script>
+                     ';
+                    if ($showyearslabel) {
+                        echo '<label for="mfn-year-filter-' . $instance_id  . '" class="mfn-year-label">' . $l('Year', $lang) . '</label>';
+                    }
+                    echo '<select name="mfn-year-filter" id="mfn-year-filter-' . $instance_id  . '" class="mfn-year-filter" onchange="filterByYear(this);">';
+                    echo '<option url="?' . http_build_query($q) . '" value="">' . $l("All", $lang) . '</option>';
+                    for ($i = $min_max_years->max_year; $i >= $min_max_years->min_year; $i--) {
+                        $params = http_build_query(array_merge($_GET, array('m-year' => $i)));
+                        $selected = $current_year == $i ? 'selected' : '';
+                        echo '<option url="' . $baseurl . "?" . $params . '" value="' . $i . '" ' . $selected . '>' . $i . '</option>';
+                    }
+                    echo '</select>';
+                    echo '  <input type="hidden" id="current_year_query" value="?' . http_build_query($q) . '" />';
+                    echo '  <input type="hidden" id="current_year" value="' . $current_year . '" />';
+                } else if ($yearstype === 'links') {
+                    for ($i = $min_max_years->max_year; $i >= $min_max_years->min_year; $i--) {
+                        $params = http_build_query(array_merge($_GET, array('m-year' => $i)));
+                        $append_active = '';
 
-                echo "<div class='mfn-newsfeed-year-selector'>";
-                for ($i = $min_max_years->max_year; $i >= $min_max_years->min_year; $i--) {
-                    $params = http_build_query(array_merge($_GET, array('m-year' => $i)));
-                    $url = $baseurl . "?" . $params;
-                    $html = $yeartemplate;
-                    $html = str_replace(array("[url]", "[year]", "[mfn-year-selected]"), array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
-                    $html = str_replace(array("{{url}}", "{{year}}", "{{mfn-year-selected}}"), array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
-                    echo $html;
+                        if (isset($current_year) && $current_year == $i) {
+                            $append_active = " mfn-filter-year-active";
+                        }
+                        $url = $baseurl . "?" . $params;
+
+                        $html = str_replace("[active]", $append_active, $yeartemplate);
+                        $html = str_replace(array("[url]", "[year]", "[mfn-year-selected]"), array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
+                        $html = str_replace(array("{{url}}", "{{year}}", "{{mfn-year-selected}}"), array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
+
+                        echo $html;
+                    }
                 }
-                echo "</div>";
             }
+            echo "</div>";
 
+            if ($showfilter || $showyears) {
+                echo '</div>';
+                echo '  <input type="hidden" id="instance_id" value="' . $instance_id . '" />';
+                echo '</form>';
+            }
         }
 
         echo '<div class="mfn-list">';
@@ -1200,7 +1281,11 @@ class mfn_news_feed_widget extends WP_Widget
         $pagelen = $instance['pagelen'] ?? '20';
         $previewlen = $instance['previewlen'] ?? '';
         $showpagination = $instance['showpagination'] ?? '1';
+        $showfilter = $instance['showfilter'] ?? '0';
+        $showfilterlabel = $instance['showfilterlabel'] ?? '1';
+        $filtertype = $instance['filtertype'] ?? 'dropdown';
         $showyears = $instance['showyears'] ?? '0';
+        $showyearslabel = $instance['showyearslabel'] ?? '1';
         $showpreview = $instance['showpreview'] ?? '0';
         $groupbyyear = $instance['groupbyyear'] ?? '0';
         $tzLocation = $instance['tzLocation'] ?? 'Europe/Stockholm';
@@ -1223,7 +1308,7 @@ class mfn_news_feed_widget extends WP_Widget
         if (isset($instance['yeartemplate']) && $instance['yeartemplate'] !== "") {
             $yeartemplate = $instance['yeartemplate'];
         } else {
-            $yeartemplate = "<span class='mfn-year-header mfn-year mfn-year-header-[year]'><a href='[url]' class='mfn-year-header-link mfn-year-header-link-[year]'>[year]</a></span>";
+            $yeartemplate = "<span class='mfn-year-header mfn-year mfn-year-header-[year][active]'><a href='[url]' class='mfn-year-header-link mfn-year-header-link-[year]'>[year]</a></span>";
         }
 
         $onlytagsallowed = $instance['onlytagsallowed'] ?? "";
@@ -1231,12 +1316,72 @@ class mfn_news_feed_widget extends WP_Widget
         ?>
 
         <p>
+            <input id="<?php echo esc_attr($this->get_field_id('showfilter')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('showfilter')); ?>" type="checkbox"
+                   value="1" <?php checked('1', $showfilter); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('showfilter')); ?>"><?php _e('Show Filter', 'text_domain'); ?></label>
+        </p>
+
+        <?php
+        if ($showfilter) { ?>
+            <div style="border: 1px solid #E0E0E0; padding: 0 10px 10px 10px;">
+                <p>
+                    <input id="<?php echo esc_attr($this->get_field_id('showfilterlabel')); ?>"
+                           name="<?php echo esc_attr($this->get_field_name('showfilterlabel')); ?>" type="checkbox"
+                           value="1" <?php checked('1', $showfilterlabel); ?> />
+                    <label for="<?php echo esc_attr($this->get_field_id('showfilterlabel')); ?>"><?php _e('Show Filter Label', 'text_domain'); ?></label>
+                </p>
+                <p>
+                    <label for="<?php echo $this->get_field_id('filtertype'); ?>"><?php _e('Filter Type', 'text_domain'); ?>:</label>
+                    <select name="<?php echo $this->get_field_name('filtertype'); ?>" id="<?php echo $this->get_field_id('filtertype'); ?>" class="widefat">
+                        <?php
+                        // Your options array
+                        $options = array(
+                            'dropdown' => __('Dropdown', 'text_domain'),
+                            'buttons' => __('Buttons', 'text_domain'),
+                        );
+
+                        // Loop through options and add each one to the select dropdown
+                        foreach ($options as $key => $name) {
+                            echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($filtertype, $key, false) . '>' . $name . '</option>';
+                        } ?>
+                    </select>
+                </p>
+            </div>
+        <? } ?>
+        <p>
             <input id="<?php echo esc_attr($this->get_field_id('showyears')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('showyears')); ?>" type="checkbox"
                    value="1" <?php checked('1', $showyears); ?> />
             <label for="<?php echo esc_attr($this->get_field_id('showyears')); ?>"><?php _e('Show Years', 'text_domain'); ?></label>
         </p>
+        <?php
+        if ($showyears) { ?>
+            <div style="border: 1px solid #E0E0E0; padding: 0 10px 10px 10px;">
+                <p>
+                    <input id="<?php echo esc_attr($this->get_field_id('showyearslabel')); ?>"
+                           name="<?php echo esc_attr($this->get_field_name('showyearslabel')); ?>" type="checkbox"
+                           value="1" <?php checked('1', $showyearslabel); ?> />
+                    <label for="<?php echo esc_attr($this->get_field_id('showyearslabel')); ?>"><?php _e('Show Years Label', 'text_domain'); ?></label>
+                </p>
+                <p>
+                    <label for="<?php echo $this->get_field_id('yearstype'); ?>"><?php _e('Years Type', 'text_domain'); ?>:</label>
+                    <select name="<?php echo $this->get_field_name('yearstype'); ?>" id="<?php echo $this->get_field_id('yearstype'); ?>" class="widefat">
+                        <?php
+                        // Your options array
+                        $options = array(
+                            'dropdown' => __('Dropdown', 'text_domain'),
+                            'links' => __('Links', 'text_domain'),
+                        );
 
+                        // Loop through options and add each one to the select dropdown
+                        foreach ($options as $key => $name) {
+                            echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($filtertype, $key, false) . '>' . $name . '</option>';
+                        } ?>
+                    </select>
+                </p>
+            </div>
+        <? } ?>
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('showpreview')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('showpreview')); ?>" type="checkbox"
@@ -1245,18 +1390,16 @@ class mfn_news_feed_widget extends WP_Widget
         </p>
 
         <?php
-            if ($showpreview) {
-                echo '
+        if ($showpreview) { ?>
+            <div style="border: 1px solid #E0E0E0; padding: 0 10px 10px 10px;">
                 <p>
-                    <label for="' . esc_attr($this->get_field_id("previewlen")) . '">' . _e('Preview length (e.g. "150". Default is to leave this field empty):', 'text_domain') . '</label>
-                    <input class="widefat" id= "' . esc_attr($this->get_field_id('previewlen')) . '"
-                           name="' . esc_attr($this->get_field_name('previewlen')) . '" type="number"
-                           value="' . esc_attr($previewlen) . '"/>
+                    <label for="<?php echo esc_attr($this->get_field_id('previewlen')); ?>"><?php _e('Preview length (e.g. "150". Default is to leave this field empty):', 'text_domain'); ?></label>
+                    <input class="widefat" id="<?php echo esc_attr($this->get_field_id('previewlen')); ?>"
+                           name="<?php echo esc_attr($this->get_field_name('previewlen')); ?>" type="number"
+                           value="<?php echo esc_attr($previewlen); ?>"/>
                 </p>
-                ';
-            }
-        ?>
-
+            </div>
+        <? } ?>
         <p>
             <input id="<?php echo esc_attr($this->get_field_id('groupbyyear')); ?>"
                    name="<?php echo esc_attr($this->get_field_name('groupbyyear')); ?>" type="checkbox"
@@ -1289,7 +1432,6 @@ class mfn_news_feed_widget extends WP_Widget
                     echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($lang, $key, false) . '>' . $name . '</option>';
                 } ?>
             </select>
-
         </p>
         <p>
             <label for="<?php echo $this->get_field_id('tzLocation'); ?>"><?php _e('Timestamp Location:', 'text_domain'); ?></label>
@@ -1385,7 +1527,12 @@ class mfn_news_feed_widget extends WP_Widget
         $instance = array();
         $instance['lang'] = (!empty($new_instance['lang'])) ? wp_strip_all_tags($new_instance['lang']) : '';
         $instance['showpagination'] = (!empty($new_instance['showpagination'])) ? strip_tags($new_instance['showpagination']) : '';
+        $instance['showfilter'] = (!empty($new_instance['showfilter'])) ? strip_tags($new_instance['showfilter']) : '';
+        $instance['filtertype'] = (!empty($new_instance['filtertype'])) ? strip_tags($new_instance['filtertype']) : 'dropdown';
+        $instance['showfilterlabel'] = (!empty($new_instance['showfilterlabel'])) ? strip_tags($new_instance['showfilterlabel']) : '';
         $instance['showyears'] = (!empty($new_instance['showyears'])) ? strip_tags($new_instance['showyears']) : '';
+        $instance['showyearslabel'] = (!empty($new_instance['showyearslabel'])) ? strip_tags($new_instance['showyearslabel']) : '';
+        $instance['yearstype'] = (!empty($new_instance['yearstype'])) ? strip_tags($new_instance['yearstype']) : 'links';
         $instance['showpreview'] = (!empty($new_instance['showpreview'])) ? strip_tags($new_instance['showpreview']) : '';
         $instance['groupbyyear'] = (!empty($new_instance['groupbyyear'])) ? strip_tags($new_instance['groupbyyear']) : '';
         $instance['pagelen'] = (!empty($new_instance['pagelen'])) ? wp_strip_all_tags($new_instance['pagelen']) : 20;

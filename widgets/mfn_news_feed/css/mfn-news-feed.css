@@ -28,11 +28,37 @@
     white-space: nowrap;
 }
 
-.mfn-newsfeed-year-selector {
-    margin-top: 20px;
-    margin-bottom: 20px;
+.mfn-filter-container {
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.mfn-filter-button-active {
+    background: #ffffff;
+    color: white;
+}
+
+.mfn-filter-container select {
+    appearance: none;
+    padding: 0 30px 0 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 3px;
+    line-height: 36px;
+    cursor: pointer;
+    width: 250px;
+    margin-bottom: 20px;
+    height: 36px;
+    background: #ffffff url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0yMy4yNDUgNGwtMTEuMjQ1IDE0LjM3NC0xMS4yMTktMTQuMzc0LS43ODEuNjE5IDEyIDE1LjM4MSAxMi0xNS4zOTEtLjc1NS0uNjA5eiIvPjwvc3ZnPg==) no-repeat right 10px top 50%;
+    background-size: 18px 18px;
+}
+
+.mfn-category-filter {
+    margin-bottom: 20px;
+}
+
+.mfn-newsfeed-category-selector, .mfn-newsfeed-year-selector {
+    margin-right: 20px;
 }
 
 .mfn-year a {

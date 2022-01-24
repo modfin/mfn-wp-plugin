@@ -35,11 +35,11 @@ function MFN_report_cmp($a, $b)
         $bScore += strtotime($b->timestamp);
     }
 
-    if($a->tags !== null && in_array(":primary", $a->tags, true)) {
+    if ($a->tags !== null && in_array(":primary", $a->tags, true)) {
         $aScore+=2;
     }
 
-    if($b->tags !== null && in_array(":primary", $b->tags, true)) {
+    if ($b->tags !== null && in_array(":primary", $b->tags, true)) {
         $bScore+=2;
     }
 
@@ -49,7 +49,7 @@ function MFN_report_cmp($a, $b)
     if ($aTypeLen > $bTypeLen) $aScore++;
     if ($bTypeLen > $aTypeLen) $bScore++;
 
-    return $aScore > $bScore;
+    return $aScore <=> $bScore;
 }
 
 class MFN_CustomDate
