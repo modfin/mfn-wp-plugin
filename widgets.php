@@ -1337,11 +1337,11 @@ class mfn_news_feed_widget extends WP_Widget
                 <p>
                     <input id="' . esc_attr($this->get_field_id('showfilterlabel')) .'"
                            name="' . esc_attr($this->get_field_name('showfilterlabel')) . '" type="checkbox"
-                           value="1" ' . checked('1', $showfilterlabel) . '/>
-                    <label for="' . esc_attr($this->get_field_id('showfilterlabel')) . '">' . _e('Show Filter Label', 'text_domain') . '</label>
+                           value="1" ' . checked('1', $showfilterlabel, false) . '/>
+                    <label for="' . esc_attr($this->get_field_id('showfilterlabel')) . '">' . __('Show Filter Label', 'text_domain') . '</label>
                 </p>
                 <p>
-                    <label for="' . $this->get_field_id('filtertype') . '">' . _e('Filter Type', 'text_domain') . ':</label>
+                    <label for="' . $this->get_field_id('filtertype') . '">' . __('Filter Type', 'text_domain') . ':</label>
                     <select name="' . $this->get_field_name('filtertype') . '" id="' . $this->get_field_id('filtertype') . '" class="widefat">';
 
                         // Your options array
@@ -1363,8 +1363,8 @@ class mfn_news_feed_widget extends WP_Widget
         <p>
             <input id="' . esc_attr($this->get_field_id('showyears')) . '"
                    name="' . esc_attr($this->get_field_name('showyears')) .  '" type="checkbox"
-                   value="1" ' . checked('1', $showyears) . ' />
-            <label for="' . esc_attr($this->get_field_id('showyears')) . '">' . _e('Show Years', 'text_domain') . '</label>
+                   value="1" ' . checked('1', $showyears, false) . ' />
+            <label for="' . esc_attr($this->get_field_id('showyears')) . '">' . __('Show Years', 'text_domain') . '</label>
         </p>';
 
         if ($showyears) {
@@ -1373,11 +1373,11 @@ class mfn_news_feed_widget extends WP_Widget
                 <p>
                     <input id="' . esc_attr($this->get_field_id('showyearslabel')) . '"
                            name="' . esc_attr($this->get_field_name('showyearslabel')) . '" type="checkbox"
-                           value="1" ' . checked('1', $showyearslabel) . ' />
-                    <label for="' . esc_attr($this->get_field_id('showyearslabel')) . '">' . _e('Show Years Label', 'text_domain') . '</label>
+                           value="1" ' . checked('1', $showyearslabel, false) . ' />
+                    <label for="' . esc_attr($this->get_field_id('showyearslabel')) . '">' . __('Show Years Label', 'text_domain') . '</label>
                 </p>
                 <p>
-                    <label for="' .  $this->get_field_id('yearstype') .'">' . _e('Years Type', 'text_domain') . '</label>
+                    <label for="' .  $this->get_field_id('yearstype') .'">' . __('Years Type', 'text_domain') . '</label>
                     <select name="' . $this->get_field_name('yearstype') .'" id="' . $this->get_field_id('yearstype') . '" class="widefat">';
 
                         // Your options array
@@ -1399,8 +1399,8 @@ class mfn_news_feed_widget extends WP_Widget
         <p>
             <input id="' .  esc_attr($this->get_field_id('showpreview')) . '"
                    name="' . esc_attr($this->get_field_name('showpreview')) . '" type="checkbox"
-                   value="1" ' . checked('1', $showpreview) . ' />
-            <label for="' . esc_attr($this->get_field_id('showpreview')) . '">' . _e('Show Preview', 'text_domain') . '</label>
+                   value="1" ' . checked('1', $showpreview, false) . ' />
+            <label for="' . esc_attr($this->get_field_id('showpreview')) . '">' . __('Show Preview', 'text_domain') . '</label>
         </p>
         ';
 
@@ -1408,7 +1408,7 @@ class mfn_news_feed_widget extends WP_Widget
             echo '
             <div style="border: 1px solid #E0E0E0; padding: 0 10px 10px 10px;">
                 <p>
-                    <label for="' . esc_attr($this->get_field_id('previewlen')) . '">' . _e('Preview length (e.g. "150". Default is to leave this field empty):', 'text_domain') . '</label>
+                    <label for="' . esc_attr($this->get_field_id('previewlen')) . '">' . __('Preview length (e.g. "150". Default is to leave this field empty):', 'text_domain') . '</label>
                     <input class="widefat" id="' . esc_attr($this->get_field_id('previewlen')) . '"
                            name="' . esc_attr($this->get_field_name('previewlen')) . '" type="number"
                            value="' . esc_attr($previewlen) . '"/>
@@ -1420,19 +1420,19 @@ class mfn_news_feed_widget extends WP_Widget
         echo '<p>
             <input id="' . esc_attr($this->get_field_id('groupbyyear')) . '"
                    name="' . esc_attr($this->get_field_name('groupbyyear')) . '" type="checkbox"
-                   value="1" ' . checked('1', $groupbyyear) . ' />
-            <label for="' .  esc_attr($this->get_field_id('groupbyyear')) . '">' . _e('Group By Year', 'text_domain') . '</label>
+                   value="1" ' . checked('1', $groupbyyear, false) . ' />
+            <label for="' .  esc_attr($this->get_field_id('groupbyyear')) . '">' . __('Group By Year', 'text_domain') . '</label>
         </p>
 
         <p>
             <input id="' . esc_attr($this->get_field_id('showpagination')) . '"
                    name="' . esc_attr($this->get_field_name('showpagination')) . '" type="checkbox"
-                   value="1" ' . checked('1', $showpagination) . ' />
-            <label for="' . esc_attr($this->get_field_id('showpagination')) .  '">' . _e('Show Pagination', 'text_domain') . '</label>
+                   value="1" ' . checked('1', $showpagination, false) . ' />
+            <label for="' . esc_attr($this->get_field_id('showpagination')) .  '">' . __('Show Pagination', 'text_domain') . '</label>
         </p>
 
         <p>
-            <label for="' . $this->get_field_id('lang') . '">' . _e('Archive Language', 'text_domain') . ':</label>
+            <label for="' . $this->get_field_id('lang') . '">' . __('Archive Language', 'text_domain') . ':</label>
             <select name="' . $this->get_field_name('lang') .'" id="' . $this->get_field_id('lang') . '" class="widefat">';
 
                 // Your options array
@@ -1452,7 +1452,7 @@ class mfn_news_feed_widget extends WP_Widget
             </select>
         </p>
         <p>
-            <label for="' . $this->get_field_id('tzLocation') .'">' . _e('Timestamp Location:', 'text_domain') . '</label>
+            <label for="' . $this->get_field_id('tzLocation') .'">' . __('Timestamp Location:', 'text_domain') . '</label>
             <select name="' . $this->get_field_name('tzLocation') . '"
                     id="' . $this->get_field_id('tzLocation') . '"
                     class="widefat">';
@@ -1477,21 +1477,21 @@ class mfn_news_feed_widget extends WP_Widget
         </p>
 
         <p>
-            <label for="' . esc_attr($this->get_field_id('pagelen')) . '">' . _e('# stories / page:', 'text_domain') . '</label>
+            <label for="' . esc_attr($this->get_field_id('pagelen')) . '">' . __('# stories / page:', 'text_domain') . '</label>
             <input class="widefat" id="' . esc_attr($this->get_field_id('pagelen')) . '"
                    name="' . esc_attr($this->get_field_name('pagelen')) . '" type="number"
                    value="' . esc_attr($pagelen) . '"/>
         </p>
 
         <p>
-            <label for="' . esc_attr($this->get_field_id('timestampFormat')) . '">' . _e('Timestamp Format:', 'text_domain') . '</label>
+            <label for="' . esc_attr($this->get_field_id('timestampFormat')) . '">' . __('Timestamp Format:', 'text_domain') . '</label>
             <input class="widefat" id="' . esc_attr($this->get_field_id('timestampFormat')) . '"
                    name="' . esc_attr($this->get_field_name('timestampFormat')) . '" type="text"
                    value="' . esc_attr($timestampFormat) . '"/>
         </p>
 
         <p>
-            <label for="' . esc_attr($this->get_field_id('template')) . '">' . _e('Template:', 'text_domain') . '</label>
+            <label for="' . esc_attr($this->get_field_id('template')) . '">' . __('Template:', 'text_domain') . '</label>
             <textarea rows="8" class="widefat" id="' . esc_attr($this->get_field_id('template')) . '"
                       name="' . esc_attr($this->get_field_name('template')) . '">' . wp_kses_post($template) . '</textarea>
         </p>';
@@ -1512,19 +1512,19 @@ class mfn_news_feed_widget extends WP_Widget
             }
         echo '
         <p>
-            <label for="' . esc_attr($this->get_field_id('tagtemplate')) . '">' . _e('Tag Template:', 'text_domain') . '</label>
+            <label for="' . esc_attr($this->get_field_id('tagtemplate')) . '">' . __('Tag Template:', 'text_domain') . '</label>
             <textarea rows="2" class="widefat" id="' . esc_attr($this->get_field_id('tagtemplate')) . '"
                       name="' . esc_attr($this->get_field_name('tagtemplate')) . '">' . wp_kses_post($tagtemplate) . '</textarea>
         </p>
 
         <p>
-            <label for="' . esc_attr($this->get_field_id('yeartemplate')) . '">' . _e('Year Template:', 'text_domain') . '</label>
+            <label for="' . esc_attr($this->get_field_id('yeartemplate')) . '">' . __('Year Template:', 'text_domain') . '</label>
             <textarea rows="2" class="widefat" id="' . esc_attr($this->get_field_id('yeartemplate')) . '"
                       name="' . esc_attr($this->get_field_name('yeartemplate')) . '">' . wp_kses_post($yeartemplate) . '</textarea>
         </p>
 
         <p>
-            <label for="' . esc_attr($this->get_field_id('onlytagsallowed')) . '">' . _e('Show Only Tags (eg. mfn-regulatory,mfn-regulatory-mar):', 'text_domain') . '</label>
+            <label for="' . esc_attr($this->get_field_id('onlytagsallowed')) . '">' . __('Show Only Tags (eg. mfn-regulatory,mfn-regulatory-mar):', 'text_domain') . '</label>
             <textarea rows="2" class="widefat" id="' . esc_attr($this->get_field_id('onlytagsallowed')) . '"
                       name="' . esc_attr($this->get_field_name('onlytagsallowed')) . '">' . wp_kses_post($onlytagsallowed) . '</textarea>
         </p>
@@ -1532,8 +1532,8 @@ class mfn_news_feed_widget extends WP_Widget
         <p>
             <input id="' . esc_attr($this->get_field_id('skipcustomtags')) . '"
                    name="' . esc_attr($this->get_field_name('skipcustomtags')) . '" type="checkbox"
-                   value="1" ' . checked('1', $skipcustomtags) . ' />
-            <label for="' .  esc_attr($this->get_field_id('skipcustomtags')) . '">' . _e('Skip Custom Tags', 'text_domain') . '</label>
+                   value="1" ' . checked('1', $skipcustomtags, false) . ' />
+            <label for="' .  esc_attr($this->get_field_id('skipcustomtags')) . '">' . __('Skip Custom Tags', 'text_domain') . '</label>
         </p>
         ';
 
