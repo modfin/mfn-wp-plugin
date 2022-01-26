@@ -37,8 +37,8 @@ function create_mfn_wid_translate()
         'Interim Report' => ['sv' => "Kvartalsrapport", 'fi' => "Osavuosikatsaukset"],
         'Year-end Report' => ['sv' => "Bokslutskommuniké", 'fi' => "Tilinpäätöstiedote"],
         'Annual Report' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
-        'Regulatory' => ['sv' => "Regulatorisk", 'fi' => '...'],
-        'Non-Regulatory' => ['sv' => "Icke-Regulatorisk", 'fi' => '...'],
+        'Regulatory' => ['sv' => "Regulatorisk", 'fi' => 'Sääntelyä'],
+        'Non-Regulatory' => ['sv' => "Icke-Regulatorisk", 'fi' => 'Sääntelemätönä'],
     );
 
     return static function ($word, $lang) use ($l10n) {
@@ -1263,7 +1263,11 @@ class mfn_news_feed_widget extends WP_Widget
             if ($page > 0) {
                 $params = http_build_query(array_merge($_GET, array('m-page' => $page - 1)));
                 $url1 = $baseurl . "?" . $params;
-                $word = $l("Previous", $lang);
+                $llang = $lang;
+                if ($l10nlang) {
+                    $llang = $l10nlang;
+                }
+                $word = $l("Previous", $llang);
                 echo "<a href='$url1' class='mfn-page-link mfn-page-link-prev'>$word</a>";
             }
 
