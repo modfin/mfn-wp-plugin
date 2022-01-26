@@ -999,6 +999,7 @@ class mfn_news_feed_widget extends WP_Widget
             }
         }
 
+        $l10nlang = empty($instance['l10nlang']) ? null : $instance['l10nlang'];
         $pmlang = empty($instance['lang']) ? 'all' : $instance['lang'];
         if ($pmlang === 'auto') {
             $pmlang = $lang;
@@ -1108,6 +1109,10 @@ class mfn_news_feed_widget extends WP_Widget
         echo "<div class=\"mfn-newsfeed\">";
 
         if ($showfilter || $showyears) {
+            $filter_lang = $lang;
+            if ($l10nlang) {
+                $filter_lang = $l10nlang;
+            }
             echo '<form method="GET" id="mfn-filter-form">';
             echo '<div class="mfn-filter-container">';
         }
@@ -1137,16 +1142,16 @@ class mfn_news_feed_widget extends WP_Widget
                  ';
 
             if ($showfilterlabel) {
-                echo '<label for="mfn-category-filter-' . $instance_id  . '" class="mfn-category-label">' . $l('Category', $lang) . '</label>';
+                echo '<label for="mfn-category-filter-' . $instance_id  . '" class="mfn-category-label">' . $l('Category', $filter_lang) . '</label>';
             }
             if ($filtertype === 'dropdown') {
                 $all_sel = $categoryTag === '' ? 'selected' : '';
                 $regulatory_sel = $categoryTag === 'regulatory' || $categoryTag === 'mfn-regulatory' ? 'selected' : '';
                 $nonRegulatory_sel = $categoryTag === '-regulatory' || $categoryTag === '-mfn-regulatory' ? 'selected' : '';
                 echo '    <select name="mfn-category-filter" id="mfn-category-filter-' . $instance_id  . '" class="mfn-category-filter" filtertype="dropdown" onchange="filterByCategory(this);">
-                            <option value="" ' . $all_sel . '>' . $l("All", $lang) . '</option>
-                            <option value="regulatory" ' . $regulatory_sel . '>' . $l("Regulatory", $lang) . '</option>
-                            <option value="-regulatory" ' . $nonRegulatory_sel . '>' . $l("Non-Regulatory", $lang) . '</option>
+                            <option value="" ' . $all_sel . '>' . $l("All", $filter_lang) . '</option>
+                            <option value="regulatory" ' . $regulatory_sel . '>' . $l("Regulatory", $filter_lang) . '</option>
+                            <option value="-regulatory" ' . $nonRegulatory_sel . '>' . $l("Non-Regulatory", $filter_lang) . '</option>
                           </select>
                 ';
             } else if ($filtertype === 'buttons') {
@@ -1154,9 +1159,9 @@ class mfn_news_feed_widget extends WP_Widget
                 $regulatory_act = $categoryTag === 'regulatory' || $categoryTag === 'mfn-regulatory' ? ' mfn-filter-button-active' : '';
                 $nonRegulatory_act = $categoryTag === '-regulatory' || $categoryTag === '-mfn-regulatory' ? ' mfn-filter-button-active' : '';
                 echo '    <div id="mfn-category-filter-' . $instance_id  . '" class="mfn-category-filter">';
-                echo '    <button type="button" value="" class="mfn-category-button-all' . $all_act . '" filtertype="buttons" onclick="filterByCategory(this);">' . $l("All", $lang) . '</button>';
-                echo '    <button type="button" value="regulatory" class="mfn-category-button-regulatory' . $regulatory_act . '" filtertype="buttons" onclick="filterByCategory(this);">' . $l("Regulatory", $lang) . '</button>';
-                echo '    <button type="button" value="-regulatory" class="mfn-category-button-non-regulatory' . $nonRegulatory_act . '" filtertype="buttons" onclick="filterByCategory(this);">' . $l("Non-Regulatory", $lang) . '</button>';
+                echo '    <button type="button" value="" class="mfn-category-button-all' . $all_act . '" filtertype="buttons" onclick="filterByCategory(this);">' . $l("All", $filter_lang) . '</button>';
+                echo '    <button type="button" value="regulatory" class="mfn-category-button-regulatory' . $regulatory_act . '" filtertype="buttons" onclick="filterByCategory(this);">' . $l("Regulatory", $filter_lang) . '</button>';
+                echo '    <button type="button" value="-regulatory" class="mfn-category-button-non-regulatory' . $nonRegulatory_act . '" filtertype="buttons" onclick="filterByCategory(this);">' . $l("Non-Regulatory", $filter_lang) . '</button>';
                 echo '    </div>';
             }
             echo '  <input type="hidden" id="current_category_query" value="?' . http_build_query($q) . '" />';
@@ -1189,10 +1194,10 @@ class mfn_news_feed_widget extends WP_Widget
                      </script>
                      ';
                     if ($showyearslabel) {
-                        echo '<label for="mfn-year-filter-' . $instance_id  . '" class="mfn-year-label">' . $l('Year', $lang) . '</label>';
+                        echo '<label for="mfn-year-filter-' . $instance_id  . '" class="mfn-year-label">' . $l('Year', $filter_lang) . '</label>';
                     }
                     echo '<select name="mfn-year-filter" id="mfn-year-filter-' . $instance_id  . '" class="mfn-year-filter" onchange="filterByYear(this);">';
-                    echo '<option url="?' . http_build_query($q) . '" value="">' . $l("All", $lang) . '</option>';
+                    echo '<option url="?' . http_build_query($q) . '" value="">' . $l("All", $filter_lang) . '</option>';
                     for ($i = $min_max_years->max_year; $i >= $min_max_years->min_year; $i--) {
                         $params = http_build_query(array_merge($_GET, array('m-year' => $i)));
                         $selected = $current_year == $i ? 'selected' : '';
@@ -1265,7 +1270,11 @@ class mfn_news_feed_widget extends WP_Widget
             if ($news_items == $pagelen) {
                 $params = http_build_query(array_merge($_GET, array('m-page' => $page + 1)));
                 $url2 = $baseurl . "?" . $params;
-                $word = $l("Next", $lang);
+                $llang = $lang;
+                if ($l10nlang) {
+                    $llang = $l10nlang;
+                }
+                $word = $l("Next", $llang);
                 echo "<a href='$url2' class='mfn-page-link mfn-page-link-next'>$word</a>";
             }
 
@@ -1322,18 +1331,19 @@ class mfn_news_feed_widget extends WP_Widget
         </p>
 
         <?php
-        if ($showfilter) { ?>
+        if ($showfilter) {
+            echo '
             <div style="border: 1px solid #E0E0E0; padding: 0 10px 10px 10px;">
                 <p>
-                    <input id="<?php echo esc_attr($this->get_field_id('showfilterlabel')); ?>"
-                           name="<?php echo esc_attr($this->get_field_name('showfilterlabel')); ?>" type="checkbox"
-                           value="1" <?php checked('1', $showfilterlabel); ?> />
-                    <label for="<?php echo esc_attr($this->get_field_id('showfilterlabel')); ?>"><?php _e('Show Filter Label', 'text_domain'); ?></label>
+                    <input id="' . esc_attr($this->get_field_id('showfilterlabel')) .'"
+                           name="' . esc_attr($this->get_field_name('showfilterlabel')) . '" type="checkbox"
+                           value="1" ' . checked('1', $showfilterlabel) . '/>
+                    <label for="' . esc_attr($this->get_field_id('showfilterlabel')) . '">' . _e('Show Filter Label', 'text_domain') . '</label>
                 </p>
                 <p>
-                    <label for="<?php echo $this->get_field_id('filtertype'); ?>"><?php _e('Filter Type', 'text_domain'); ?>:</label>
-                    <select name="<?php echo $this->get_field_name('filtertype'); ?>" id="<?php echo $this->get_field_id('filtertype'); ?>" class="widefat">
-                        <?php
+                    <label for="' . $this->get_field_id('filtertype') . '">' . _e('Filter Type', 'text_domain') . ':</label>
+                    <select name="' . $this->get_field_name('filtertype') . '" id="' . $this->get_field_id('filtertype') . '" class="widefat">';
+
                         // Your options array
                         $options = array(
                             'dropdown' => __('Dropdown', 'text_domain'),
@@ -1343,30 +1353,33 @@ class mfn_news_feed_widget extends WP_Widget
                         // Loop through options and add each one to the select dropdown
                         foreach ($options as $key => $name) {
                             echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($filtertype, $key, false) . '>' . $name . '</option>';
-                        } ?>
+                        }
+                    echo '
                     </select>
                 </p>
-            </div>
-        <? } ?>
+            </div>';
+        }
+        echo '
         <p>
-            <input id="<?php echo esc_attr($this->get_field_id('showyears')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('showyears')); ?>" type="checkbox"
-                   value="1" <?php checked('1', $showyears); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('showyears')); ?>"><?php _e('Show Years', 'text_domain'); ?></label>
-        </p>
-        <?php
-        if ($showyears) { ?>
+            <input id="' . esc_attr($this->get_field_id('showyears')) . '"
+                   name="' . esc_attr($this->get_field_name('showyears')) .  '" type="checkbox"
+                   value="1" ' . checked('1', $showyears) . ' />
+            <label for="' . esc_attr($this->get_field_id('showyears')) . '">' . _e('Show Years', 'text_domain') . '</label>
+        </p>';
+
+        if ($showyears) {
+            echo '
             <div style="border: 1px solid #E0E0E0; padding: 0 10px 10px 10px;">
                 <p>
-                    <input id="<?php echo esc_attr($this->get_field_id('showyearslabel')); ?>"
-                           name="<?php echo esc_attr($this->get_field_name('showyearslabel')); ?>" type="checkbox"
-                           value="1" <?php checked('1', $showyearslabel); ?> />
-                    <label for="<?php echo esc_attr($this->get_field_id('showyearslabel')); ?>"><?php _e('Show Years Label', 'text_domain'); ?></label>
+                    <input id="' . esc_attr($this->get_field_id('showyearslabel')) . '"
+                           name="' . esc_attr($this->get_field_name('showyearslabel')) . '" type="checkbox"
+                           value="1" ' . checked('1', $showyearslabel) . ' />
+                    <label for="' . esc_attr($this->get_field_id('showyearslabel')) . '">' . _e('Show Years Label', 'text_domain') . '</label>
                 </p>
                 <p>
-                    <label for="<?php echo $this->get_field_id('yearstype'); ?>"><?php _e('Years Type', 'text_domain'); ?>:</label>
-                    <select name="<?php echo $this->get_field_name('yearstype'); ?>" id="<?php echo $this->get_field_id('yearstype'); ?>" class="widefat">
-                        <?php
+                    <label for="' .  $this->get_field_id('yearstype') .'">' . _e('Years Type', 'text_domain') . '</label>
+                    <select name="' . $this->get_field_name('yearstype') .'" id="' . $this->get_field_id('yearstype') . '" class="widefat">';
+
                         // Your options array
                         $options = array(
                             'dropdown' => __('Dropdown', 'text_domain'),
@@ -1376,47 +1389,52 @@ class mfn_news_feed_widget extends WP_Widget
                         // Loop through options and add each one to the select dropdown
                         foreach ($options as $key => $name) {
                             echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($filtertype, $key, false) . '>' . $name . '</option>';
-                        } ?>
+                        }
+                        echo '
                     </select>
                 </p>
-            </div>
-        <? } ?>
+            </div>';
+            }
+        echo '
         <p>
-            <input id="<?php echo esc_attr($this->get_field_id('showpreview')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('showpreview')); ?>" type="checkbox"
-                   value="1" <?php checked('1', $showpreview); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('showpreview')); ?>"><?php _e('Show Preview', 'text_domain'); ?></label>
+            <input id="' .  esc_attr($this->get_field_id('showpreview')) . '"
+                   name="' . esc_attr($this->get_field_name('showpreview')) . '" type="checkbox"
+                   value="1" ' . checked('1', $showpreview) . ' />
+            <label for="' . esc_attr($this->get_field_id('showpreview')) . '">' . _e('Show Preview', 'text_domain') . '</label>
         </p>
+        ';
 
-        <?php
-        if ($showpreview) { ?>
+        if ($showpreview) {
+            echo '
             <div style="border: 1px solid #E0E0E0; padding: 0 10px 10px 10px;">
                 <p>
-                    <label for="<?php echo esc_attr($this->get_field_id('previewlen')); ?>"><?php _e('Preview length (e.g. "150". Default is to leave this field empty):', 'text_domain'); ?></label>
-                    <input class="widefat" id="<?php echo esc_attr($this->get_field_id('previewlen')); ?>"
-                           name="<?php echo esc_attr($this->get_field_name('previewlen')); ?>" type="number"
-                           value="<?php echo esc_attr($previewlen); ?>"/>
+                    <label for="' . esc_attr($this->get_field_id('previewlen')) . '">' . _e('Preview length (e.g. "150". Default is to leave this field empty):', 'text_domain') . '</label>
+                    <input class="widefat" id="' . esc_attr($this->get_field_id('previewlen')) . '"
+                           name="' . esc_attr($this->get_field_name('previewlen')) . '" type="number"
+                           value="' . esc_attr($previewlen) . '"/>
                 </p>
             </div>
-        <? } ?>
-        <p>
-            <input id="<?php echo esc_attr($this->get_field_id('groupbyyear')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('groupbyyear')); ?>" type="checkbox"
-                   value="1" <?php checked('1', $groupbyyear); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('groupbyyear')); ?>"><?php _e('Group By Year', 'text_domain'); ?></label>
+            ';
+        }
+
+        echo '<p>
+            <input id="' . esc_attr($this->get_field_id('groupbyyear')) . '"
+                   name="' . esc_attr($this->get_field_name('groupbyyear')) . '" type="checkbox"
+                   value="1" ' . checked('1', $groupbyyear) . ' />
+            <label for="' .  esc_attr($this->get_field_id('groupbyyear')) . '">' . _e('Group By Year', 'text_domain') . '</label>
         </p>
 
         <p>
-            <input id="<?php echo esc_attr($this->get_field_id('showpagination')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('showpagination')); ?>" type="checkbox"
-                   value="1" <?php checked('1', $showpagination); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('showpagination')); ?>"><?php _e('Show Pagination', 'text_domain'); ?></label>
+            <input id="' . esc_attr($this->get_field_id('showpagination')) . '"
+                   name="' . esc_attr($this->get_field_name('showpagination')) . '" type="checkbox"
+                   value="1" ' . checked('1', $showpagination) . ' />
+            <label for="' . esc_attr($this->get_field_id('showpagination')) .  '">' . _e('Show Pagination', 'text_domain') . '</label>
         </p>
 
         <p>
-            <label for="<?php echo $this->get_field_id('lang'); ?>"><?php _e('Archive Language', 'text_domain'); ?>:</label>
-            <select name="<?php echo $this->get_field_name('lang'); ?>" id="<?php echo $this->get_field_id('lang'); ?>" class="widefat">
-                <?php
+            <label for="' . $this->get_field_id('lang') . '">' . _e('Archive Language', 'text_domain') . ':</label>
+            <select name="' . $this->get_field_name('lang') .'" id="' . $this->get_field_id('lang') . '" class="widefat">';
+
                 // Your options array
                 $options = array(
                     'all' => __('All', 'text_domain'),
@@ -1429,15 +1447,16 @@ class mfn_news_feed_widget extends WP_Widget
                 // Loop through options and add each one to the select dropdown
                 foreach ($options as $key => $name) {
                     echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($lang, $key, false) . '>' . $name . '</option>';
-                } ?>
+                }
+            echo '    
             </select>
         </p>
         <p>
-            <label for="<?php echo $this->get_field_id('tzLocation'); ?>"><?php _e('Timestamp Location:', 'text_domain'); ?></label>
-            <select name="<?php echo $this->get_field_name('tzLocation'); ?>"
-                    id="<?php echo $this->get_field_id('tzLocation'); ?>"
-                    class="widefat">
-                <?php
+            <label for="' . $this->get_field_id('tzLocation') .'">' . _e('Timestamp Location:', 'text_domain') . '</label>
+            <select name="' . $this->get_field_name('tzLocation') . '"
+                    id="' . $this->get_field_id('tzLocation') . '"
+                    class="widefat">';
+
                 // Your options array
                 $options = array(
                     'Europe/Stockholm' => __('Stockholm', 'text_domain'),
@@ -1452,31 +1471,31 @@ class mfn_news_feed_widget extends WP_Widget
                 // Loop through options and add each one to the select dropdown
                 foreach ($options as $key => $name) {
                     echo '<option value="' . esc_attr($key) . '" id="' . esc_attr($key) . '" ' . selected($tzLocation, $key, false) . '>' . $name . '</option>';
-                } ?>
+                }
+            echo '
             </select>
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('pagelen')); ?>"><?php _e('# stories / page:', 'text_domain'); ?></label>
-            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('pagelen')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('pagelen')); ?>" type="number"
-                   value="<?php echo esc_attr($pagelen); ?>"/>
+            <label for="' . esc_attr($this->get_field_id('pagelen')) . '">' . _e('# stories / page:', 'text_domain') . '</label>
+            <input class="widefat" id="' . esc_attr($this->get_field_id('pagelen')) . '"
+                   name="' . esc_attr($this->get_field_name('pagelen')) . '" type="number"
+                   value="' . esc_attr($pagelen) . '"/>
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('timestampFormat')); ?>"><?php _e('Timestamp Format:', 'text_domain'); ?></label>
-            <input class="widefat" id="<?php echo esc_attr($this->get_field_id('timestampFormat')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('timestampFormat')); ?>" type="text"
-                   value="<?php echo esc_attr($timestampFormat); ?>"/>
+            <label for="' . esc_attr($this->get_field_id('timestampFormat')) . '">' . _e('Timestamp Format:', 'text_domain') . '</label>
+            <input class="widefat" id="' . esc_attr($this->get_field_id('timestampFormat')) . '"
+                   name="' . esc_attr($this->get_field_name('timestampFormat')) . '" type="text"
+                   value="' . esc_attr($timestampFormat) . '"/>
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('template')); ?>"><?php _e('Template:', 'text_domain'); ?></label>
-            <textarea rows="8" class="widefat" id="<?php echo esc_attr($this->get_field_id('template')); ?>"
-                      name="<?php echo esc_attr($this->get_field_name('template')); ?>"><?php echo wp_kses_post($template); ?></textarea>
-        </p>
+            <label for="' . esc_attr($this->get_field_id('template')) . '">' . _e('Template:', 'text_domain') . '</label>
+            <textarea rows="8" class="widefat" id="' . esc_attr($this->get_field_id('template')) . '"
+                      name="' . esc_attr($this->get_field_name('template')) . '">' . wp_kses_post($template) . '</textarea>
+        </p>';
 
-        <?php
             if (!$showpreview && strpos($template, '[preview]') !== false) {
                 echo '
                     <li style="border-color: #fedb75; background-color: #fff3d0; padding: 10px 20px 10px 20px; border-radius: 2px;">
@@ -1491,36 +1510,34 @@ class mfn_news_feed_widget extends WP_Widget
                     </li>
                 ';
             }
-        ?>
-
+        echo '
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('tagtemplate')); ?>"><?php _e('Tag Template:', 'text_domain'); ?></label>
-            <textarea rows="2" class="widefat" id="<?php echo esc_attr($this->get_field_id('tagtemplate')); ?>"
-                      name="<?php echo esc_attr($this->get_field_name('tagtemplate')); ?>"><?php echo wp_kses_post($tagtemplate); ?></textarea>
+            <label for="' . esc_attr($this->get_field_id('tagtemplate')) . '">' . _e('Tag Template:', 'text_domain') . '</label>
+            <textarea rows="2" class="widefat" id="' . esc_attr($this->get_field_id('tagtemplate')) . '"
+                      name="' . esc_attr($this->get_field_name('tagtemplate')) . '">' . wp_kses_post($tagtemplate) . '</textarea>
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('yeartemplate')); ?>"><?php _e('Year Template:', 'text_domain'); ?></label>
-            <textarea rows="2" class="widefat" id="<?php echo esc_attr($this->get_field_id('yeartemplate')); ?>"
-                      name="<?php echo esc_attr($this->get_field_name('yeartemplate')); ?>"><?php echo wp_kses_post($yeartemplate); ?></textarea>
+            <label for="' . esc_attr($this->get_field_id('yeartemplate')) . '">' . _e('Year Template:', 'text_domain') . '</label>
+            <textarea rows="2" class="widefat" id="' . esc_attr($this->get_field_id('yeartemplate')) . '"
+                      name="' . esc_attr($this->get_field_name('yeartemplate')) . '">' . wp_kses_post($yeartemplate) . '</textarea>
         </p>
 
         <p>
-            <label for="<?php echo esc_attr($this->get_field_id('onlytagsallowed')); ?>"><?php _e('Show Only Tags (eg. mfn-regulatory,mfn-regulatory-mar):', 'text_domain'); ?></label>
-            <textarea rows="2" class="widefat" id="<?php echo esc_attr($this->get_field_id('onlytagsallowed')); ?>"
-                      name="<?php echo esc_attr($this->get_field_name('onlytagsallowed')); ?>"><?php echo wp_kses_post($onlytagsallowed); ?></textarea>
+            <label for="' . esc_attr($this->get_field_id('onlytagsallowed')) . '">' . _e('Show Only Tags (eg. mfn-regulatory,mfn-regulatory-mar):', 'text_domain') . '</label>
+            <textarea rows="2" class="widefat" id="' . esc_attr($this->get_field_id('onlytagsallowed')) . '"
+                      name="' . esc_attr($this->get_field_name('onlytagsallowed')) . '">' . wp_kses_post($onlytagsallowed) . '</textarea>
         </p>
 
         <p>
-            <input id="<?php echo esc_attr($this->get_field_id('skipcustomtags')); ?>"
-                   name="<?php echo esc_attr($this->get_field_name('skipcustomtags')); ?>" type="checkbox"
-                   value="1" <?php checked('1', $skipcustomtags); ?> />
-            <label for="<?php echo esc_attr($this->get_field_id('skipcustomtags')); ?>"><?php _e('Skip Custom Tags', 'text_domain'); ?></label>
+            <input id="' . esc_attr($this->get_field_id('skipcustomtags')) . '"
+                   name="' . esc_attr($this->get_field_name('skipcustomtags')) . '" type="checkbox"
+                   value="1" ' . checked('1', $skipcustomtags) . ' />
+            <label for="' .  esc_attr($this->get_field_id('skipcustomtags')) . '">' . _e('Skip Custom Tags', 'text_domain') . '</label>
         </p>
+        ';
 
-        <?php
     }
-
     public function update($new_instance, $old_instance)
     {
         $instance = array();
