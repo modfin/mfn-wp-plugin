@@ -34,16 +34,11 @@ class Mfn_Wp_Plugin_Activator
      *
      * @since    1.0.0
      */
-
-
-
-
     public static function activate()
     {
         register_mfn_types();
         sync_mfn_taxonomy();
-
-
+        flush_rewrite_rules(false);
     }
 
 }

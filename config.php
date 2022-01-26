@@ -149,8 +149,13 @@ function register_mfn_types()
                 'rewrite' => array(''),
                 'supports' => $supports,
             ));
-        flush_rewrite_rules(false);
     }
+
+    // do url rewrite option upon settings save
+    add_action('update_option_mfn-wp-plugin', function() {
+        register_mfn_types();
+        flush_rewrite_rules(false);
+    }, 11, 3);
 
     $labels = array(
         'name' => _x('News Tags', 'MFN News tags'),
