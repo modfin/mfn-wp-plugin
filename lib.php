@@ -259,12 +259,18 @@ function upsertLanguage($post_id, $groupId, $lang)
     }
 }
 
+function upsertNewsMeta($post_id, $newsid, $slug) {
+    update_post_meta($post_id, MFN_POST_TYPE . "_news_id", $newsid);
+    update_post_meta($post_id, MFN_POST_TYPE . "_news_slug", $slug);
+}
+
 function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false): int
 {
     do_action('mfn_before_upsertitem', $item);
     global $wpdb;
 
     $newsid = $item->news_id;
+    $slug = $item->content->slug;
     $groupId = $item->group_id;
     $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
 
@@ -286,13 +292,14 @@ function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false
 
     $tags = createTags($item);
 
-    $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags) {
+    $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags, $newsid, $slug) {
         if ($reset_cache) {
             wp_cache_flush();
         }
 
         wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
         upsertLanguage($post_id, $groupId, $lang);
+        upsertNewsMeta($post_id, $newsid, $slug);
         upsertAttachments($post_id, $attachments);
 
         if ($reset_cache) {

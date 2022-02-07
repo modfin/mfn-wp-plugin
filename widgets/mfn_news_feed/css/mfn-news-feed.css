@@ -92,12 +92,11 @@
     display: flex;
     align-items: center;
     min-height: 80px;
-    height: 80px;
 }
 
 .mfn-attachments-container .mfn-attachment .mfn-attachment-link {
-    display: inline-block;
-    vertical-align: middle;
+    display: flex;
+    align-items: center;
 }
 
 .mfn-attachments-container .mfn-attachment .mfn-attachment-icon {
@@ -106,6 +105,7 @@
 
 .mfn-attachments-container .mfn-attachment .mfn-attachment-icon img {
     width: 55px;
+    min-width: 55px;
     border: 1px solid #eee;
 }
 
