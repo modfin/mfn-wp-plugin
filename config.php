@@ -3,36 +3,6 @@
 require_once('consts.php');
 require_once('api.php');
 
-function is_language_plugin_enabled(): bool
-{
-    $uses_wpml = isset(get_option(MFN_PLUGIN_NAME)['use_wpml']) && get_option(MFN_PLUGIN_NAME)['use_wpml'] === 'on';
-    $uses_pll = isset(get_option(MFN_PLUGIN_NAME)['use_pll']) && get_option(MFN_PLUGIN_NAME)['use_pll'] === 'on';
-    return $uses_wpml || $uses_pll;
-}
-
-function get_current_language(): string
-{
-    $current_lang = '';
-    $wpml_active_enabled = defined('WPML_PLUGIN_BASENAME') && isset(get_option(MFN_PLUGIN_NAME)['use_wpml']) && get_option(MFN_PLUGIN_NAME)['use_wpml'] === 'on';
-    $pll_active_enabled = defined('POLYLANG_BASENAME') && isset(get_option(MFN_PLUGIN_NAME)['use_pll']) && get_option(MFN_PLUGIN_NAME)['use_pll'] === 'on';
-
-    if (function_exists('icl_get_current_language') && $wpml_active_enabled) {
-            $current_lang = icl_get_current_language();
-    } else if (function_exists('pll_current_language') && $pll_active_enabled) {
-            $current_lang = pll_current_language();
-    }
-    // if no current language fallback to default
-    if (!$current_lang) {
-        if (function_exists('icl_get_default_language')) {
-            $current_lang = icl_get_default_language();
-        }
-        else if (function_exists('pll_default_language')) {
-            $current_lang = pll_default_language();
-        }
-    }
-    return $current_lang;
-}
-
 // If ABSPATH not defined, php app is initiated from plugin folder.
 // Lets try to find and run wp-config.php
 if (!defined('ABSPATH')) {
@@ -75,7 +45,8 @@ if (isset(get_option(MFN_PLUGIN_NAME)['rewrite_post_type'])) {
     // adding filter for rewriting the post_type from settings
     add_filter('register_post_type_args', 'rewrite_post_type', 10, 2);
 
-    function rewrite_post_type($args, $post_type) {
+    function rewrite_post_type($args, $post_type)
+    {
         if ($post_type === 'mfn_news') {
             $rewrite_post_type = unserialize(get_option(MFN_PLUGIN_NAME)['rewrite_post_type']);
             $disable_archive = isset(get_option(MFN_PLUGIN_NAME)['disable_archive']) && get_option(MFN_PLUGIN_NAME)['disable_archive'] === 'on';
@@ -84,22 +55,8 @@ if (isset(get_option(MFN_PLUGIN_NAME)['rewrite_post_type'])) {
             $rewrite_archive_name = '';
             $rewrite_singular_name = '';
 
-            $current_lang = get_current_language();
-
-            // has language plugin
-            if (isset($rewrite_post_type['slug_' . $current_lang])) {
-                $rewrite_slug = $rewrite_post_type['slug_' . $current_lang];
-            }
-            if (isset($rewrite_post_type['archive-name_' . $current_lang])) {
-                $rewrite_archive_name = $rewrite_post_type['archive-name_' . $current_lang];
-            }
-            if (isset($rewrite_post_type['singular-name_' . $current_lang])) {
-                $rewrite_singular_name = $rewrite_post_type['singular-name_' . $current_lang];
-            }
-
-            // no language plugin
-            if (isset($rewrite_post_type['single-slug'])) {
-                $rewrite_slug = $rewrite_post_type['single-slug'];
+            if (isset($rewrite_post_type['slug'])) {
+                $rewrite_slug = $rewrite_post_type['slug'];
             }
             if (isset($rewrite_post_type['archive-name'])) {
                 $rewrite_archive_name = $rewrite_post_type['archive-name'];
@@ -109,19 +66,16 @@ if (isset(get_option(MFN_PLUGIN_NAME)['rewrite_post_type'])) {
             }
 
             // rewrite
-            if (isset($args['rewrite'])) {
-                if ($rewrite_slug !== '' && $rewrite_slug !== MFN_POST_TYPE) {
-                    $args['rewrite']['slug'] = $rewrite_slug;
-                }
-                if ($rewrite_archive_name !== '' && $rewrite_archive_name !== MFN_ARCHIVE_NAME) {
-                    $args['labels']['name'] = $rewrite_archive_name;
-                }
-                if ($rewrite_singular_name !== '' && $rewrite_singular_name !== MFN_SINGULAR_NAME) {
-                    $args['labels']['singular_name'] = $rewrite_singular_name;
-                }
-
-                $args['has_archive'] = !$disable_archive;
+            if ($rewrite_slug !== '' && $rewrite_slug !== MFN_POST_TYPE) {
+                $args['rewrite']['slug'] = $rewrite_slug;
             }
+            if ($rewrite_archive_name !== '' && $rewrite_archive_name !== MFN_ARCHIVE_NAME) {
+                $args['labels']['name'] = $rewrite_archive_name;
+            }
+            if ($rewrite_singular_name !== '' && $rewrite_singular_name !== MFN_SINGULAR_NAME) {
+                $args['labels']['singular_name'] = $rewrite_singular_name;
+            }
+            $args['has_archive'] = !$disable_archive;
         }
         return $args;
     }
@@ -135,7 +89,7 @@ function register_mfn_types()
     else {
         $supports = array( 'title', 'editor');
         if (isset(get_option(MFN_PLUGIN_NAME)['thumbnail_on'])) {
-            $supports = array( 'title', 'editor', 'thumbnail');
+            $supports = array('title', 'editor', 'thumbnail');
         }
 
         register_post_type(MFN_POST_TYPE,

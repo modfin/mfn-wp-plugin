@@ -69,30 +69,8 @@
         $is_subscribed = strlen($subscription_id) == 36;
         $is_disabled = $is_subscribed == true ? 'disabled' : '';
 
-        $wpml_enabled = ($use_wpml === "on" && $has_wpml);
-        $polylang_enabled = ($use_pll === "on" && $has_pll);
-
-        $default_lang = '';
-        $all_languages = [];
-
         // Get rewrite options
         $rewrite_post_type = isset($options['rewrite_post_type']) ? unserialize($options['rewrite_post_type']) : null;
-
-        if($wpml_enabled) {
-            if (function_exists('icl_get_default_language')) {
-                $default_lang = icl_get_default_language();
-                if (function_exists('icl_get_languages')) {
-                    $all_languages = icl_get_languages('skip_missing=1');
-                }
-            }
-        } else if($polylang_enabled) {
-            if (function_exists('pll_default_language')) {
-                $default_lang = pll_default_language();
-                if (function_exists('pll_languages_list')) {
-                    $all_languages = pll_languages_list();
-                }
-            }
-        }
 
         $default_tab = null;
         $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
@@ -192,36 +170,12 @@
             </tbody>
         </table>
         <?php
-        if ($wpml_enabled || $polylang_enabled && sizeof($all_languages) > 0) {
-            echo '
-                <nav class="nav-tab-wrapper mfn-nav-tab-wrapper">
-                    <div class="mfn-tooltip-box">
-                        <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                        <span class="mfn-tooltip-text">Listing all languages detected.</span>
-                    </div>
-            ';
-
-            foreach ($all_languages as $lang) {
-                $lang = $wpml_enabled ? $lang["language_code"] : $lang;
-                $is_default_lang = $default_lang === $lang ? " <small>(" . "Primary" . ")</small>" : '';
+                $slug = isset($rewrite_post_type['slug']) && $rewrite_post_type['slug'] !== '' ? $rewrite_post_type['slug'] : MFN_POST_TYPE;
+                $archive_name = isset($rewrite_post_type['archive-name']) && $rewrite_post_type['archive-name'] !== '' ? $rewrite_post_type['archive-name'] : MFN_ARCHIVE_NAME;
+                $singular_name = isset($rewrite_post_type['singular-name']) && $rewrite_post_type['singular-name'] !== '' ? $rewrite_post_type['singular-name'] : MFN_SINGULAR_NAME;
 
                 echo '
-                    <a data-lang=' . $lang . ' class="nav-tab mfn-nav-tab">' . $lang . $is_default_lang . '</a>
-                ';
-            }
-
-            echo "</nav>";
-            echo '<div class="mfn-tab-content">';
-
-            foreach ($all_languages as $lang) {
-                $lang = $wpml_enabled ? $lang["language_code"] : $lang;
-
-                $slug = isset($rewrite_post_type['slug_' . $lang]) && $rewrite_post_type['slug_' . $lang] !== '' ? $rewrite_post_type['slug_' . $lang] : MFN_POST_TYPE . '_' . $lang;
-                $archive_name = isset($rewrite_post_type['archive-name_' . $lang]) && $rewrite_post_type['archive-name_' . $lang] !== '' ? $rewrite_post_type['archive-name_' . $lang] : MFN_ARCHIVE_NAME;
-                $singular_name = isset($rewrite_post_type['singular-name_' . $lang]) && $rewrite_post_type['singular-name_' . $lang] !== '' ? $rewrite_post_type['singular-name_' . $lang] : MFN_SINGULAR_NAME;
-
-                echo '
-                <table class="mfn-hide mfn-lang-table mfn-lang-table-' . $lang . '">
+                <table class="mfn-hide mfn-lang-table">
                     <tbody>
                         <tr>
                             <td>
@@ -239,7 +193,7 @@
                         </tr>
                         <tr>
                             <td class="mfn-lang-td">
-                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][slug_' . $lang . ']' . '" value="' . $slug . '" ' . $is_disabled . '>
+                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][slug]' . '" value="' . $slug . '" ' . $is_disabled . '>
                                 <div class="mfn-tooltip-box">
                                     <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
                                     <span class="mfn-tooltip-text">Rewrite the slug (' . MFN_POST_TYPE . ') in the URL - eg. "press-releases"</span>
@@ -262,7 +216,7 @@
                         </tr>
                         <tr>
                             <td class="mfn-lang-td">
-                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][archive-name_' . $lang . ']' . '" value="' . $archive_name . '" ' . $is_disabled . '>
+                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][archive-name]' . '" value="' . $archive_name . '" ' . $is_disabled . '>
                                 <div class="mfn-tooltip-box">
                                     <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
                                     <span class="mfn-tooltip-text">Set a custom name of the news archive page  - eg. "Press Releases"</span>
@@ -285,14 +239,14 @@
                         </tr>
                         <tr>
                             <td class="mfn-lang-td">
-                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][singular-name_' . $lang . ']' . '" value="' . $singular_name . '" ' . $is_disabled . '>
+                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][singular-name]' . '" value="' . $singular_name . '" ' . $is_disabled . '>
                                 <div class="mfn-tooltip-box">
                                     <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
                                     <span class="mfn-tooltip-text">Set a custom name of a single news item - eg. "Press release"</span>
                                 </div>
                             </td>
                          </tr>';
-                        if(!isset($rewrite_post_type['slug_' . $lang])) {
+                        if(!isset($rewrite_post_type['slug'])) {
                             echo '
                             <tr>
                                 <td class="mfn-info-td">
@@ -303,100 +257,7 @@
                         echo '
                     </tbody>
                 </table>
-                ';
-            }
-                echo "</div>";
-        } else {
-                $single_slug = isset($rewrite_post_type['single-slug']) && $rewrite_post_type['single-slug'] !== '' ? $rewrite_post_type['single-slug'] : MFN_POST_TYPE;
-                $archive_name = isset($rewrite_post_type['archive-name']) && $rewrite_post_type['archive-name'] !== '' ? $rewrite_post_type['archive-name'] : MFN_ARCHIVE_NAME;
-                $singular_name = isset($rewrite_post_type['singular-name']) && $rewrite_post_type['singular-name'] !== '' ? $rewrite_post_type['singular-name'] : MFN_SINGULAR_NAME;
-
-                echo '
-                <table class="mfn-hide mfn-lang-table">
-                    <tbody>
-                        <tr>
-                            <td>
-                ';
-                ?>
-                                <label>
-                                    <?php echo _e('Custom Post Type URL Slug', $this->plugin_name) . ' <small>(Default: ' . MFN_POST_TYPE . ')</small>'; ?>
-                                </label>
-                                <legend class="screen-reader-text">
-                                    <?php _e('Custom Post Type URL Slug', $this->plugin_name); ?>
-                                </legend>
-                <?php
-                echo '
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="mfn-lang-td">     
-                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][single-slug]' . '" value="' . $single_slug . '" ' . $is_disabled . '>
-                                <div class="mfn-tooltip-box">
-                                    <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                                    <span class="mfn-tooltip-text">Rewrite the slug (' . MFN_POST_TYPE . ') in the URL - eg. "press-releases"</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                ';
-                ?>
-                                <label>
-                                    <?php echo _e('Custom Archive Name', $this->plugin_name) . ' <small>(Default: MFN News Items)</small>'; ?>
-                                </label>
-                                <legend class="screen-reader-text">
-                                    <?php _e('Custom Archive Name', $this->plugin_name); ?>
-                                </legend>
-                <?php
-                echo '
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="mfn-lang-td">     
-                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][archive-name]' . '" value="' . $archive_name . '" ' . $is_disabled . '>
-                                <div class="mfn-tooltip-box">
-                                    <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                                    <span class="mfn-tooltip-text">Set a custom name of the news archive page  - eg. "Press Releases"</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                ';
-            ?>
-                                <label>
-                                    <?php echo _e('Custom Singular Name', $this->plugin_name) . ' <small>(Default: MFN News Item)</small>'; ?>
-                                </label>
-                                <legend class="screen-reader-text">
-                                    <?php _e('Custom Singular Name', $this->plugin_name); ?>
-                                </legend>
-            <?php
-            echo '
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="mfn-lang-td">     
-                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][singular-name]' . '" value="' . $singular_name . '" ' . $is_disabled . '>
-                                <div class="mfn-tooltip-box">
-                                    <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                                    <span class="mfn-tooltip-text">Set a custom name of a single news item - eg. "Press release"</span>
-                                </div>
-                            </td>
-                        </tr>';
-            if(!isset($rewrite_post_type['single-slug'])) {
-                echo '
-                         <tr>
-                            <td class="mfn-info-td">
-                                <span class="mfn-info-box do-fade"><i class="dashicons dashicons-warning"></i> <span class="mfn-info-box-text">Unsaved!</span></span>
-                            </td>
-                         </tr>
-                ';
-                }
-                echo '
-                    </tbody>
-                </table>
-                ';
-            }
+            ';
         ?>
         <table>
             <tbody>
@@ -407,7 +268,7 @@
                             <label for="<?php echo $this->plugin_name; ?>-disable_archive"><?php _e('Disable Archive', $this->plugin_name); ?></label>
                             <legend class="screen-reader-text"><?php _e('Disable Archive', $this->plugin_name); ?></legend>
                             <br>
-                            <small>(<?php _e('Makes the news archive unreachable - eg. ' .  get_home_url() . '/' . get_post_type_object('mfn_news')->rewrite['slug']); ?>)</small>
+                            <small>(<?php _e('Makes the news archive unreachable - eg. ' .  rtrim(get_home_url(), '/') . '/' . get_post_type_object('mfn_news')->rewrite['slug'] . '. You might need to update <a href="' . get_home_url() . '/wp-admin/options-permalink.php">permalinks</a> after saving to activate this setting.'); ?>)</small>
                         </p>
                     <td>
                 </tr>
