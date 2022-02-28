@@ -85,9 +85,8 @@ function register_mfn_types()
 {
     if (empty(MFN_POST_TYPE)) {
         die("MFN News Feed - The post type was empty. Please enter a post type name in consts.php.");
-    }
-    else {
-        $supports = array( 'title', 'editor');
+    } else {
+        $supports = array('title', 'editor');
         if (isset(get_option(MFN_PLUGIN_NAME)['thumbnail_on'])) {
             $supports = array('title', 'editor', 'thumbnail');
         }
@@ -106,7 +105,7 @@ function register_mfn_types()
     }
 
     // do url rewrite option upon settings save
-    add_action('update_option_mfn-wp-plugin', function() {
+    add_action('update_option_mfn-wp-plugin', function () {
         register_mfn_types();
         flush_rewrite_rules(false);
     }, 11, 3);
@@ -275,7 +274,7 @@ function sync_mfn_taxonomy()
                             [
                                 "slug" => "issuance",
                                 "name" => "Issuance",
-                                "i10n" => ["sv" => "Emission", 'fi'=>"Osakeanti"]
+                                "i10n" => ["sv" => "Emission", 'fi' => "Osakeanti"]
                             ],
                             [
                                 "slug" => "repurchase",
@@ -305,7 +304,7 @@ function sync_mfn_taxonomy()
                             [
                                 "slug" => "notice",
                                 "name" => "Notice",
-                                "i10n" => ["sv" => "Kallelse", 'fi'=>"Kutsumus"]
+                                "i10n" => ["sv" => "Kallelse", 'fi' => "Kutsumus"]
                             ],
                             [
                                 "slug" => "info",
@@ -465,13 +464,13 @@ function sync_mfn_taxonomy()
         $translations = array();
         $translations['en'] = $enTerm->term_id;
 
-        $allowed = pll_the_languages( array( 'raw' => true));
+        $allowed = pll_the_languages(array('raw' => true));
 
         foreach ($enItem['i10n'] as $i10nLang => $name) {
 
             $lang = $pllLangMapping[$i10nLang];
 
-            if(!array_key_exists($lang, $allowed)){
+            if (!array_key_exists($lang, $allowed)) {
                 continue;
             }
             $slug = $enTerm->slug . "_" . $lang;
@@ -479,17 +478,17 @@ function sync_mfn_taxonomy()
             $l_parent_term_id = 0;
             if ($enParentTerm != null) {
                 $p_slug = $enParentTerm->slug . '_' . $lang;
-                $pterms = get_terms( array(
+                $pterms = get_terms(array(
                     'taxonomy' => MFN_TAXONOMY_NAME,
                     'hide_empty' => false,
                     'slug' => $p_slug
-                ) );
-                if (sizeof($pterms) == 0){
-                    $pterms = get_terms( array(
+                ));
+                if (sizeof($pterms) == 0) {
+                    $pterms = get_terms(array(
                         'taxonomy' => MFN_TAXONOMY_NAME,
                         'hide_empty' => false,
-                         'slug' => $p_slug,
-                     'lang' => $lang
+                        'slug' => $p_slug,
+                        'lang' => $lang
                     ));
                 }
 
@@ -498,20 +497,20 @@ function sync_mfn_taxonomy()
                 }
             }
 
-            $terms = get_terms( array(
+            $terms = get_terms(array(
                 'taxonomy' => MFN_TAXONOMY_NAME,
                 'hide_empty' => false,
                 'slug' => $slug
             ));
-            if (sizeof($terms) == 0){
+            if (sizeof($terms) == 0) {
                 $ids = wp_insert_term($name, MFN_TAXONOMY_NAME, array(
                     'slug' => $slug,
                     'parent' => $l_parent_term_id,
                 ));
-                if (is_array($ids)){
+                if (is_array($ids)) {
                     pll_set_term_language($ids['term_id'], $lang);
                 }
-                $terms = get_terms( array(
+                $terms = get_terms(array(
                     'taxonomy' => MFN_TAXONOMY_NAME,
                     'hide_empty' => false,
                     'slug' => $slug,
@@ -534,22 +533,22 @@ function sync_mfn_taxonomy()
         pll_save_term_translations($translations);
     };
 
-    $getTerm = function($slug, $lang){
-        $terms = get_terms( array(
+    $getTerm = function ($slug, $lang) {
+        $terms = get_terms(array(
             'taxonomy' => MFN_TAXONOMY_NAME,
             'hide_empty' => false,
             'slug' => $slug,
         ));
-        if (sizeof($terms) == 0){
-            $terms = get_terms( array(
+        if (sizeof($terms) == 0) {
+            $terms = get_terms(array(
                 'taxonomy' => MFN_TAXONOMY_NAME,
                 'hide_empty' => false,
                 'slug' => $slug,
                 'lang' => $lang
             ));
         }
-        if (sizeof($terms) == 0){
-            $terms = get_terms( array(
+        if (sizeof($terms) == 0) {
+            $terms = get_terms(array(
                 'taxonomy' => MFN_TAXONOMY_NAME,
                 'hide_empty' => false,
                 'slug' => $slug,
@@ -568,7 +567,7 @@ function sync_mfn_taxonomy()
 
         $term = $getTerm($slug, 'en');
 
-        if ($term == false){
+        if ($term == false) {
             wp_insert_term($item['name'], MFN_TAXONOMY_NAME, array(
                 'slug' => $slug,
                 'parent' => $parent_id,
