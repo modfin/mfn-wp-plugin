@@ -1228,9 +1228,11 @@ class mfn_news_feed_widget extends WP_Widget
 
             if ($showfilter || $showyears) {
                 echo '</div>';
-                echo '  <input type="hidden" id="instance_id" value="' . $instance_id . '" />';
-                echo '</form>';
             }
+        }
+        if ($showfilter || $showyears) {
+            echo '  <input type="hidden" id="instance_id" value="' . $instance_id . '" />';
+            echo '</form>';
         }
 
         echo '<div class="mfn-list">';
