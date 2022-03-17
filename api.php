@@ -152,6 +152,101 @@ function get_report_period($publish_date_string, $report_type, $fiscal_year_offs
     return null;
 }
 
+function MFN_get_reports_v2($lang, $from_year, $to_year, $offset, $limit, $genericTitle) {
+
+    $ops = get_option('mfn-wp-plugin');
+
+    $api_base = 'https://feed.mfn.se/v1/archive/';
+    $entity_id = $ops['entity_id'];
+    $params = '?mod:tz-location=Europe/Stockholm';
+
+    if (isset($genericTitle)) {
+        $params .= '&mod:generic-title';
+    }
+    if (isset($lang) && $lang != 'all') {
+        $params .= '&lang=' . $lang;
+    }
+    if (isset($from_year)) {
+        $params .= '&from-fiscal-year=' . $from_year;
+    }
+    if (isset($to_year)) {
+        $params .= '&to-fiscal-year=' . $to_year;
+    }
+
+    for ($i = 0; $i < 3; $i++) {
+        $response = wp_remote_get($api_base . $entity_id .  $params . '&offset=' . $offset . '&limit=' . $limit);
+        $json = wp_remote_retrieve_body($response);
+        $obj = json_decode($json);
+        if (!empty($obj->events)) {
+            break;
+        }
+    }
+    if (empty($obj->events)) {
+        return [];
+    }
+
+    $slug_prefix = (MFN_TAG_PREFIX !== '' && MFN_TAG_PREFIX !== null ? MFN_TAG_PREFIX . '-' : '');
+    $reports = [];
+
+    foreach ($obj->events as $event) {
+
+        $tags = [];
+        $title = '';
+
+        foreach($event->metadata as $m) {
+            if ($m->type == 'generic-title') {
+                $title = $m->title;
+            }
+            if ($m->type == 'title' && empty($title)) {
+                $title = $m->title;
+            }
+        }
+
+        $longest_report_tag = "";
+        foreach($event->tags as $tag) {
+            $wpTag = str_replace('sub:', '', $tag);
+            $wpTag = str_replace(':', '-', $wpTag);
+            $wpTag = $slug_prefix . $wpTag;
+            $tags[] = $wpTag;
+            if (strpos($tag, 'sub:report') === 0 && strlen($wpTag) > strlen($longest_report_tag)) {
+                $longest_report_tag = $wpTag;
+            }
+        }
+
+        foreach($event->items as $item) {
+            if ($item->type === "report-pdf") {
+                $r = new Report();
+                $r->lang = $item->lang;
+                $r->group_id = $event->event_id;
+                $r->timestamp = $event->event_date;
+                $r->title = $title;
+                $r->url = $item->url;
+                $r->tags = $tags;
+                $r->type = $longest_report_tag;
+                if (isset($event->fiscal_year)) {
+                    $r->year = $event->fiscal_year->name;
+                }
+                $reports[] = $r;
+            }
+            if ($item->type === "report-esef") {
+                $r = new Report();
+                $r->lang = $item->lang;
+                $r->group_id = $event->event_id;
+                $r->timestamp = $event->event_date;
+                $r->title = $title . " (ESEF)";
+                $r->url = $item->url;
+                $r->tags = $tags;
+                $r->type = $longest_report_tag;
+                if (isset($event->fiscal_year)) {
+                    $r->year = $event->fiscal_year->name;
+                }
+                $reports[] = $r;
+            }
+        }
+    }
+    return $reports;
+}
+
 function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limit = 100, $order = 'DESC', $fiscal_year_offset = null)
 {
     global $wpdb;

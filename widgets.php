@@ -279,7 +279,8 @@ class mfn_archive_widget extends WP_Widget
             'toyear' => $instance['toyear'] ?? '',
             'limit' => (!empty($instance['limit'])) ? $instance['limit'] : 500,
             'offset' => (!empty($instance['offset'])) ? $instance['offset'] : 0,
-            'instance_id' => random_int(1, time())
+            'instance_id' => random_int(1, time()),
+            'v2api' => $instance['v2api'] ?? false,
         ];
 
         // force to true, since 'showgenerictitle' depends on 'usefiscalyearoffset' to even show meaningful titles
@@ -323,7 +324,11 @@ class mfn_archive_widget extends WP_Widget
             $to_year = "";
         }
 
-        echo "<div class=\"mfn-report-container all\" id=\"mfn-report-archive-id-" . $w['instance_id'] . "\">";
+        if ($w['v2api']) {
+            echo "<div class=\"mfn-report-container all v2api\" id=\"mfn-report-archive-id-" . $w['instance_id'] . "\">";
+        } else {
+            echo "<div class=\"mfn-report-container all\" id=\"mfn-report-archive-id-" . $w['instance_id'] . "\">";
+        }
 
         if (isset($instance['showheading']) && $instance['showheading']) {
             echo "<h2>" . $l("Financial reports", $lang) . "</h2>";
@@ -334,7 +339,12 @@ class mfn_archive_widget extends WP_Widget
             $fiscal_year_offset = $w['fiscalyearoffset'];
         }
 
-        $reports = MFN_get_reports($pmlang, $from_year, $to_year, $w['offset'], $w['limit'], 'DESC', $fiscal_year_offset);
+        if ($w['v2api']) {
+            $reports = MFN_get_reports_v2($pmlang, $from_year, $to_year, $w['offset'], $w['limit'], $w['showgenerictitle']);
+            $w['showgenerictitle'] = null;
+        } else {
+            $reports = MFN_get_reports($pmlang, $from_year, $to_year, $w['offset'], $w['limit'], 'DESC', $fiscal_year_offset);
+        }
 
         if (count($reports) < 1) {
             echo "</div>";
@@ -893,6 +903,8 @@ class mfn_news_feed_widget extends WP_Widget
 
     public function __construct()
     {
+        require_once(ABSPATH . 'wp-includes/functions.wp-styles.php');
+
         // load css
         wp_enqueue_style( MFN_PLUGIN_NAME . '-mfn-news-list-css', plugin_dir_url( __FILE__ ) . 'widgets/mfn_news_feed/css/mfn-news-feed.css', array(), MFN_PLUGIN_NAME_VERSION );
         // require news feed class
