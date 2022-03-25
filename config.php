@@ -2,12 +2,18 @@
 
 require_once('consts.php');
 require_once('api.php');
+require_once('text-domain.php');
+
+function mfn_plugin_url(): string
+{
+    return plugins_url('', __FILE__);
+}
 
 // If ABSPATH not defined, php app is initiated from plugin folder.
 // Lets try to find and run wp-config.php
 if (!defined('ABSPATH')) {
     $dir = __DIR__;
-    for ($i = 0; $i < 3; $i++) {
+    for ($i = 0; $i < 5; $i++) {
         if (file_exists($dir . "/wp-config.php")) {
             break;
         }
@@ -40,16 +46,34 @@ require_once(ABSPATH . 'wp-admin/includes/taxonomy.php');
 require_once(ABSPATH . 'wp-includes/taxonomy.php');
 global $pagenow;
 
-if (isset(get_option(MFN_PLUGIN_NAME)['rewrite_post_type'])) {
+if (isset(get_option(MFN_PLUGIN_NAME)['enable_attachments'])
+    && get_option(MFN_PLUGIN_NAME)['enable_attachments'] == true) {
+    add_filter('the_content', 'mfn_enable_attachments');
+}
+
+function mfn_enable_attachments($content): string
+{
+    if (get_post()->post_type === MFN_POST_TYPE) {
+        $content .= mfn_remove_regular_attachment_footer();
+        $content .= mfn_list_post_attachments();
+    }
+    return $content;
+}
+
+$ops = get_option(MFN_PLUGIN_NAME);
+
+if (isset($ops['rewrite_post_type'])) {
 
     // adding filter for rewriting the post_type from settings
     add_filter('register_post_type_args', 'rewrite_post_type', 10, 2);
 
-    function rewrite_post_type($args, $post_type)
+    function rewrite_post_type($args, $post_type): array
     {
-        if ($post_type === 'mfn_news') {
-            $rewrite_post_type = unserialize(get_option(MFN_PLUGIN_NAME)['rewrite_post_type']);
-            $disable_archive = isset(get_option(MFN_PLUGIN_NAME)['disable_archive']) && get_option(MFN_PLUGIN_NAME)['disable_archive'] === 'on';
+        $ops = get_option(MFN_PLUGIN_NAME);
+
+        if ($post_type === 'mfn_news' && isset($ops['rewrite_post_type'])) {
+            $rewrite_post_type = unserialize($ops['rewrite_post_type']);
+            $disable_archive = isset($ops['disable_archive']) && $ops['disable_archive'] === 'on';
 
             $rewrite_slug = '';
             $rewrite_archive_name = '';
@@ -81,13 +105,15 @@ if (isset(get_option(MFN_PLUGIN_NAME)['rewrite_post_type'])) {
     }
 }
 
-function register_mfn_types()
+function mfn_register_types()
 {
+    $ops = get_option(MFN_PLUGIN_NAME);
+
     if (empty(MFN_POST_TYPE)) {
         die("MFN News Feed - The post type was empty. Please enter a post type name in consts.php.");
     } else {
         $supports = array('title', 'editor');
-        if (isset(get_option(MFN_PLUGIN_NAME)['thumbnail_on'])) {
+        if (isset($ops['thumbnail_on'])) {
             $supports = array('title', 'editor', 'thumbnail');
         }
 
@@ -106,7 +132,7 @@ function register_mfn_types()
 
     // do url rewrite option upon settings save
     add_action('update_option_mfn-wp-plugin', function () {
-        register_mfn_types();
+        mfn_register_types();
         flush_rewrite_rules(false);
     }, 11, 3);
 
@@ -136,7 +162,7 @@ function register_mfn_types()
 
 }
 
-function sync_mfn_taxonomy()
+function mfn_sync_taxonomy()
 {
     $tax = [
         "slug" => MFN_TAG_PREFIX,
@@ -363,11 +389,9 @@ function sync_mfn_taxonomy()
     ];
 
     $options = get_option(MFN_PLUGIN_NAME);
-    $use_wpml = isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
+    $use_wpml = isset($options['language_plugin']) && $options['language_plugin'] == 'wpml';
+    $use_pll = isset($options['language_plugin']) && $options['language_plugin'] == 'pll';
     $has_wpml = defined('WPML_PLUGIN_BASENAME');
-
-
-    $use_pll = isset($options['use_pll']) ? $options['use_pll'] : 'off';
     $has_pll = defined('POLYLANG_BASENAME');
 
     $upsert_wpml = function ($enItem, $enTerm, $prefix = '') {
@@ -408,7 +432,6 @@ function sync_mfn_taxonomy()
             }
 
             $l_slug = $enTerm->slug . '_' . $lang;
-
 
             $q = $wpdb->prepare("
             SELECT term_id
@@ -581,10 +604,10 @@ function sync_mfn_taxonomy()
             ));
         }
 
-        if ($has_wpml && $use_wpml == 'on') {
+        if ($has_wpml && $use_wpml) {
             $upsert_wpml($item, $term, $prefix);
         }
-        if ($has_pll && $use_pll == 'on') {
+        if ($has_pll && $use_pll) {
             $pllLangMapping = array();
             foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
                 $l = explode('_', $pll_lang->locale)[0];

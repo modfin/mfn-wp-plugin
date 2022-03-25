@@ -96,15 +96,21 @@ class Mfn_Wp_Plugin_Admin {
 		 * class.
 		 */
 
+        $options = get_option($this->plugin_name);
+
+        $subscription = mfn_get_subscription_by_plugin_url(get_option("mfn-subscriptions"), mfn_plugin_url());
+        $subscription_id = $subscription['subscription_id'] ?? '';
+
+        $mfn_admin_params = array(
+            'plugin_url' => mfn_plugin_url(),
+            'sync_url' => $options['sync_url'] ?? '',
+            'hub_url' => mfn_fetch_hub_url() ?? '',
+            'subscription_id' => $subscription_id
+        );
+
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/mfn-wp-plugin-admin.js', array( 'jquery' ), $this->version, false );
-
+        wp_localize_script($this->plugin_name, 'mfn_admin_params', $mfn_admin_params);
 	}
-
-
-
-
-
-
 
     public function add_plugin_admin_menu() {
 
@@ -144,6 +150,7 @@ class Mfn_Wp_Plugin_Admin {
      */
 
     public function display_plugin_setup_page() {
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'lib.php';
         include_once( 'partials/mfn-wp-plugin-admin-display.php' );
     }
 
@@ -164,7 +171,7 @@ class Mfn_Wp_Plugin_Admin {
     public function validate($input) {
         $input['hub_url'] = str_replace(' ', '', trim(isset($input['hub_url']) ? $input['hub_url'] : ''));
         $input['sync_url'] = str_replace(' ', '', trim(isset($input['sync_url']) ? $input['sync_url'] : ''));
-        $input['plugin_url'] = str_replace(' ', '', trim(isset($input['plugin_url']) ? $input['plugin_url'] : ''));
+
 
         if(isset($input['rewrite_post_type']) && is_array($input['rewrite_post_type'])) {
             foreach($input['rewrite_post_type'] as $key => $slug) {
