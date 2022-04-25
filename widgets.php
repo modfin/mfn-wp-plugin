@@ -266,22 +266,22 @@ class mfn_archive_widget extends WP_Widget
             return $_GET[$name] ?? $default;
         };
 
-        $w = [
-            'showdate' => $instance['showdate'] ?? false,
-            'showyear' => $instance['showyear'] ?? false,
-            'showfilter' => $instance['showfilter'] ?? false,
-            'showthumbnail' => $instance['showthumbnail'] ?? false,
-            'showgenerictitle' => $instance['showgenerictitle'] ?? false,
-            'usefiscalyearoffset' => $instance['usefiscalyearoffset'] ?? true,
-            'fiscalyearoffset' => $instance['fiscalyearoffset'] ?? 0,
-            'useproxiedattachments' => $instance['useproxiedattachments'] ?? true,
+        $w = array(
+            'showdate' => isset($instance['showdate']) && bool_check($instance['showdate']) ?? false,
+            'showyear' => isset($instance['showyear']) && bool_check($instance['showyear']) ?? false,
+            'showfilter' => isset($instance['showfilter']) && bool_check($instance['showfilter']) ?? false,
+            'showthumbnail' =>  isset($instance['showthumbnail']) && bool_check($instance['showthumbnail']) ?? false,
+            'showgenerictitle' => isset($instance['showgenerictitle']) && bool_check($instance['showgenerictitle']) ?? false,
+            'usefiscalyearoffset' => isset($instance['usefiscalyearoffset']) && bool_check($instance['usefiscalyearoffset']) ?? true,
+            'fiscalyearoffset' => (!empty($instance['fiscalyearoffset'])) ?? 0,
+            'useproxiedattachments' => isset($instance['useproxiedattachments']) && bool_check($instance['useproxiedattachments']) ?? true,
             'fromyear' => $instance['fromyear'] ?? '',
             'toyear' => $instance['toyear'] ?? '',
             'limit' => (!empty($instance['limit'])) ? $instance['limit'] : 500,
             'offset' => (!empty($instance['offset'])) ? $instance['offset'] : 0,
             'instance_id' => random_int(1, time()),
-            'v2api' => $instance['v2api'] ?? false,
-        ];
+            'v2api' => isset($instance['v2api']) && bool_check($instance['v2api']) ?? false,
+        );
 
         // force to true, since 'showgenerictitle' depends on 'usefiscalyearoffset' to even show meaningful titles
         if ($w['showgenerictitle']) {

@@ -160,7 +160,7 @@ function MFN_get_reports_v2($lang, $from_year, $to_year, $offset, $limit, $gener
     $entity_id = $ops['entity_id'];
     $params = '?mod:tz-location=Europe/Stockholm';
 
-    if (isset($genericTitle)) {
+    if (isset($genericTitle) && $genericTitle) {
         $params .= '&mod:generic-title';
     }
     if (isset($lang) && $lang != 'all') {
