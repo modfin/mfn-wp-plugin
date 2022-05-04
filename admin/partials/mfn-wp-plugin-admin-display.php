@@ -71,6 +71,8 @@
 
         // Get rewrite options
         $rewrite_post_type = isset($options['rewrite_post_type']) ? unserialize($options['rewrite_post_type']) : null;
+        $taxonomy_rewrite_slug = isset($options['taxonomy_rewrite_slug']) ? $options['taxonomy_rewrite_slug'] : "";
+        $taxonomy_disable_cus_prefix = isset($options['taxonomy_disable_cus_prefix']) ? $options['taxonomy_disable_cus_prefix'] : "";
 
         $default_tab = null;
         $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
@@ -261,6 +263,28 @@
         ?>
         <table>
             <tbody>
+                <tr>
+                    <td>
+                        <p>
+                            <label for="<?php echo $this->plugin_name; ?>-taxonomy_rewrite_slug"><?php _e('Custom Taxonomy URL Slug', $this->plugin_name); ?> <small>(Default: mfn-news-tag)</small></label>
+                            <legend class="screen-reader-text"><?php _e('Custom Taxonomy URL Slug', $this->plugin_name); ?></legend>
+                        </p>
+                        <p>
+                            <input pattern="\S+" class="regular-text" name="<?php echo $this->plugin_name; ?>[taxonomy_rewrite_slug]" type="text" id="<?php echo $this->plugin_name; ?>-taxonomy_rewrite_slug" value="<?php echo $taxonomy_rewrite_slug; ?>" <?php echo $is_disabled; ?>>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <input type="checkbox" id="<?php echo $this->plugin_name; ?>-taxonomy_disable_cus_prefix" name="<?php echo $this->plugin_name; ?>[taxonomy_disable_cus_prefix]" <?php checked($taxonomy_disable_cus_prefix, "on"); ?> value="on" <?php echo $is_disabled; ?>>
+                            <label for="<?php echo $this->plugin_name; ?>-taxonomy_disable_cus_prefix"><?php _e('Drop Custom Tag Prefix', $this->plugin_name); ?></label>
+                            <legend class="screen-reader-text"><?php _e('Drop Custom Tag Prefix', $this->plugin_name); ?></legend>
+                            <br>
+                            <small>(<?php _e('Drops mfn-cus tag prefix for custom tags'); ?>)</small>
+                        </p>
+                    <td>
+                </tr>
                 <tr>
                     <td>
                         <p>

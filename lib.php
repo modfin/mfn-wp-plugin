@@ -10,6 +10,9 @@ function startsWith($haystack, $needle): bool
 
 function createTags($item): array
 {
+    $options = get_option(MFN_PLUGIN_NAME);
+    $drop_custom_tag_prefix = isset($options['taxonomy_disable_cus_prefix']) && $options['taxonomy_disable_cus_prefix']  === 'on';
+
     $tags = isset($item->properties->tags) ? $item->properties->tags : array();
     $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
     $type = isset($item->properties->type) ? $item->properties->type : 'ir';
@@ -22,16 +25,33 @@ function createTags($item): array
     array_push($newtag, $slug_prefix . 'lang-' . $lang);
     array_push($newtag, $slug_prefix . 'type-' . $type);
 
+    $skipped_tags = [
+        'sub:ci:gm:notice:extra',
+        'sub:ci:gm:info:extra'
+    ];
+
     foreach ($tags as $i => $tag) {
         if (startsWith($tag, ':correction')) {
             array_push($newtag, $slug_prefix . '-correction');
             continue;
         }
-
+        if (strpos($tag, 'sub:') !== 0 && strpos($tag, 'cus:') !== 0 && strpos($tag, ':regulatory') !== 0) {
+            continue;
+        }
+        if (in_array($tag, $skipped_tags, true)) {
+            continue;
+        }
         $tag = str_replace('sub:', '', $tag);
         $tag = trim($tag, ' :');
         $tag = str_replace(':', '-', $tag);
-        $tag = $slug_prefix . $tag;
+        if ($drop_custom_tag_prefix && strpos($tag, 'cus-') === 0) {
+            $tag = str_replace('cus-', '', $tag);
+            if (strlen($tag) < 2) {
+                continue;
+            }
+        } else {
+            $tag = $slug_prefix . $tag;
+        }
         array_push($newtag, $tag);
     }
 
