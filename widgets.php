@@ -229,7 +229,15 @@ class mfn_after_post extends WP_Widget
                 $icon = '<span class="mfn-attachment-icon"><img src="' . $preview_url. '"></span>';
             }
             $link = '<a class="mfn-attachment-link" href="' . $url . '">' . $icon . $attachment->file_title . '</a>';
-            echo '<div class="mfn-attachment">' . $link . '</div>';
+
+            $classes = array("mfn-attachment");
+            if (isset($attachment->tags) && in_array(':primary', $attachment->tags)) {
+                $classes[] ="mfn-primary";
+            }
+            if (isset($attachment->tags) && in_array('image:primary', $attachment->tags)) {
+                $classes[] ="mfn-image-primary";
+            }
+            echo '<div class="' . join(" ", $classes) . '">' . $link . '</div>';
         }
         echo  '</div>';
     }
