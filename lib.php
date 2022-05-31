@@ -8,8 +8,35 @@ function startsWith($haystack, $needle): bool
     return (substr($haystack, 0, $length) === $needle);
 }
 
+function mfn_create_base_tags($item, $prefix)
+{
+    $tags = isset($item->properties->tags) ? $item->properties->tags : array();
+    $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
+    $type = isset($item->properties->type) ? $item->properties->type : 'ir';
+
+    $prefix = empty($prefix) ? '' : ($prefix . '-');
+
+    $base_tags = array();
+
+    $base_tags[] = $prefix . 'lang-' . $lang;
+    $base_tags[] = $prefix . 'type-' . $type;
+
+    foreach ($tags as $tag) {
+        if (startsWith($tag, ':correction')) {
+            $base_tags[] = $prefix . 'correction';
+            continue;
+        }
+
+        $tag = str_replace('sub:', '', $tag);
+        $tag = trim($tag, ' :');
+        $base_tags[] = $prefix . str_replace(':', '-', $tag);
+    }
+    return $base_tags;
+}
+
 function createTags($item): array
 {
+    // TODO: use mfn_create_base_tags() then add slug-prefix etc
     $options = get_option(MFN_PLUGIN_NAME);
     $drop_custom_tag_prefix = isset($options['taxonomy_disable_cus_prefix']) && $options['taxonomy_disable_cus_prefix']  === 'on';
 
@@ -284,6 +311,202 @@ function upsertNewsMeta($post_id, $newsid, $slug) {
     update_post_meta($post_id, MFN_POST_TYPE . "_news_slug", $slug);
 }
 
+function mfn_upsert_category($post_id, $item)
+{
+    $categories_enabled = isset(get_option(MFN_PLUGIN_NAME)['category_on']) && get_option(MFN_PLUGIN_NAME)['category_on'] === 'on';
+    if (!$categories_enabled) {
+        return;
+    }
+
+    $lang = isset($item->properties->lang) ? $item->properties->lang : '';
+    $type = isset($item->properties->type) ? $item->properties->type : '';
+
+    if (empty($lang) || empty($type)) {
+        return;
+    }
+
+    $pll_enabled = function_exists('pll_is_translated_taxonomy')
+        && function_exists('pll_is_translated_post_type')
+        && function_exists('pll_languages_list')
+        && function_exists('pll_get_term_language')
+        && function_exists('pll_set_term_language')
+        && pll_is_translated_taxonomy('category')
+        && pll_is_translated_post_type(MFN_POST_TYPE);
+
+    $categories = [
+        [
+            "slug" => "mfn-ir",
+            "base_name" => "MFN IR",
+            "filter" => ["mfn-type-ir"]
+        ],
+        [
+            "slug" => "mfn-pr",
+            "base_name" => "MFN PR",
+            "filter" => ["mfn-type-pr"]
+        ],
+        [
+            "slug" => "mfn-regulatory",
+            "filter" => ["mfn-regulatory"],
+        ],
+        [
+            "slug" => "mfn-not-regulatory",
+            "filter" => ["-mfn-regulatory"],
+        ],
+        [
+            "slug" => "mfn-report",
+            "filter" => ["mfn-report"],
+        ],
+        [
+            "slug" => "mfn-annual-report",
+            "filter" => ["mfn-report-annual"],
+        ],
+    ];
+
+    if (!$pll_enabled) {
+        $categories[] = [
+            "slug" => "mfn-lang-" . $lang,
+            "filter" => ["mfn-lang-" . $lang],
+        ];
+    }
+
+    $categories = apply_filters('mfn_define_categories', $categories);
+
+    $base_tags = mfn_create_base_tags($item, "mfn");
+    $has_base_tag = array();
+    foreach ($base_tags as $t) {
+        $has_base_tag[$t] = true;
+    }
+
+    $pllLangMapping = array();
+    $langs = array();
+    if ($pll_enabled) {
+        foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
+            $l = explode('_', $pll_lang->locale)[0];
+            $pllLangMapping[$l] = $pll_lang->slug;
+            $langs[] = $l;
+        }
+        if (!in_array($lang, $langs)) {
+            return;
+        }
+    }
+
+    $matching_categories = array();
+    foreach ($categories as $c) {
+        if (!isset($c["filter"]) || !is_array($c["filter"]) || !isset($c["slug"]) || trim($c["slug"]) === "") continue;
+        $matching = true;
+        foreach ($c["filter"] as $f) {
+            if ($f[0] === '-') {
+                if (isset($has_base_tag[substr($f, 1)])) {
+                    $matching = false;
+                    break;
+                }
+            } else if (!isset($has_base_tag[$f])) {
+                $matching = false;
+                break;
+            }
+        }
+        if ($matching && count($c["filter"]) > 0) {
+            $matching_categories[] = $c;
+        }
+    }
+
+    $insertTerm = function ($c) use ($pllLangMapping, $lang, $pll_enabled) {
+        $base_slug = $c["slug"];
+
+        $meta_query = array(
+            array(
+                'key' => 'mfn_category_slug',
+                'compare' => '=',
+                'value' => $base_slug
+            )
+        );
+        if ($pll_enabled) {
+            $meta_query[] = array(
+                'key' => 'mfn_category_lang',
+                'compare' => '=',
+                'value' => $lang
+            );
+        }
+        $terms = get_terms([
+            'taxonomy' => "category",
+            'lang' => '',
+            'meta_query' => $meta_query,
+            'hide_empty' => false
+        ]);
+
+        if (isset($terms[0])) {
+            return $terms[0]->term_id;
+        }
+
+        $name = str_replace("mfn", "MFN", $base_slug);
+        $name = ucwords(str_replace("-", " ", $name));
+        if (isset($c["base_name"]) && trim($c["base_name"]) !== "") {
+            $name = trim($c["base_name"]);
+        }
+        $slug = $base_slug;
+        if ($pll_enabled) {
+            $slug .= "-" . $lang;
+            $name .= " (" . $lang . ")";
+        }
+        if (isset($c["name"]) && trim($c["name"]) !== "") {
+            $name = trim($c["name"]);
+        }
+        $ids = wp_insert_term($name, "category", array('slug' => $slug));
+        if (is_wp_error($ids)) {
+            echo $ids->get_error_message();
+            return null;
+        }
+        if ($ids == null) {
+            return null;
+        }
+
+        $term_id = $ids["term_id"];
+        add_term_meta($term_id, "mfn_category_slug", $base_slug, true);
+
+        if ($pll_enabled) {
+            add_term_meta($term_id, "mfn_category_lang", $lang, true);
+            pll_set_term_language($term_id, $pllLangMapping[$lang]);
+
+            $terms = get_terms([
+                'taxonomy' => "category",
+                'lang' => '',
+                'meta_query' => array(
+                    array(
+                        'key' => 'mfn_category_slug',
+                        'compare' => '=',
+                        'value' => $base_slug
+                    )
+                ),
+                'hide_empty' => false
+            ]);
+
+            $translations = array();
+            foreach ($terms as $t) {
+                $pllLang = pll_get_term_language($t->term_id);
+                if ($pllLang) {
+                    $translations[$pllLang] = $t->term_id;
+                }
+            }
+            if (count($translations) > 0) {
+                pll_save_term_translations($translations);
+            }
+        }
+        return $term_id;
+    };
+
+    $termsToSet = array();
+    foreach ($matching_categories as $c) {
+        $termId = $insertTerm($c);
+
+        if ($termId === null) {
+            return;
+        }
+        $termsToSet[] = $termId;
+    }
+
+    wp_set_object_terms($post_id, $termsToSet, "category", false);
+}
+
 function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false): int
 {
     do_action('mfn_before_upsertitem', $item);
@@ -312,7 +535,7 @@ function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false
 
     $tags = createTags($item);
 
-    $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags, $newsid, $slug) {
+    $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags, $newsid, $slug, $item) {
         if ($reset_cache) {
             wp_cache_flush();
         }
@@ -320,6 +543,7 @@ function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false
         wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
         upsertLanguage($post_id, $groupId, $lang);
         upsertNewsMeta($post_id, $newsid, $slug);
+        mfn_upsert_category($post_id, $item);
         upsertAttachments($post_id, $attachments);
 
         if ($reset_cache) {
@@ -371,6 +595,7 @@ function upsertItemFull($item, $signature = '', $raw_data = '', $reset_cache = f
     global $wpdb;
 
     $newsid = $item->news_id;
+    $slug = $item->content->slug;
     $groupId = $item->group_id;
     $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
 
@@ -392,13 +617,15 @@ function upsertItemFull($item, $signature = '', $raw_data = '', $reset_cache = f
 
     $tags = createTags($item);
 
-    $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags) {
+    $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags, $newsid, $slug, $item) {
         if ($reset_cache) {
             wp_cache_flush();
         }
 
         wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
         upsertLanguage($post_id, $groupId, $lang);
+        upsertNewsMeta($post_id, $newsid, $slug);
+        mfn_upsert_category($post_id, $item);
         upsertAttachments($post_id, $attachments);
 
         if ($reset_cache) {

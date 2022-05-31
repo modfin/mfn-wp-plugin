@@ -91,6 +91,12 @@ function register_mfn_types()
             $supports = array('title', 'editor', 'thumbnail');
         }
 
+        $taxonomies = array(MFN_TAXONOMY_NAME);
+        $categories_enabled = isset(get_option(MFN_PLUGIN_NAME)['category_on']) && get_option(MFN_PLUGIN_NAME)['category_on'] === 'on';
+        if ($categories_enabled) {
+            $taxonomies = array('category', MFN_TAXONOMY_NAME);
+        }
+
         register_post_type(MFN_POST_TYPE,
             array(
                 'labels' => array(
@@ -100,8 +106,29 @@ function register_mfn_types()
                 'public' => true,
                 'has_archive' => true,
                 'rewrite' => array(''),
+                'taxonomies' => $taxonomies,
                 'supports' => $supports,
             ));
+    }
+
+    if ($categories_enabled) {
+        add_action('pre_get_posts', function ($query) {
+            if (!is_admin() && $query->is_category() && $query->is_main_query()) {
+                $post_type = $query->get('post_type');
+                $post_types = array();
+                if (is_array($post_type)) {
+                    $post_types = $post_type;
+                } else if (empty($post_type)) {
+                    $post_types[] = "post";
+                } else {
+                    $post_types[] = $post_type;
+                }
+                if (!in_array(MFN_POST_TYPE, $post_types)) {
+                    $post_types[] = MFN_POST_TYPE;
+                }
+                $query->set('post_type', $post_types);
+            }
+        });
     }
 
     // do url rewrite option upon settings save

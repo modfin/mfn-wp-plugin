@@ -74,6 +74,8 @@
         $taxonomy_rewrite_slug = isset($options['taxonomy_rewrite_slug']) ? $options['taxonomy_rewrite_slug'] : "";
         $taxonomy_disable_cus_prefix = isset($options['taxonomy_disable_cus_prefix']) ? $options['taxonomy_disable_cus_prefix'] : "";
 
+        $category_on =  isset($options['category_on']) ? $options['category_on'] : 'off';
+
         $default_tab = null;
         $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
         ?>
@@ -377,6 +379,19 @@
                         <legend class="screen-reader-text"><?php _e('Thumbnail Support: delete images with posts', $this->plugin_name); ?></legend>
                         <br>
                         <small>("Delete all MFN posts" will also delete all attached images from the Media Library) <strong>Recommended.</strong></small>
+                    </p>
+                <td>
+            </tr>
+            <tr>
+                <td>
+                    <p>
+                        <input type="checkbox" id="<?php echo $this->plugin_name; ?>-category_on" name="<?php echo $this->plugin_name; ?>[category_on]" <?php checked($category_on, "on"); ?> value="on" <?php echo $is_disabled; ?>>
+                        <label for="<?php echo $this->plugin_name; ?>-category_on"><?php _e('Category Support', $this->plugin_name); ?></label>
+                        <legend class="screen-reader-text"><?php _e('Category support', $this->plugin_name); ?></legend>
+                        <br>
+                        <small>(Experimental: Enables category support for the custom post type. Categories (and slugs) can be renamed in the UI.)</small>
+                        <br>
+                        <small>(Which categories are added can be controlled using the 'mfn_define_categories' filter hook)</small>
                     </p>
                 <td>
             </tr>
