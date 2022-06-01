@@ -429,8 +429,12 @@ ON p.ID = lang.post_id
 INNER JOIN (
   SELECT 
   po.ID, 
-  group_concat(CONCAT(ter.name, ':', ter.slug) ORDER BY ter.slug LIKE '" . MFN_TAG_PREFIX . "-cus-%', ter.slug) AS tags, 
-  group_concat(SUBSTRING_INDEX(ter.slug, '_', 1) ORDER BY ter.slug LIKE '" . MFN_TAG_PREFIX . "-cus-%', ter.slug) AS tag_slugs
+  group_concat(CONCAT(ter.name, ':', ter.slug)
+    ORDER BY (ter.slug LIKE '" . MFN_TAG_PREFIX . "-cus-%'
+      || ter.slug NOT LIKE '" . MFN_TAG_PREFIX . "%'), ter.slug) AS tags,
+  group_concat(SUBSTRING_INDEX(ter.slug, '_', 1)
+    ORDER BY (ter.slug LIKE '" . MFN_TAG_PREFIX . "-cus-%'
+      || ter.slug NOT LIKE '" . MFN_TAG_PREFIX . "%'), ter.slug) AS tag_slugs
   FROM $wpdb->posts po
          INNER JOIN $wpdb->term_relationships r
                     ON r.object_id = po.ID
