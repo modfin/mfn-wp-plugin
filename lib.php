@@ -390,22 +390,30 @@ function mfn_upsert_category($post_id, $item)
         }
     }
 
+    $matches = function ($f) use ($has_base_tag) {
+        if ($f[0] === '-') {
+            if (isset($has_base_tag[substr($f, 1)])) {
+                return false;
+            }
+        } else if (!isset($has_base_tag[$f])) {
+            return false;
+        }
+        return true;
+    };
+
     $matching_categories = array();
     foreach ($categories as $c) {
         if (!isset($c["filter"]) || !is_array($c["filter"]) || !isset($c["slug"]) || trim($c["slug"]) === "") continue;
-        $matching = true;
+        $or = isset($c["op"]) && strtolower(trim($c["op"])) === 'or';
+        $numMatching = 0;
         foreach ($c["filter"] as $f) {
-            if ($f[0] === '-') {
-                if (isset($has_base_tag[substr($f, 1)])) {
-                    $matching = false;
-                    break;
-                }
-            } else if (!isset($has_base_tag[$f])) {
-                $matching = false;
+            if ($matches($f)) {
+                $numMatching++;
+            } else if ($or === false) {
                 break;
             }
         }
-        if ($matching && count($c["filter"]) > 0) {
+        if ($numMatching === count($c["filter"]) || ($numMatching > 0 && $or === true)) {
             $matching_categories[] = $c;
         }
     }
