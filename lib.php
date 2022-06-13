@@ -173,10 +173,11 @@ function upsertAttachments($post_id, $attachments)
         $content_type = $attachment->content_type;
         $url = $attachment->url;
 
-        $a = "<a href='$url' content='$content_type' target='_blank' rel='noopener'>$title</a>";
+        $attachment_link = "<a href='$url' content='$content_type' target='_blank' rel='noopener'>$title</a>";
+        $attachment_data = wp_slash(json_encode($attachment, JSON_UNESCAPED_UNICODE));
 
-        add_post_meta($post_id, MFN_POST_TYPE . "_attachment_link", $a);
-        add_post_meta($post_id, MFN_POST_TYPE . "_attachment_data", json_encode($attachment, JSON_UNESCAPED_UNICODE));
+        add_post_meta($post_id, MFN_POST_TYPE . "_attachment_link", $attachment_link);
+        add_post_meta($post_id, MFN_POST_TYPE . "_attachment_data", $attachment_data);
     }
     if (isset(get_option(MFN_PLUGIN_NAME)['thumbnail_on'])) {
         upsertThumbnails($post_id, $attachments);
