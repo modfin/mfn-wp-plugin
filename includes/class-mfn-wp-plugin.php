@@ -113,7 +113,7 @@ class Mfn_Wp_Plugin {
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-mfn-wp-plugin-admin.php';
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-mfn-wp-plugin-admin.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing

@@ -3,7 +3,7 @@ require_once('./config.php');
 require_once('./lib.php');
 global $wp_query;
 
-register_mfn_types();
+mfn_register_types();
 
 $queries = array();
 parse_str($_SERVER['QUERY_STRING'], $queries);

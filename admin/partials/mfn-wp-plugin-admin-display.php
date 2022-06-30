@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Provide a admin area view for the plugin
  *
@@ -11,463 +10,507 @@
  * @package    Mfn_Wp_Plugin
  * @subpackage Mfn_Wp_Plugin/admin/partials
  */
-?>
 
-<div class="wrap">
+// Grab all options
+$options = get_option($this->plugin_name);
 
-    <h2>
-        <?php echo esc_html( get_admin_page_title() ); ?>
+// Subscription settings
+$subscriptions = get_option("mfn-subscriptions");
+$subscription = mfn_get_subscription_by_plugin_url($subscriptions, mfn_plugin_url());
+$subscription_id = $subscription['subscription_id'] ?? '';
+
+// Defaults if cleared options
+if ($options === false || (is_array($options) && sizeof($options) === 0)) {
+    $options['verify_signature'] = 'on';
+    $options['enable_attachments'] = 'on';
+    $options['thumbnail_allow_delete'] = 'on';
+}
+
+// Settings
+$plugin_url = plugins_url() . "/" . MFN_PLUGIN_NAME; // *determined
+
+$sync_url = isset($options['sync_url']) && $options['sync_url'] !== "" ? $options['sync_url'] : "https://feed.mfn.se/v1";
+
+$entity_id = $options['entity_id'] ?? "";
+
+$has_entity_id = strlen($entity_id) == 36;
+$subscribe_button_disabled = strlen($subscription_id) == 36 || !$has_entity_id;
+$unsubscribe_button_disabled = strlen($subscription_id) !== 36 || !$has_entity_id || $sync_url === '';
+$is_readonly = $has_entity_id == true ? 'readonly' : '';
+
+$cus_query = $options['cus_query'] ?? "";
+
+// Language settings
+$has_wpml = defined('WPML_PLUGIN_BASENAME');
+$has_pll = defined('POLYLANG_BASENAME');
+$use_wpml = isset($options['language_plugin']) && $options['language_plugin'] == 'wpml';
+$use_pll = isset($options['language_plugin']) && $options['language_plugin'] == 'pll';
+$language_check = mfn_language_plugin_check($use_pll, $has_pll, $use_wpml, $has_wpml);
+$language_usage_check = mfn_language_plugin_usage_check();
+
+$has_language_plugins = $use_wpml || $use_pll;
+$append_none_radio_classes = !$has_language_plugins || (isset($options['language_plugin']) && $options['language_plugin'] === 'none') ? ' mfn-selected-radio-option' : '';
+$checked_none = (!$has_pll && !$has_wpml) || !isset($options['language_plugin']) ? 'checked' : checked('none', $options['language_plugin'], false);
+
+$append_wpml_detected_classes = $language_check->detected_wpml ? ' do-fade mfn-warning-input' : '';
+$append_wpml_detected_classes .= $use_wpml && $has_wpml ? ' mfn-selected-radio-option': '';
+$wpml_detected = $language_check->detected_wpml ? ' <span style="color: green;">' . mfn_get_text('text_plugin_detected') . '</span>' : '';
+$wpml_msg = $language_check->detected_wpml ? '<p><span class="dashicons dashicons-warning mfn-warning-icon mfn-do-fade"></span> ' . $language_check->languageMsg . '</p>' : '';
+
+$append_pll_detected_classes = $language_check->detected_pll ? ' do-fade mfn-warning-input' : '';
+$append_pll_detected_classes .= $use_pll && $has_pll ? ' mfn-selected-radio-option': '';
+$pll_detected = $language_check->detected_pll ? ' <span style="color: green;">' . mfn_get_text('text_plugin_detected') . '</span>' : '';
+$pll_msg = $language_check->detected_pll ? '<p><span class="dashicons dashicons-warning mfn-warning-icon mfn-do-fade"></span> ' . $language_check->languageMsg . '</p>' : '';
+
+$disable_archive = $options['disable_archive'] ?? 'off';
+
+// Advanced settings
+$thumbnail_on = $options['thumbnail_on'] ?? 'off';
+$thumbnail_allow_delete = $options['thumbnail_allow_delete'] ?? 'off';
+$verify_signature = $options['verify_signature'] ?? 'off';
+$reset_cache = $options['reset_cache'] ?? 'on';
+$enable_attachments = $options['enable_attachments'] ?? 'off';
+
+// Rewrite settings
+$rewrite = isset($options['rewrite_post_type']) ? unserialize($options['rewrite_post_type']) : null;
+$slug = (isset($rewrite['slug']) && $rewrite['slug'] !== '' ? $rewrite['slug'] : MFN_POST_TYPE);
+$archive_name = (isset($rewrite['archive-name']) && $rewrite['archive-name'] !== '' ? $rewrite['archive-name'] : MFN_ARCHIVE_NAME);
+$singular_name = (isset($rewrite['singular-name']) && $rewrite['singular-name'] !== '' ? $rewrite['singular-name'] : MFN_SINGULAR_NAME);
+
+// HTML
+echo '
+<div class="wrap" id="mfn-admin-wrapper">
+    <h2>' . esc_html( get_admin_page_title() ) . '
         <span class="mfn-plugin-version-card">
-            v<?php echo file_get_contents(dirname(__FILE__) . "/../../version") ?>
+            <a href="https://github.com/modfin/mfn-wp-plugin" target="_blank">
+                ' . "v" . file_get_contents(dirname(__FILE__) . "/../../version") . '
+            </a>
         </span>
     </h2>
 
     <div class="mcol-1-2">
-
-    <form method="post" name="cleanup_options" action="options.php">
-
-        <?php
-        // Check if WPML/Polylang plugin exists
-        $has_wpml = defined('WPML_PLUGIN_BASENAME');
-        $has_pll = defined('POLYLANG_BASENAME');
-
-        // Grab all options
-        $options = get_option($this->plugin_name);
-
-        if ($options === false || (is_array($options) && sizeof($options) === 0)) {
-            $options['verify_signature'] = 'on';
-            $options['enable_attachments'] = 'on';
-        }
-
-        // Cleanup
-        $hub_url = isset($options['hub_url']) && $options['hub_url'] !== "" ? $options['hub_url'] : "https://feed.mfn.se/v1";
-        $sync_url = isset($options['sync_url']) && $options['sync_url'] !== "" ? $options['sync_url'] : "https://feed.mfn.se/v1";
-        $plugin_url = isset($options['plugin_url']) && $options['plugin_url'] !== "" ? $options['plugin_url'] : plugins_url() . "/mfn-wp-plugin";
-        $entity_id = isset($options['entity_id']) ? $options['entity_id'] : "";
-
-        $cus_query = isset($options['cus_query']) ? $options['cus_query'] : "";
-
-        $disable_archive =  isset($options['disable_archive']) ? $options['disable_archive'] : 'off';
-        $verify_signature =  isset($options['verify_signature']) ? $options['verify_signature'] : 'off';
-        $use_wpml =  isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
-        $use_pll =  isset($options['use_pll']) ? $options['use_pll'] : 'off';
-
-        $reset_cache =  isset($options['reset_cache']) ? $options['reset_cache'] : 'off';
-
-        $thumbnail_on =  isset($options['thumbnail_on']) ? $options['thumbnail_on'] : 'off';
-        $thumbnail_allow_delete =  isset($options['thumbnail_allow_delete']) ? $options['thumbnail_allow_delete'] : 'off';
-
-        $enable_attachments =  isset($options['enable_attachments']) ? $options['enable_attachments'] : 'off';
-
-        $subscription_id = isset($options['subscription_id']) ? $options['subscription_id'] : "N/A";
-        $posthook_secret = isset($options['posthook_secret']) ? $options['posthook_secret'] : "N/A";
-        $posthook_name = isset($options['posthook_name']) ? $options['posthook_name'] : "N/A";
-
-        settings_fields($this->plugin_name);
-        do_settings_sections($this->plugin_name);
-
-        $is_subscribed = strlen($subscription_id) == 36;
-        $is_disabled = $is_subscribed == true ? 'disabled' : '';
-
-        // Get rewrite options
-        $rewrite_post_type = isset($options['rewrite_post_type']) ? unserialize($options['rewrite_post_type']) : null;
-
-        $default_tab = null;
-        $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
-        ?>
-
+    
+    <form method="POST" id="mfn-form"  name="cleanup_options" action="options.php">
+';
+    settings_fields($this->plugin_name);
+    do_settings_sections($this->plugin_name);
+    echo '
         <script>
             function toggleQueryInput(e) {
-                var el = document.getElementById("<?php echo $this->plugin_name; ?>-cus_query");
-                el.setAttribute("disabled", "");
+                var el = document.getElementById("' . $this->plugin_name . '-cus_query");
+                el.setAttribute("readonly", "");
                 if (e.checked) {
-                    el.removeAttribute("disabled");
+                    el.removeAttribute("readonly");
                 }
             }
         </script>
 
-        <h2><?php _e('Settings', $this->plugin_name); ?></h2>
-
+        ' . mfn_parse_heading('heading_settings', 'h2') . '
+        
         <table class="mfn-settings-table">
             <tbody>
                 <tr>
                     <th>
                         <p>
-                            <label for="<?php echo $this->plugin_name; ?>-sync_url"><?php _e('Sync URL', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Sync URL', $this->plugin_name); ?></legend>
-                            <small>(probably https://feed.mfn.se/v1)</small>
+                            ' . mfn_parse_label('label_sync_url') . '
+                            ' . mfn_parse_small('small_probably_feed_mfn_se') . '
                         </p>
                     </th>
                 </tr>
                 <tr>
                     <td>
-                        <input required pattern="\S+" class="regular-text wide" name="<?php echo $this->plugin_name; ?>[sync_url]" type="text" id="<?php echo $this->plugin_name; ?>-sync_url" value="<?php echo $sync_url; ?>" <?php echo $is_disabled; ?>>
+                        <input required pattern="\S+" class="regular-text wide" name="' . $this->plugin_name . '[sync_url]" type="text" id="' . $this->plugin_name . '-sync_url" value="' . $sync_url . '" ' . $is_readonly . '>
                     </td>
                 </tr>
                 <tr>
                     <th scope="row">
                         <p>
-                            <label for="<?php echo $this->plugin_name; ?>-hub_url"><?php _e('Hub URL', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Hub URL', $this->plugin_name); ?></legend>
-                            <small>(<?php _e('probably https://feed.mfn.se/v1', $this->plugin_name); ?>)</small>
+                            ' . mfn_parse_label('label_entity_id') . '
                         </p>
                     </th>
                 </tr>
                 <tr>
                     <td>
-                        <input required pattern="\S+" class="regular-text wide" name="<?php echo $this->plugin_name; ?>[hub_url]" type="text" id="<?php echo $this->plugin_name; ?>-hub_url" value="<?php echo $hub_url; ?>" <?php echo $is_disabled; ?>>
+                        <input required pattern="\S+" class="regular-text wide" name="' . $this->plugin_name . '[entity_id]" type="text" id="' . $this->plugin_name . '-entity_id" value="' . $entity_id . '" ' . $is_readonly . '>
                     </td>
                 </tr>
                 <tr>
                     <th scope="row">
                         <p>
-                            <label for="<?php echo $this->plugin_name; ?>-plugin_url"><?php _e('Plugin URL', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Plugin URL', $this->plugin_name); ?></legend>
-                            <small>(<?php _e('probably ' . plugins_url() . '/mfn-wp-plugin', $this->plugin_name); ?>)</small>
+                            ' . mfn_parse_label('label_cus_query') . '
+                            ' . mfn_parse_small('small_know_what_im_doing') . '
+                            <input type="checkbox" id="' . $this->plugin_name . '-cus_query_checkbox" name="' . $this->plugin_name . '[cus_query]" ' . checked($cus_query, "on", false) . ' value="on" onclick="toggleQueryInput(this)" ' . $is_readonly . '>
                         </p>
                     </th>
                 </tr>
                 <tr>
+                    <td class="mfn-inline-td">
+                        <input class="regular-text wide" name="' . $this->plugin_name . '[cus_query]" type="text" id="' . $this->plugin_name . '-cus_query" value="' . $cus_query . '" readonly>
+                        <div class="mfn-tooltip-box">
+                            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_cus_query') . '</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
                     <td>
-                        <input required pattern="\S+" class="regular-text wide" name="<?php echo $this->plugin_name; ?>[plugin_url]" type="text" id="<?php echo $this->plugin_name; ?>-plugin_url" value="<?php echo $plugin_url; ?>" <?php echo $is_disabled ?>>
+                        <hr>
                     </td>
                 </tr>
                 <tr>
                     <th scope="row">
                         <p>
-                            <label for="<?php echo $this->plugin_name; ?>-entity_id"><?php _e('Entity ID', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Entity ID', $this->plugin_name); ?></legend>
-                        </p>
-                    </th>
-                </tr>
-                <tr>
-                    <td>
-                        <input required pattern="\S+" class="regular-text wide" name="<?php echo $this->plugin_name; ?>[entity_id]" type="text" id="<?php echo $this->plugin_name; ?>-entity_id" value="<?php echo $entity_id; ?>" <?php echo $is_disabled; ?>>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">
-                        <p>
-                            <label for="<?php echo $this->plugin_name; ?>-cus_query"><?php _e('Custom Query', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Custom Query', $this->plugin_name); ?></legend>
-                            <small>(I know what I'm doing <input type="checkbox" onchange="toggleQueryInput(this)" <?php echo $is_disabled; ?>/>)</small>
-                        </p>
-                    </th>
-                </tr>
-                <tr>
-                    <td>
-                        <input class="regular-text wide" name="<?php echo $this->plugin_name; ?>[cus_query]" type="text" id="<?php echo $this->plugin_name; ?>-cus_query" value="<?php echo $cus_query; ?>" <?php echo $is_disabled; ?> disabled>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">
-                        <p>
-                            <label for="<?php echo $this->plugin_name; ?>-rewrite_post_type"><?php _e('Rewrite settings', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Rewrite settings', $this->plugin_name); ?></legend>
+                            ' . mfn_parse_label('label_rewrite_settings', 'mfn-h2-label') . '
                         </p>
                     </th>
                 </tr>
             </tbody>
         </table>
-        <?php
-                $slug = isset($rewrite_post_type['slug']) && $rewrite_post_type['slug'] !== '' ? $rewrite_post_type['slug'] : MFN_POST_TYPE;
-                $archive_name = isset($rewrite_post_type['archive-name']) && $rewrite_post_type['archive-name'] !== '' ? $rewrite_post_type['archive-name'] : MFN_ARCHIVE_NAME;
-                $singular_name = isset($rewrite_post_type['singular-name']) && $rewrite_post_type['singular-name'] !== '' ? $rewrite_post_type['singular-name'] : MFN_SINGULAR_NAME;
-
-                echo '
-                <table class="mfn-hide mfn-lang-table">
-                    <tbody>
-                        <tr>
-                            <td>
-                ';
-                ?>
-                                <label>
-                                    <?php echo _e('Custom Post Type URL Slug', $this->plugin_name) . ' <small>(Default: ' . MFN_POST_TYPE . ')</small>'; ?>
-                                </label>
-                                <legend class="screen-reader-text">
-                                    <?php _e('Custom Post Type URL Slug', $this->plugin_name); ?>
-                                </legend>
-                <?php
-                echo '
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="mfn-lang-td">
-                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][slug]' . '" value="' . $slug . '" ' . $is_disabled . '>
-                                <div class="mfn-tooltip-box">
-                                    <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                                    <span class="mfn-tooltip-text">Rewrite the slug (' . MFN_POST_TYPE . ') in the URL - eg. "press-releases"</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                ';
-                ?>
-                                <label>
-                                    <?php echo _e('Custom Archive Name', $this->plugin_name) . ' <small>(Default: ' . MFN_ARCHIVE_NAME . ')</small>'; ?>
-                                </label>
-                                <legend class="screen-reader-text">
-                                    <?php _e('Custom Archive Name', $this->plugin_name); ?>
-                                </legend>
-                <?php
-                echo '
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="mfn-lang-td">
-                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][archive-name]' . '" value="' . $archive_name . '" ' . $is_disabled . '>
-                                <div class="mfn-tooltip-box">
-                                    <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                                    <span class="mfn-tooltip-text">Set a custom name of the news archive page  - eg. "Press Releases"</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                ';
-                ?>
-                                <label>
-                                    <?php echo _e('Custom Singular Name', $this->plugin_name) . ' <small>(Default: ' . MFN_SINGULAR_NAME . ')</small>'; ?>
-                                </label>
-                                <legend class="screen-reader-text">
-                                    <?php _e('Custom Singular Name', $this->plugin_name); ?>
-                                </legend>
-                <?php
-                echo '
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="mfn-lang-td">
-                                <input type="text" class="regular-text" name="' . $this->plugin_name . '[rewrite_post_type][singular-name]' . '" value="' . $singular_name . '" ' . $is_disabled . '>
-                                <div class="mfn-tooltip-box">
-                                    <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                                    <span class="mfn-tooltip-text">Set a custom name of a single news item - eg. "Press release"</span>
-                                </div>
-                            </td>
-                         </tr>';
-                        if(!isset($rewrite_post_type['slug'])) {
-                            echo '
-                            <tr>
-                                <td class="mfn-info-td">
-                                    <span class="mfn-info-box do-fade"><i class="dashicons dashicons-warning"></i> <span class="mfn-info-box-text">Unsaved!</span></span>
-                                </td>
-                            </tr>';
-                        }
-                        echo '
-                    </tbody>
-                </table>
-            ';
-        ?>
-        <table>
+        <table class="mfn-settings-table">
+            <tbody>
+                <tr>
+                    <td>
+                    ' . mfn_parse_label('label_rewrite_post_type_slug') . '
+                    ' . mfn_parse_small('small_default_mfn_news') . '
+                    </td>
+                </tr>
+                <tr>
+                    <td class="mfn-inline-td">
+                        <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[rewrite_post_type][slug]' . '" id="' . $this->plugin_name . '-rewrite_post_type_slug"' . ' value="' . $slug . '" ' . $is_readonly . '>
+                        <div class="mfn-tooltip-box">
+                            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_slug') . '</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                    ' . mfn_parse_label('label_rewrite_post_type_archive_name') . '
+                    ' . mfn_parse_small('small_default_mfn_news_items') . '
+                    </td>
+                </tr>
+                <tr>
+                    <td class="mfn-inline-td">
+                        <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[rewrite_post_type][archive-name]' . '" id="' . $this->plugin_name . '-rewrite_post_type_archive_name' . '" value="' . $archive_name . '" ' . $is_readonly . '>
+                        <div class="mfn-tooltip-box">
+                            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_archive_name') . '</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                    ' . mfn_parse_label('label_rewrite_post_type_singular_name') . '
+                    ' . mfn_parse_small('small_default_mfn_news_item') . '
+                    </td>
+                </tr>
+                <tr>
+                    <td class="mfn-inline-td">
+                        <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[rewrite_post_type][singular-name]' . '" id="' . $this->plugin_name . '-rewrite_post_type_singular_name' . '" value="' . $singular_name . '" ' . $is_readonly . '>
+                        <div class="mfn-tooltip-box">
+                            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_singular_name') . '</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="mfn-settings-table">
             <tbody>
                 <tr>
                     <td>
                         <p>
-                            <input type="checkbox" id="<?php echo $this->plugin_name; ?>-disable_archive" name="<?php echo $this->plugin_name; ?>[disable_archive]" <?php checked($disable_archive, "on"); ?> value="on" <?php echo $is_disabled; ?>>
-                            <label for="<?php echo $this->plugin_name; ?>-disable_archive"><?php _e('Disable Archive', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Disable Archive', $this->plugin_name); ?></legend>
+                            <input type="checkbox" id="' . $this->plugin_name . '-disable_archive" name="' . $this->plugin_name . '[disable_archive]" ' . checked($disable_archive, "on", false) . ' value="on" ' . $is_readonly . '>
+                            ' . mfn_parse_label('label_disable_archive') . '
                             <br>
-                            <small>(<?php _e('Makes the news archive unreachable - eg. ' .  rtrim(get_home_url(), '/') . '/' . get_post_type_object('mfn_news')->rewrite['slug'] . '. You might need to update <a href="' . get_home_url() . '/wp-admin/options-permalink.php">permalinks</a> after saving to activate this setting.'); ?>)</small>
+                            ' . mfn_parse_small('small_disable_archive_permalinks') . '
                         </p>
                     <td>
                 </tr>
                 <tr>
                     <td>
+                        <hr>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
                         <p>
-                            <input type="checkbox" id="<?php echo $this->plugin_name; ?>-verify_signature" name="<?php echo $this->plugin_name; ?>[verify_signature]" <?php checked("on", $verify_signature); ?> value="on" <?php echo $is_disabled; ?>>
-                            <label for="<?php echo $this->plugin_name; ?>-verify_signature"><?php _e('Verify Signature', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Verify Signature', $this->plugin_name); ?></legend>
-                            <br>
-                            <small>(<?php _e('Cryptographically ensures that mfn.se is indeed the sender of the story'); ?>)</small>
+                            ' . mfn_parse_label('label_language_settings', 'mfn-h2-label') . '
                         </p>
+                    </th>
+                </tr>
+                <tr>
+                ';
+                echo '
+                    <td>
+                        <div class="mfn-radio-button-container' . $append_none_radio_classes . '">
+                            <input type="radio" id="' . $this->plugin_name . '-language_plugin_none" name="' . $this->plugin_name . '[language_plugin]" value="none" ' . $checked_none . ' ' . $is_readonly . '>
+                            ' . mfn_parse_label('label_language_plugin_none', 'mfn-h2-label') . '
+                        <div>
                     <td>
                 </tr>
                 <tr>
                     <td>
-                        <p>
-                            <input type="checkbox" id="<?php echo $this->plugin_name; ?>-use_wpml" name="<?php echo $this->plugin_name; ?>[use_wpml]" <?php checked($use_wpml, "on"); ?> value="on" <?php echo $is_subscribed == true || $has_wpml == false  ? 'disabled' : '' ?>>
-                            <label for="<?php echo $this->plugin_name; ?>-use_wpml"><?php _e('Use WPML', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Use WPML', $this->plugin_name); ?></legend>
-                            <br>
-                            <small>(<?php _e('Make plugin compliant with https://wpml.org locale management. Mapping story content only works with stories sent by mfn.se', $this->plugin_name); ?>)</small>
-                        </p>
+                        <div class="mfn-radio-button-container' . $append_wpml_detected_classes . '">
+                            <input type="radio" id="' . $this->plugin_name . '-language_plugin_wpml" name="' . $this->plugin_name . '[language_plugin]" value="wpml" ' . checked('wpml', $options['language_plugin'] ?? false, false) . ' ' . $is_readonly . '>
+                            ' . mfn_parse_label('label_language_plugin_wpml') . '
+                            ' . mfn_parse_small('small_experimental') . '
+                            ' . $wpml_detected . '
+                            ' . $wpml_msg . '
+                        <div>
                     <td>
                 </tr>
+                ';
+                if ($use_wpml && !$has_wpml) {
+                echo '
+                    <tr>
+                        <td>
+                            <div class="mfn-radio-button-container mfn-warning-input do-fade">
+                                <p><span class="dashicons dashicons-warning mfn-warning-icon do-fade"></span> This option can\'t be applied as the WPML plugin is currently not activated.</p>
+                            <div>
+                        <td>
+                    </tr>
+                ';
+                }
+                if ($use_wpml && $has_wpml && $language_usage_check->is_wpml_missing) {
+                echo '
+                    <tr>
+                        <td>
+                            <div class="mfn-radio-button-container mfn-warning-input do-fade">
+                                <p><span class="dashicons dashicons-warning mfn-warning-icon do-fade"></span> ' . $language_usage_check->languageUsageMsgWpml . '</p>
+                            <div>
+                        <td>
+                    </tr>
+                ';
+                }
+                echo '
                 <tr>
                     <td>
-                        <p>
-                            <input type="checkbox" id="<?php echo $this->plugin_name; ?>-use_pll" name="<?php echo $this->plugin_name; ?>[use_pll]" <?php checked($use_pll, "on"); ?> value="on" <?php echo $is_subscribed == true || $has_pll == false  ? 'disabled' : '' ?>>
-                            <label for="<?php echo $this->plugin_name; ?>-use_pll"><?php _e('Use Polylang', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Use Polylang', $this->plugin_name); ?></legend>
-                            <br>
-                            <small>(<?php _e('Make plugin compliant with https://polylang.pro locale management. Mapping story content only works with stories sent by mfn.se', $this->plugin_name); ?>)</small>
-                        </p>
+                        <div class="mfn-radio-button-container' . $append_pll_detected_classes . '">
+                            <input type="radio" id="' . $this->plugin_name . '-language_plugin_pll" name="' . $this->plugin_name . '[language_plugin]" value="pll" ' . checked('pll', $options['language_plugin'] ?? false, false) . ' ' . $is_readonly . '>
+                            ' . mfn_parse_label('label_language_plugin_pll') . '
+                            ' . mfn_parse_small('small_experimental') . '
+                            ' . $pll_detected . '
+                            ' . $pll_msg . '
+                            <div>
                     <td>
-                </tr>
-                <tr>
-                    <td>
-                        <p>
-                            <input type="checkbox" id="<?php echo $this->plugin_name; ?>-reset_cache" name="<?php echo $this->plugin_name; ?>[reset_cache]" <?php checked($reset_cache, "on"); ?> value="on" <?php echo $is_disabled; ?>>
-                            <label for="<?php echo $this->plugin_name; ?>-reset_cache"><?php _e('Reset Cache', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Reset Cache', $this->plugin_name); ?></legend>
-                            <br>
-                            <small>(<?php _e('On every new item insert, if checked, this will reset the db cache', $this->plugin_name); ?>)</small>
-                        </p>
-                    <td>
-                </tr>
-                <tr>
-                    <td>
-                        <p>
-                            <input type="checkbox" id="<?php echo $this->plugin_name; ?>-enable_attachments" name="<?php echo $this->plugin_name; ?>[enable_attachments]" <?php checked("on", $enable_attachments); ?> value="on" <?php echo $is_disabled; ?>>
-                            <label for="<?php echo $this->plugin_name; ?>-enable_attachments"><?php _e('Enable Attachments Widget', $this->plugin_name); ?></label>
-                            <legend class="screen-reader-text"><?php _e('Enable Attachments Widget', $this->plugin_name); ?></legend>
-                            <br>
-                            <small>(<?php _e('If enabled, our plugin will handle the listing of attachments and will bypass the default mfn-attachment footer', $this->plugin_name); ?>) <strong>Enabled by default.</strong></small>
-                        </p>
-                    <td>
-                </tr>
+                </tr>';
+                if ($use_pll && !$has_pll) {
+                echo '
+                    <tr>
+                        <td>
+                            <div class="mfn-radio-button-container mfn-warning-input do-fade">
+                                <p><span class="dashicons dashicons-warning mfn-warning-icon do-fade"></span> This option can\'t be applied as the Polylang plugin is currently not activated.</p>
+                            <div>
+                        <td>
+                    </tr>
+                ';
+                }
+                if ($use_pll && $has_pll && $language_usage_check->is_pll_missing) {
+                    echo '
+                        <tr>
+                            <td>
+                                <div class="mfn-radio-button-container mfn-warning-input do-fade">
+                                    <p><span class="dashicons dashicons-warning mfn-warning-icon do-fade"></span> ' . $language_usage_check->languageUsageMsgPll . '</p>
+                                <div>
+                            <td>
+                        </tr>
+                    ';
+                }
+        echo '
             </tbody>
         </table>
         <hr>
-        <table>
+        <table class="mfn-settings-table">
             <tbody>
-            <tr>
+                <tr>
+                    <th scope="row">
+                        <p>
+                            ' . mfn_parse_label('label_advanced_settings', 'mfn-h2-label') . '
+                        </p>
+                    </th>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="checkbox" id="' . $this->plugin_name . '-thumbnail_on" name="' . $this->plugin_name . '[thumbnail_on]" ' . checked($thumbnail_on, "on", false) . ' value="on" ' . $is_readonly . '>
+                        ' . mfn_parse_label('label_thumbnail_on') . '
+                        <br>
+                        ' . mfn_parse_small('small_thumbnail_on_description') . '
+                    <td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <input type="checkbox" id="' . $this->plugin_name . '-thumbnail_allow_delete" name="' . $this->plugin_name . '[thumbnail_allow_delete]" ' . checked($thumbnail_allow_delete, "on", false) . ' value="on" ' . $is_readonly . '>
+                            ' . mfn_parse_label('label_thumbnail_allow_delete') . '
+                            <br>
+                            ' . mfn_parse_small('small_thumbnail_allow_delete_description') . '
+                        </p>
+                    <td>
+                </tr>
+                <tr>
                 <td>
                     <p>
-                        <input type="checkbox" id="<?php echo $this->plugin_name; ?>-thumbnail_on" name="<?php echo $this->plugin_name; ?>[thumbnail_on]" <?php checked($thumbnail_on, "on"); ?> value="on" <?php echo $is_disabled; ?>>
-                        <label for="<?php echo $this->plugin_name; ?>-thumbnail_on"><?php _e('Thumbnail Support (Requires Wordpress 4.8)', $this->plugin_name); ?></label>
-                        <legend class="screen-reader-text"><?php _e('Thumbnail Support', $this->plugin_name); ?></legend>
+                        <input type="checkbox" id="' . $this->plugin_name . '-verify_signature" name="' . $this->plugin_name . '[verify_signature]" ' . checked($verify_signature, "on", false) . ' value="on" ' . $is_readonly . '>
+                        ' . mfn_parse_label('label_verify_signature') . '
                         <br>
-                        <small>(Experimental: Upload image attachments to the Media Library and set post thumbnail. Warning: Makes insertion/syncing slower and requires a lot of disk space)</small>
-                        <br>
-                        <small>(Can make integration into certain themes easier)</small>
+                        ' . mfn_parse_small('small_verify_signature_description') . '
                     </p>
                 <td>
             </tr>
             <tr>
                 <td>
                     <p>
-                        <input type="checkbox" id="<?php echo $this->plugin_name; ?>-thumbnail_allow_delete" name="<?php echo $this->plugin_name; ?>[thumbnail_allow_delete]" <?php checked($thumbnail_allow_delete, "on"); ?> value="on" <?php echo $is_disabled; ?>>
-                        <label for="<?php echo $this->plugin_name; ?>-thumbnail_allow_delete"><?php _e('Thumbnail Support: delete images with posts', $this->plugin_name); ?></label>
-                        <legend class="screen-reader-text"><?php _e('Thumbnail Support: delete images with posts', $this->plugin_name); ?></legend>
+                        <input type="checkbox" id="' . $this->plugin_name . '-reset_cache" name="' . $this->plugin_name . '[reset_cache]" ' . checked($reset_cache, "on", false) . ' value="on" ' . $is_readonly . '>
+                        ' . mfn_parse_label('label_reset_cache') . '
                         <br>
-                        <small>("Delete all MFN posts" will also delete all attached images from the Media Library) <strong>Recommended.</strong></small>
+                        ' .  mfn_parse_small('small_reset_cache_description') . '
+                    </p>
+                <td>
+            </tr>
+            <tr>
+                <td>
+                    <p>
+                        <input type="checkbox" id="' . $this->plugin_name . '-enable_attachments" name="' . $this->plugin_name . '[enable_attachments]" ' . checked($enable_attachments, "on", false) . ' value="on" ' . $is_readonly . '>
+                        ' . mfn_parse_label('label_enable_attachments') . '
+                        <br>
+                        ' . mfn_parse_small('small_enable_attachments_description') . '
                     </p>
                 <td>
             </tr>
             </tbody>
         </table>
-
-        <div style="display: inline-block;">
-            <?php submit_button('Save', 'primary','submit', true, $is_disabled); ?>
+        <div class="mfn-save-buttons-container">
+            <table>
+                <tbody>
+                    <tr>
+                        <td>
+                        ' . get_submit_button('Save', 'primary','save-submit-btn') . '
+                        </td>
+                        <td>';
+                        $disabled_unlock_btn = !isset($options['entity_id']) ? 'disabled' : '';
+                        echo '
+                            <button class="button mfn-unlock-settings-button" id="unlock-settings-btn" ' . $disabled_unlock_btn . '>
+                                <span class="dashicons dashicons-lock mfn-unlock-icon"></span>
+                                <span>
+                                ' . mfn_get_text('button_unlock') . '
+                                </span>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-
     </form>
-        <h3 class="mfn-danger-zone-heading"><?php _e('Danger Zone', $this->plugin_name); ?></h3>
-        <table>
-            <tbody>
-                <tr>
-                    <td>
-                        <p>
-                            <button class="button mfn-danger-zone-btn" id="clear-settings-btn"><?php _e('Clear all MFN settings', $this->plugin_name); ?></button>
-                        </p>
-                    </td>
-                    <td>
-                        <p>
-                            <input type="text" placeholder="write 'clear' to confirm" id="clear-settings-input">
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <button class="button mfn-danger-zone-btn" id="delete-posts-btn"><?php _e('Delete all MFN posts', $this->plugin_name); ?></button>
-                    </td>
-                    <td>
-                        <input type="text" placeholder="write 'delete' to confirm" id="delete-posts-input">
-                    </td>
-                    <td>
-                        <span id="delete-posts-info"></span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <p>' . mfn_parse_heading('heading_danger_zone', 'h3', 'mfn-danger-zone-heading') . '</p>
+    <table class="mfn-danger-zone-table">
+        <tbody>
+            <th>' . mfn_get_text('heading_actions') . '</th>
+            <tr>
+                <td>
+                    <button class="button mfn-danger-zone-btn" id="mfn-clear-settings-btn">
+                        <span class="dashicons dashicons-admin-generic mfn-clear-settings-icon"></span>
+                        ' . mfn_get_text('button_clear_mfn_settings') . '
+                    </button>
+                </td>
+                <td>
+                    <div class="mfn-tooltip-box mfn-do-fade-top">
+                        <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                        <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_clear_mfn_settings') . '</span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button class="button mfn-danger-zone-btn" id="mfn-delete-tags-btn">
+                        <span class="dashicons dashicons-tag mfn-clear-tags-icon"></span>
+                        ' . mfn_get_text('button_delete_mfn_tags') . '
+                    </button>
+                </td>
+                <td>
+                    <div class="mfn-tooltip-box mfn-do-fade-top">
+                        <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                        <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_delete_mfn_tags') . '</span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button class="button mfn-danger-zone-btn" id="mfn-delete-posts-btn">
+                        <span class="dashicons dashicons-admin-post mfn-clear-posts-icon"></span>
+                        ' . mfn_get_text('button_delete_mfn_posts') . '
+                    </button>
+                </td>
+                <td>
+                    <div class="mfn-tooltip-box mfn-do-fade-top">
+                        <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                        <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_delete_mfn_posts') . '</span>
+                    </div>
+                </td>
 
-    <div class="mcol-1-2">
-        <h3><?php _e('Status', $this->plugin_name); ?></h3>
-        <table class="mfn-status-table">
-            <tbody>
-                <tr>
-                    <th><?php _e('Subscription Id', $this->plugin_name); ?>:</th>
-                    <td>
-                        <?php echo $subscription_id; ?>
-                    </td>
-                </tr>
-                <tr>
-                    <th><?php _e('Post hook Secret', $this->plugin_name); ?>:</th>
-                    <td>
-                        <?php echo $posthook_secret; ?>
-                    </td>
-                </tr>
-                <tr>
-                    <th><?php _e('Post hook Name', $this->plugin_name); ?>:</th>
-                    <td>
-                        <?php echo $posthook_name; ?>
-                    </td>
-                </tr>
-                <tr>
-                    <th><?php _e('Sync URL', $this->plugin_name); ?>:</th>
-                    <td id="sync-url-test"></td>
-                </tr>
-                <tr>
-                    <th><?php _e('Hub URL', $this->plugin_name); ?>:</th>
-                    <td id="hub-url-test"></td>
-                </tr>
-                <tr>
-                    <th><?php _e('Plugin URL', $this->plugin_name); ?>:</th>
-                    <td id="plugin-url-test"></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <h3><?php _e('Actions', $this->plugin_name); ?></h3>
-
-        <h4 class="mfn-h4"><?php _e('Sync', $this->plugin_name); ?></h4>
-        <div class="mfn-tooltip-box">
-            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-            <span class="mfn-tooltip-text"><?php _e('Fetch the 10 latest or all press releases from MFN.se to the local Wordpress feed', $this->plugin_name); ?>.</span>
-        </div>
-        <div>
-            <button id="sync-latest" class="button mfn-button"><?php _e('Sync Latest', $this->plugin_name); ?></button>
-            <button class="button-primary mfn-button" id="sync-all"><?php _e('Sync All', $this->plugin_name); ?></button>
-            <span id="sync-status"></span>
-        </div>
-        <h4 class="mfn-h4"><?php _e('Sync Taxonomy', $this->plugin_name); ?></h4>
-        <div class="mfn-tooltip-box">
-            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-            <span class="mfn-tooltip-text"><?php _e('Fetches and updates the local tags with the translations from MFN.se', $this->plugin_name); ?>.</span>
-        </div>
-        <div>
-            <button class="button mfn-button" id="sync-tax"><?php _e('Sync Taxonomy', $this->plugin_name); ?></button>
-            <span id="sync-tax-status"></span>
-        </div>
-
-        <h4 class="mfn-h4"><?php _e('Subscription', $this->plugin_name); ?></h4>
-        <div class="mfn-tooltip-box">
-            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-            <span class="mfn-tooltip-text"><?php _e('Subscribing enables new press releases to be automatically injected into the Wordpress feed', $this->plugin_name); ?>.</span>
-        </div>
-
-        <div>
-            <button class="button mfn-button" id="sub-button" <?php echo $is_subscribed == true ? 'disabled' : ''?>><?php _e('Subscribe', $this->plugin_name); ?></button>
-            <button class="button mfn-button" id="unsub-button" <?php echo $is_subscribed == false ? 'disabled' : ''?>><?php _e('Unsubscribe', $this->plugin_name); ?></button>
-            <span id="sync-status"></span>
-        </div>
-    </div>
-
+            </tr>
+        </tbody>
+    </table>
+    <div id="mfn-danger-zone-status"></div>
 </div>
-
-<script>
-    window.PLUGIN_URL = '<?php echo $plugin_url; ?>';
-</script>
+<div class="mcol-1-2">
+    ' . mfn_parse_heading('heading_subscription', 'h2') . '
+    <div id="mfn-status-container" class="do-fade"></div>
+    ' . mfn_parse_heading('heading_actions', 'h3') . '
+    <h4 class="mfn-h4">' . mfn_get_text('heading_sync_feed') . '</h4>
+    <div class="mfn-tooltip-box">
+        <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+        <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_sync') . '</span>
+    </div>
+    <span class="mfn-action-buttons-container">
+        <button id="mfn-sync-latest" class="button mfn-button">
+        <span class="dashicons dashicons-image-rotate mfn-sync-icon"></span>
+            ' . mfn_get_text('button_sync_latest') . '
+        </button>
+        <button class="button-primary mfn-button" id="mfn-sync-all">
+        <span class="dashicons dashicons-image-rotate mfn-sync-icon"></span>
+            ' . mfn_get_text('button_sync_all') . '
+        </button>
+    </span>
+    <span id="mfn-sync-status"></span>
+    <div>
+        <h4 class="mfn-h4">' . mfn_get_text('heading_sync_taxonomy') . '</h4>
+        <div class="mfn-tooltip-box">
+            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_sync_taxonomy') . '</span>
+        </div>
+        <div class="mfn-row-container">
+            <div class="mfn-buttons-container">
+                <button class="button mfn-button" id="mfn-sync-tax">
+                    <span class="dashicons dashicons-image-rotate mfn-sync-icon"></span>
+                    ' . mfn_get_text('button_sync_taxonomy') . '
+                </button>
+            </div>
+            <span id="mfn-sync-tax-status"></span>
+        </div>
+    </div>
+    <h4 class="mfn-h4">' . mfn_get_text('heading_subscribe') . '</h4>
+    <div class="mfn-tooltip-box">
+        <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+        <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_subscribe') . '</span>
+    </div>
+    <div class="mfn-row-container">
+        <div class="mfn-buttons-container">';
+        $sub_disabled = $subscribe_button_disabled ? 'disabled' : '';
+        echo '
+            <button class="button-primary mfn-button" id="mfn-sub-button" ' . $sub_disabled . '>
+                <span class="dashicons dashicons-admin-links mfn-subscribe-icon"></span>
+                ' . mfn_get_text('button_subscribe') . '
+            </button>';
+        $unsub_disabled = $unsubscribe_button_disabled ? 'disabled' : '';
+        echo '
+            <button class="button mfn-button" id="mfn-unsub-button" ' . $unsub_disabled . '>
+                <span class="dashicons dashicons-editor-unlink mfn-subscribe-icon"></span>
+                ' . mfn_get_text('button_unsubscribe') . '
+            </button>
+        </div>
+        <span id="mfn-subscription-status"></span>
+    </div>
+</div>
+</div>
+';

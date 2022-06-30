@@ -1,30 +1,241 @@
 <?php
 
-require_once(dirname(__FILE__) . '/config.php');
+function mfn_post_is_dirty($post_id): bool
+{
+    return get_post_meta($post_id, MFN_POST_TYPE . "_is_dirty", true);
+}
 
-function startsWith($haystack, $needle): bool
+function mfn_post_is_local($post_id) {
+    $post_meta = get_post_meta($post_id);
+    return $post_meta[MFN_POST_TYPE . '_news_id'] ?? null;
+}
+
+function mfn_fetch_tags_status(): array
+{
+
+    $terms = get_terms( array(
+        'taxonomy' => MFN_TAXONOMY_NAME,
+        'hide_empty' => false,
+        'lang' => ''
+    ));
+
+    return [sizeof($terms)];
+}
+
+function mfn_fetch_posts_status(): array
+{
+    $all_posts = get_posts(
+        array(
+            'post_type' => MFN_POST_TYPE,
+            'lang'     => '',
+            'numberposts' => '-1',
+            'post_status' => 'Trash',
+        )
+    );
+
+    $i = 0;
+    $num_modified = 0;
+    $num_trash = 0;
+
+    foreach ($all_posts as $each_post) {
+        if ($each_post->post_type == MFN_POST_TYPE) {
+            if (mfn_post_is_local($each_post->ID) !== null) {
+                if ($each_post->post_status == 'trash') {
+                    $num_trash++;
+                }
+                if (mfn_post_is_dirty($each_post->ID)) {
+                    if ($each_post->post_status !== 'trash') {
+                        $num_modified++;
+                    }
+                }
+                $i++;
+            }
+        }
+    }
+
+    return [$i, $num_modified, $num_trash];
+}
+
+function mfn_fetch_hub_url()
+{
+    $sync_url = get_option(MFN_PLUGIN_NAME)['sync_url'] ?? '';
+    $dev_sync_url = 'https://widget.datablocks.se/proxy/mfn-dev';
+
+    $hub_url = 'https://feed.mfn.se/v1';
+
+    $compare_feed_url = array(
+        'https://feed.mfn.se/v1',
+        'https://feed.mfn.modfin.se/v1',
+    );
+
+    $compare_mfn_url = array(
+        'https://mfn.se',
+        'https://mfn.modfin.se',
+        $dev_sync_url
+    );
+
+    if (in_array($sync_url, $compare_feed_url)) {
+        if ($sync_url === $compare_feed_url[0] || $sync_url === $compare_feed_url[1]) {
+            $hub_url = $sync_url;
+        }
+    } else if (in_array($sync_url, $compare_mfn_url)) {
+        $hub_url = 'https://hub.mfn.se';
+        if ($sync_url === $compare_mfn_url[1] || $sync_url === $dev_sync_url) {
+            $hub_url = 'https://hub.mfn.modfin.se';
+        }
+    }
+
+    return $hub_url;
+}
+
+function mfn_parse_language_usage_msg($check)
+{
+    $append = ' ' . mfn_get_text('text_language_usage_msg');
+    $prepend = 'Missing ';
+    $and =  ' ' . mfn_get_text('text_and') . ' ';
+    $post_type = 'MFN post type "' . MFN_POST_TYPE . '"';
+    $taxonomy_name = 'MFN taxonomy "' . MFN_TAXONOMY_NAME . '"';
+
+    // pll
+    if ($check->is_pll_missing) {
+        $msg = $prepend;
+        $pll_text = ' ' . mfn_get_text('text_in') . ' <i>' . mfn_get_text('text_pll_settings_section') . '</i> ' . mfn_get_text('text_in') . ' <a href="' . get_admin_url() . 'admin.php?page=mlang_settings' . '">' . mfn_get_text('text_pll_settings') . '</a>.';
+
+        if (!$check->has_pll_mfn_post_type) {
+            $msg .= $post_type;
+        }
+
+        $add = !$check->has_pll_mfn_post_type ? $and : '';
+
+        if (!$check->has_pll_mfn_taxonomies) {
+            $msg .= $add . $taxonomy_name;
+        }
+
+        $msg_pll = $msg . $pll_text . $append;
+        $check->languageUsageMsgPll = $msg_pll;
+    }
+
+    // wpml
+    if ($check->is_wpml_missing) {
+        $msg = $prepend;
+        $wpml_text = ' ' . mfn_get_text('text_in') . ' <i>' . mfn_get_text('text_wpml_settings_section') . '</i> ' . mfn_get_text('text_in') . ' <a href="' . get_admin_url() . 'admin.php?page=sitepress%2Fmenu%2Ftranslation-options.php' . '">' . mfn_get_text('text_wpml_settings') . '</a>.';
+
+        if (!$check->has_wpml_mfn_post_type) {
+            $msg .= $post_type;
+        }
+
+        $add = !$check->has_wpml_mfn_post_type ? $and : '';
+
+        if (!$check->has_wpml_mfn_taxonomies) {
+            $msg .= $add . $taxonomy_name;
+        }
+
+        $msg_wpml = $msg . $wpml_text . $append;
+        $check->languageUsageMsgWpml = $msg_wpml;
+    }
+}
+
+function mfn_language_plugin_usage_check(): stdClass
+{
+    $c = new stdClass();
+    $c->is_pll_missing = false;
+    $c->is_wpml_missing = false;
+    $c->has_pll_mfn_post_type = false;
+    $c->has_pll_mfn_taxonomies = false;
+    $c->has_wpml_mfn_post_type = false;
+    $c->has_wpml_mfn_taxonomies = false;
+    $c->languageUsageMsgPll = '';
+    $c->languageUsageMsgWpml = '';
+
+    if (get_option('polylang')) {
+        $pll_post_types = get_option('polylang')['post_types'];
+        if (isset($pll_post_types)) {
+            foreach ($pll_post_types as $v) {
+                if ($v === MFN_POST_TYPE) {
+                    $c->has_pll_mfn_post_type = true;
+                }
+            }
+        }
+        $pll_taxonomies = get_option('polylang')['taxonomies'];
+        if (isset($pll_taxonomies)) {
+            foreach ($pll_taxonomies as $v) {
+                if ($v === MFN_TAXONOMY_NAME) {
+                    $c->has_pll_mfn_taxonomies = true;
+                }
+            }
+        }
+    }
+
+    $wpml_options = get_option('icl_sitepress_settings');
+
+    if (isset($wpml_options)) {
+        $wpml_mfn_post_type = $wpml_options['custom_posts_sync_option'][MFN_POST_TYPE] ?? 0;
+        $wpml_mfn_taxonomies = $wpml_options['taxonomies_sync_option'][MFN_TAXONOMY_NAME] ?? 0;
+
+        if ($wpml_mfn_post_type > 0)  {
+            $c->has_wpml_mfn_post_type = true;
+        }
+        if ($wpml_mfn_taxonomies > 0)  {
+            $c->has_wpml_mfn_taxonomies = true;
+        }
+    }
+
+    if (!$c->has_pll_mfn_post_type || !$c->has_pll_mfn_taxonomies) {
+        $c->is_pll_missing = true;
+    }
+    if (!$c->has_wpml_mfn_post_type || !$c->has_wpml_mfn_taxonomies) {
+        $c->is_wpml_missing = true;
+    }
+
+    mfn_parse_language_usage_msg($c);
+    return $c;
+}
+
+function mfn_language_plugin_check($use_pll, $has_pll, $use_wpml, $has_wpml): stdClass
+{
+    $check = new stdClass();
+    $check->languageMsg = '';
+    $check->detected_pll = false;
+    $check->detected_wpml = false;
+    $check->plugin_detected = false;
+
+    if (($has_pll && !$use_pll) || ($has_wpml && !$use_wpml)) {
+        $check->plugin_detected = true;
+    }
+    if ($has_pll && !$use_pll) {
+        $check->detected_pll = true;
+        $check->languageMsg = mfn_parse_language_msg('Polylang');
+    }
+    if ($has_wpml && !$use_wpml) {
+        $check->detected_wpml = true;
+        $check->languageMsg = mfn_parse_language_msg('WPML');
+    }
+    return $check;
+}
+
+function mfn_starts_with($haystack, $needle): bool
 {
     $length = strlen($needle);
     return (substr($haystack, 0, $length) === $needle);
 }
 
-function createTags($item): array
+function mfn_create_tags($item): array
 {
-    $tags = isset($item->properties->tags) ? $item->properties->tags : array();
-    $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
-    $type = isset($item->properties->type) ? $item->properties->type : 'ir';
+    $tags = $item->properties->tags ?? array();
+    $lang = $item->properties->lang ?? 'xx';
+    $type = $item->properties->type ?? 'ir';
 
     $newtag = array();
 
     $slug_prefix = (MFN_TAG_PREFIX !== '' && MFN_TAG_PREFIX !== null ? MFN_TAG_PREFIX . '-' : '');
 
-    array_push($newtag, MFN_TAG_PREFIX);
-    array_push($newtag, $slug_prefix . 'lang-' . $lang);
-    array_push($newtag, $slug_prefix . 'type-' . $type);
+    $newtag[] = MFN_TAG_PREFIX;
+    $newtag[] = $slug_prefix . 'lang-' . $lang;
+    $newtag[] = $slug_prefix . 'type-' . $type;
 
-    foreach ($tags as $i => $tag) {
-        if (startsWith($tag, ':correction')) {
-            array_push($newtag, $slug_prefix . '-correction');
+    foreach ($tags as $tag) {
+        if (mfn_starts_with($tag, ':correction')) {
+            $newtag[] = $slug_prefix . '-correction';
             continue;
         }
 
@@ -32,46 +243,150 @@ function createTags($item): array
         $tag = trim($tag, ' :');
         $tag = str_replace(':', '-', $tag);
         $tag = $slug_prefix . $tag;
-        array_push($newtag, $tag);
+        $newtag[] = $tag;
     }
 
     $options = get_option(MFN_PLUGIN_NAME);
-    $use_wpml = isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
-    $use_pll = isset($options['use_pll']) ? $options['use_pll'] : 'off';
-    if ($use_wpml == 'on' && $lang != 'en') {
+    $use_wpml = isset($options['language_plugin']) && $options['language_plugin'] == 'wpml';
+    $use_pll = isset($options['language_plugin']) && $options['language_plugin'] == 'pll';
+    if ($use_wpml && $lang != 'en') {
         foreach ($newtag as $i => $t) {
             $newtag[$i] = $t . "_" . $lang;
         }
     }
-    if ($use_pll == 'on' && $lang != 'en') {
-        $pllLangMapping = array();
-        foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
-            $l = explode('_', $pll_lang->locale)[0];
-            $pllLangMapping[$l] = $pll_lang->slug;
-        };
-        foreach ($newtag as $i => $t) {
-            $newtag[$i] = $t . "_" . $pllLangMapping[$lang];
+    if ($use_pll && $lang != 'en') {
+        if (function_exists('pll_languages_list')) {
+            $pllLangMapping = array();
+            foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
+                $l = explode('_', $pll_lang->locale)[0];
+                $pllLangMapping[$l] = $pll_lang->slug;
+            };
+            foreach ($newtag as $i => $t) {
+                $newtag[$i] = $t . "_" . $pllLangMapping[$lang];
+            }
         }
     }
     return $newtag;
 }
 
-function getProxiedUrl($url, $vanityFileName) {
-    $ops = get_option('mfn-wp-plugin');
-    $storageUrl = isset($ops['sync_url'])
+function mfn_get_storage_url()
+{
+    $ops = get_option(MFN_PLUGIN_NAME);
+    return isset($ops['sync_url'])
         ? ((strpos($ops['sync_url'], 'https://feed.mfn.') === 0)
             ? str_replace('//feed.mfn', '//storage.mfn', str_replace('/v1', '', $ops['sync_url']))
             : str_replace('//mfn', '//storage.mfn', $ops['sync_url']))
         : null;
+}
+
+function mfn_get_proxied_url($url, $vanityFileName): string
+{
+    $storageUrl = mfn_get_storage_url();
 
     return $storageUrl !== null && $storageUrl !== '' && (strpos($url, $storageUrl) !== 0)
         ? "$storageUrl/proxy/$vanityFileName?url=" . urlencode($url) . "&size=w-2560"
         : $url . "?size=w-2560";
 }
 
+function mfn_list_post_attachments(): string
+{
+    $attachments_content = '<div class="mfn-attachments-container">';
+    foreach (mfn_fetch_post_attachments() as $attachment) {
+        $icon_type_slug = empty($attachment->content_type) ? 'admin-links' : 'media-default';
+
+        list ($url, $preview_url) = mfn_get_proxied_preview_url($attachment->url, $attachment->file_title, $attachment->content_type);
+        if (empty($preview_url)) {
+            $icon = '<span class="mfn-attachment-icon"><span class="dash dashicons dashicons-' . $icon_type_slug . '"></span></span>';
+        } else {
+            $icon = '<span class="mfn-attachment-icon"><img src="' . $preview_url. '"></span>';
+        }
+        $link = '<a class="mfn-attachment-link" href="' . $url . '">' . $icon . $attachment->file_title . '</a>';
+        $attachments_content .= '<div class="mfn-attachment">' . $link . '</div>';
+    }
+    $attachments_content .= '</div>';
+    return $attachments_content;
+}
+
+function mfn_get_proxied_preview_url($url, $file_title, $content_type): array
+{
+    $mime_to_ext = array(
+        "application/pdf" => "pdf",
+        "image/jpg" => "jpg",
+        "image/jpeg" => "jpg",
+        "image/png" => "png",
+        "image/tiff" => "tiff",
+        'audio/mpeg' => 'mp3',
+        'audio/mpeg3' => 'mp3',
+        'audio/mp3' => 'mp3',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
+        'application/x-zip' => 'zip',
+        'application/zip' => 'zip',
+        'application/x-zip-compressed' => 'zip',
+        'application/s-compressed' => 'zip',
+        'multipart/x-zip' => 'zip',
+        'video/mp4' => 'mp4',
+        'video/mpeg' => 'mpeg',
+        'video/quicktime' => 'mov',
+    );
+
+    $vanity_part = '';
+    if (isset($mime_to_ext[$content_type])) {
+        $ext = $mime_to_ext[$content_type];
+        $vanity_part = '/' . sanitize_title($file_title) . "." . $ext;
+    }
+
+    $storageUrl = mfn_get_storage_url();
+
+    if ($storageUrl === null || $storageUrl === '' || $content_type === null || $content_type === '') {
+        return array($url, '');
+    }
+
+    $isStorageAttachment = strpos($url, $storageUrl) === 0;
+
+    $outUrl = $isStorageAttachment
+        ? $url
+        : "$storageUrl/proxy$vanity_part?url=" . urlencode($url);
+
+    $previewUrl = '';
+
+    if ($content_type === 'application/pdf') {
+        $previewUrl = $isStorageAttachment
+            ? $url . '?type=jpg'
+            : $outUrl . '&type=jpg';
+    }
+    if (strpos($content_type, 'image/') === 0) {
+        $previewUrl = $isStorageAttachment
+            ? $url . '?size=w-512'
+            : $outUrl . '&size=w-512';
+    }
+
+    return array($outUrl, $previewUrl);
+}
+
+function mfn_fetch_post_attachments(): array
+{
+    $attachments = array();
+    foreach (get_post_meta(get_the_ID(), MFN_POST_TYPE . '_attachment_data') as $data)
+    {
+        $d = json_decode($data);
+        array_push($attachments, $d);
+    }
+    return $attachments;
+}
+
+function mfn_remove_regular_attachment_footer(): string
+{
+    return '<script>
+                Array.prototype.slice.call(document.querySelectorAll(".mfn-footer.mfn-attachment")).forEach(function (el) { el.remove() });
+            </script>
+        ';
+}
+
 $upsert_thumbnails_dependencies_included = false;
 
-function upsertThumbnails($post_id, $attachments)
+function mfn_upsert_thumbnails($post_id, $attachments)
 {
     global $wp_version;
     if (!version_compare($wp_version, '4.8', '>=')) {
@@ -99,7 +414,7 @@ function upsertThumbnails($post_id, $attachments)
         $filename = sanitize_title($a->file_title) . "." . $ext;
 
         $image = clone($a);
-        $image->proxied_url = getProxiedUrl($a->url, $filename);
+        $image->proxied_url = mfn_get_proxied_url($a->url, $filename);
 
         $image_attachments[] = $image;
     }
@@ -163,7 +478,7 @@ function upsertThumbnails($post_id, $attachments)
     }
 }
 
-function upsertAttachments($post_id, $attachments)
+function mfn_upsert_attachments($post_id, $attachments)
 {
     delete_post_meta($post_id,  MFN_POST_TYPE . "_attachment_link");
     delete_post_meta($post_id,  MFN_POST_TYPE . "_attachment_data");
@@ -180,53 +495,55 @@ function upsertAttachments($post_id, $attachments)
         add_post_meta($post_id, MFN_POST_TYPE . "_attachment_data", $attachment_data);
     }
     if (isset(get_option(MFN_PLUGIN_NAME)['thumbnail_on'])) {
-        upsertThumbnails($post_id, $attachments);
+        mfn_upsert_thumbnails($post_id, $attachments);
     }
 }
 
-function upsertLanguage($post_id, $groupId, $lang)
+function mfn_upsert_language($post_id, $group_id, $lang)
 {
 
     $meta = get_post_meta($post_id, MFN_POST_TYPE . "_group_id", true);
     if (!$meta) {
-        update_post_meta($post_id, MFN_POST_TYPE . "_group_id", $groupId);
+        update_post_meta($post_id, MFN_POST_TYPE . "_group_id", $group_id);
     }
     update_post_meta($post_id, MFN_POST_TYPE . "_lang", $lang);
 
     $options = get_option(MFN_PLUGIN_NAME);
-    $use_wpml = isset($options['use_wpml']) ? $options['use_wpml'] : 'off';
-    $use_pll = isset($options['use_pll']) ? $options['use_pll'] : 'off';
+    $use_wpml = isset($options['language_plugin']) && $options['language_plugin'] == 'wpml';
+    $use_pll = isset($options['language_plugin']) && $options['language_plugin'] == 'pll';
 
-    if ($use_pll == 'on') {
-        $pllLangMapping = array();
-        foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
-            $l = explode('_', $pll_lang->locale)[0];
-            $pllLangMapping[$l] = $pll_lang->slug;
-        };
-        pll_set_post_language($post_id, $pllLangMapping[$lang]);
+    if ($use_pll) {
+        if (function_exists('pll_languages_list')) {
+            $pllLangMapping = array();
+            foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
+                $l = explode('_', $pll_lang->locale)[0];
+                $pllLangMapping[$l] = $pll_lang->slug;
+            };
+            pll_set_post_language($post_id, $pllLangMapping[$lang]);
 
-        global $wpdb;
-        $q = $wpdb->prepare("
-        SELECT lang.post_id, lang.meta_value as lang
-        FROM  $wpdb->postmeta grp
-        INNER JOIN  $wpdb->postmeta lang
-        ON grp.post_id = lang.post_id AND lang.meta_key = '" . MFN_POST_TYPE . "_lang'
-        WHERE grp.meta_value = %s
-          AND grp.meta_key = '" . MFN_POST_TYPE . "_group_id';
-        ", $groupId);
+            global $wpdb;
+            $q = $wpdb->prepare("
+            SELECT lang.post_id, lang.meta_value as lang
+            FROM  $wpdb->postmeta grp
+            INNER JOIN  $wpdb->postmeta lang
+            ON grp.post_id = lang.post_id AND lang.meta_key = '" . MFN_POST_TYPE . "_lang'
+            WHERE grp.meta_value = %s
+              AND grp.meta_key = '" . MFN_POST_TYPE . "_group_id';
+            ", $group_id);
 
-        $res = $wpdb->get_results($q);
+            $res = $wpdb->get_results($q);
 
-        $translations = array();
-        foreach ($res as $i => $post){
-            $_post_id= $post->post_id;
-            $_lang = $post->lang;
-            $translations[$pllLangMapping[$_lang]] = $_post_id;
+            $translations = array();
+            foreach ($res as $i => $post){
+                $_post_id= $post->post_id;
+                $_lang = $post->lang;
+                $translations[$pllLangMapping[$_lang]] = $_post_id;
+            }
+            pll_save_post_translations( $translations );
         }
-        pll_save_post_translations( $translations );
     }
 
-    if ($use_wpml == 'on') {
+    if ($use_wpml) {
         // This since WPML has some sort of race condition when creating a multiple posts at once
         // It should really be done in the call wp_insert_post
         do_action( 'wpml_set_element_language_details', array(
@@ -246,7 +563,7 @@ function upsertLanguage($post_id, $groupId, $lang)
             ON m.post_id = t.element_id AND t.element_type = 'post_" . MFN_POST_TYPE . "'
             WHERE m.meta_key = '" . MFN_POST_TYPE . "_group_id'
               AND m.meta_value = %s
-      ", $groupId);
+      ", $group_id);
         $trid = $wpdb->get_var($q);
 
         // $wpdb->update($tableName, array('language_code' => $lang, 'trid' => $trid), array('element_id' => $post_id));
@@ -260,26 +577,24 @@ function upsertLanguage($post_id, $groupId, $lang)
     }
 }
 
-function upsertNewsMeta($post_id, $newsid, $slug) {
-    update_post_meta($post_id, MFN_POST_TYPE . "_news_id", $newsid);
+function mfn_upsert_news_meta($post_id, $news_id, $slug) {
+    update_post_meta($post_id, MFN_POST_TYPE . "_news_id", $news_id);
     update_post_meta($post_id, MFN_POST_TYPE . "_news_slug", $slug);
 }
 
-function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false): int
+function mfn_upsert_item_full($item, $signature = '', $raw_data = '', $reset_cache = false): int
 {
-    do_action('mfn_before_upsertitem', $item);
     global $wpdb;
 
-    $newsid = $item->news_id;
-    $slug = $item->content->slug;
-    $groupId = $item->group_id;
-    $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
-
+    $news_id = $item->news_id;
+    $group_id = $item->group_id;
+    $lang = $item->properties->lang ?? 'xx';
     $title = $item->content->title;
+    $slug = $item->content->slug;
     $publish_date = $item->content->publish_date;
-    $preamble = isset($item->content->preamble) ? $item->content->preamble : '';
+    $preamble = $item->content->preamble ?? '';
     $html = $item->content->html;
-    $attachments = isset($item->content->attachments) ? $item->content->attachments : array();
+    $attachments = $item->content->attachments ?? array();
 
     $post_id = $wpdb->get_var($wpdb->prepare(
         "
@@ -288,99 +603,28 @@ function upsertItem($item, $signature = '', $raw_data = '', $reset_cache = false
             WHERE meta_key = %s
             LIMIT 1
         ",
-        MFN_POST_TYPE . "_" . $newsid
+        MFN_POST_TYPE . "_" . $news_id
     ));
 
-    $tags = createTags($item);
+    $is_dirty = mfn_post_is_dirty($post_id);
 
-    $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags, $newsid, $slug) {
-        if ($reset_cache) {
-            wp_cache_flush();
-        }
-
-        wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
-        upsertLanguage($post_id, $groupId, $lang);
-        upsertNewsMeta($post_id, $newsid, $slug);
-        upsertAttachments($post_id, $attachments);
-
-        if ($reset_cache) {
-            wp_cache_flush();
-        }
-
-    };
-
-    if ($post_id) {
-        $outro($post_id);
+    if ($is_dirty) {
         return 0;
     }
 
-    if (empty($html)) {
-        $html = '';
-    }
-    $html = "[mfn_before_post]\n" . $html . "\n[mfn_after_post]";
-
-    $post_id = wp_insert_post(array(
-        'post_content' => $html,
-        'post_title' => $title,
-        'post_excerpt' => $preamble,
-        'post_status' => 'publish',
-        'post_type' => MFN_POST_TYPE,
-        'post_date_gmt' => $publish_date,
-    ));
-
-    if ($post_id != 0) {
-        add_post_meta($post_id, MFN_POST_TYPE . "_" . $newsid, $publish_date);
-
-        if ($signature != '') {
-            add_post_meta($post_id, MFN_POST_TYPE . "_signature_" . $newsid, $signature);
-        }
-        if ($raw_data != '') {
-            add_post_meta($post_id, MFN_POST_TYPE . "_data_" . $newsid, $raw_data);
-        }
-        $outro($post_id);
-    }
-
-    // run callback
-    do_action('mfn_after_upsertitem', $post_id);
-
-    return 1;
-}
-
-function upsertItemFull($item, $signature = '', $raw_data = '', $reset_cache = false): int
-{
     do_action('mfn_before_upsertitem', $item);
-    global $wpdb;
 
-    $newsid = $item->news_id;
-    $groupId = $item->group_id;
-    $lang = isset($item->properties->lang) ? $item->properties->lang : 'xx';
+    $tags = mfn_create_tags($item);
 
-    $title = $item->content->title;
-    $publish_date = $item->content->publish_date;
-    $preamble = isset($item->content->preamble) ? $item->content->preamble : '';
-    $html = $item->content->html;
-    $attachments = isset($item->content->attachments) ? $item->content->attachments : array();
-
-    $post_id = $wpdb->get_var($wpdb->prepare(
-        "
-            SELECT post_id
-            FROM $wpdb->postmeta
-            WHERE meta_key = %s
-            LIMIT 1
-        ",
-        MFN_POST_TYPE . "_" . $newsid
-    ));
-
-    $tags = createTags($item);
-
-    $outro = function ($post_id) use ($reset_cache, $groupId, $lang, $attachments, $tags) {
+    $outro = function ($post_id) use ($reset_cache, $group_id, $news_id, $lang, $slug, $attachments, $tags) {
         if ($reset_cache) {
             wp_cache_flush();
         }
 
         wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
-        upsertLanguage($post_id, $groupId, $lang);
-        upsertAttachments($post_id, $attachments);
+        mfn_upsert_language($post_id, $group_id, $lang);
+        mfn_upsert_news_meta($post_id, $news_id, $slug);
+        mfn_upsert_attachments($post_id, $attachments);
 
         if ($reset_cache) {
             wp_cache_flush();
@@ -391,7 +635,6 @@ function upsertItemFull($item, $signature = '', $raw_data = '', $reset_cache = f
     if (empty($html)) {
         $html = '';
     }
-    $html = "[mfn_before_post]\n" . $html . "\n[mfn_after_post]";
 
     if ($post_id) {
         $post = get_post($post_id);
@@ -417,13 +660,13 @@ function upsertItemFull($item, $signature = '', $raw_data = '', $reset_cache = f
     }
 
     if ($post_id != 0) {
-        add_post_meta($post_id, MFN_POST_TYPE . "_" . $newsid, $publish_date);
+        add_post_meta($post_id, MFN_POST_TYPE . "_" . $news_id, $publish_date);
 
         if ($signature != '') {
-            add_post_meta($post_id, MFN_POST_TYPE . "_signature_" . $newsid, $signature);
+            add_post_meta($post_id, MFN_POST_TYPE . "_signature_" . $news_id, $signature);
         }
         if ($raw_data != '') {
-            add_post_meta($post_id, MFN_POST_TYPE . "_data_" . $newsid, $raw_data);
+            add_post_meta($post_id, MFN_POST_TYPE . "_data_" . $news_id, $raw_data);
         }
         $outro($post_id);
     }
@@ -434,7 +677,7 @@ function upsertItemFull($item, $signature = '', $raw_data = '', $reset_cache = f
     return 1;
 }
 
-function unpublishItem($news_id) {
+function mfn_unpublish_item($news_id) {
     $mfn_post_type = MFN_POST_TYPE;
     global $wpdb;
     echo $wpdb->query($wpdb->prepare(
@@ -446,7 +689,8 @@ function unpublishItem($news_id) {
     ));
 }
 
-function verifyPingItem($method, $item) {
+function mfn_verify_ping_item($subscription, $method, $item): array
+{
     $valid = isset($item->properties->type) && $item->properties->type === 'ping' &&
         isset($item->news_id) && $item->news_id === '00000000-0000-0000-0000-000000000000' &&
         isset($item->source) && $item->source === 'mfn' &&
@@ -470,66 +714,37 @@ function verifyPingItem($method, $item) {
     if (!$content) {
         return array (null, null, 'json_encode failed');
     }
-
-    $ops = get_option('mfn-wp-plugin');
-    if (!$ops) {
-        return array (null, null, '"mfn-wp-plugin" option missing');
-    }
-    if (empty($ops['posthook_secret'])) {
+    if (empty($subscription['posthook_secret'])) {
         return array (null, null, '"posthook_secret" is empty');
     }
-    $key = $ops['posthook_secret'];
+    $key = $subscription['posthook_secret'];
 
     $pingSignatureHeader = 'sha256=' . hash_hmac('sha256', $content, $key);
 
     return array ($content, $pingSignatureHeader, null);
 }
 
-function MFN_subscribe(): string
+function mfn_subscribe_to_websub($pluginUrl, $posthookName, $posthookSecret, $topic, $hubUrl): string
 {
-
-    $ops = get_option('mfn-wp-plugin');
-
-    $subscription_id = isset($ops['subscription_id']) ? $ops['subscription_id'] : "N/A";
-
-    if (strlen($subscription_id) == 36) {
-        return "a subscription is already active";
-    }
-
-    $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
-    $entity_id = isset($ops['entity_id']) ? $ops['entity_id'] : "";
-    $plugin_url = isset($ops['plugin_url']) ? $ops['plugin_url'] : "";
-    $cus_query = isset($ops['cus_query']) ? $ops['cus_query'] : "";
-
-    $ops['posthook_name'] = isset($ops['posthook_name']) ? $ops['posthook_name'] : MFN_generate_random_string();
-    $ops['posthook_secret'] = isset($ops['posthook_secret']) ? $ops['posthook_secret'] : MFN_generate_random_string();
-
-    $posthook_name = $ops['posthook_name'];
-    $posthook_secret = $ops['posthook_secret'];
-
-    update_option(MFN_PLUGIN_NAME, $ops);
-
-    $topic = '/mfn/s.json?type=all&.author.entity_id=' . $entity_id .  "&" . $cus_query;
-
-    if (strpos($hub_url, 'https://feed.mfn.') === 0) {
-        $topic = '/feed/' . $entity_id .  "?" . $cus_query;
-    }
-
     $args = array(
         'method' => 'POST',
         'headers' => array("content-type" => "application/x-www-form-urlencoded"),
         'body' => array(
             'hub.mode' => 'subscribe',
             'hub.topic' => $topic,
-            'hub.callback' => $plugin_url . '/posthook.php?wp-name=' . $posthook_name,
-            'hub.secret' => $posthook_secret,
+            'hub.callback' => $pluginUrl . '/posthook.php?wp-name=' . $posthookName,
+            'hub.secret' => $posthookSecret,
             'hub.metadata' => '{"synchronize": true}',
             'hub.ext.ping' => true,
             'hub.ext.event' => true,
         )
     );
 
-    $response = wp_remote_post($hub_url, $args);
+    $response = wp_remote_post($hubUrl, $args);
+    if (is_wp_error($response)) {
+        return $response->get_error_message();
+    }
+
     $code = wp_remote_retrieve_response_code($response);
     if ($code >= 200 && $code <= 299) {
         return "";
@@ -537,28 +752,299 @@ function MFN_subscribe(): string
     return $code . ' ' .  wp_remote_retrieve_body($response);
 }
 
-function MFN_unsubscribe(): string
-{
-    $ops = get_option('mfn-wp-plugin');
+function mfn_save_subscriptions($subscriptions) {
+    update_option("mfn-subscriptions", $subscriptions);
+}
 
-    $subscription_id = isset($ops['subscription_id']) ? $ops['subscription_id'] : "N/A";
+function mfn_get_subscription_by_plugin_url($subscriptions, $pluginUrl) {
+    $subscription = [];
+    if (isset($subscriptions) && is_array($subscriptions)) {
+        foreach ($subscriptions as $s) {
+            if (isset($s['plugin_url']) && $s['plugin_url'] === $pluginUrl) {
+                $subscription = $s;
+            }
+        }
+    }
+    return $subscription;
+}
 
-    if (strlen($subscription_id) != 36) {
-        return "there is no active subscription";
+function mfn_update_challenge_by_plugin_url($subscriptions, $pluginUrl, $challenge) {
+    if (isset($subscriptions) && is_array($subscriptions)) {
+        foreach ($subscriptions as $key => $s) {
+            if ($s['plugin_url'] === $pluginUrl) {
+                $subscriptions[$key]['subscription_id'] = $challenge;
+            }
+        }
+        mfn_save_subscriptions($subscriptions);
+    }
+    return $subscriptions;
+}
+
+function mfn_add_subscription($subscriptions, $pluginUrl, $posthookName, $posthookSecret) {
+    if (!isset($subscriptions) || !is_array($subscriptions)) {
+        $subscriptions = [];
+    }
+    $subscriptions[] = array(
+            'subscription_id' => '',
+            'plugin_url' => $pluginUrl,
+            'posthook_name' => $posthookName,
+            'posthook_secret' => $posthookSecret,
+    );
+    mfn_save_subscriptions($subscriptions);
+}
+
+function mfn_subscribe(): string {
+    $ops = get_option(MFN_PLUGIN_NAME);
+    $subscriptions = get_option("mfn-subscriptions");
+    $plugin_url = mfn_plugin_url();
+
+    $cus_query = $ops['cus_query'] ?? '';
+    $entity_id = $ops['entity_id'] ?? '';
+    $hub_url = mfn_fetch_hub_url();
+
+    $posthook_name = mfn_generate_random_string();
+    $posthook_secret = mfn_generate_random_string();
+
+    $subscription = mfn_get_subscription_by_plugin_url($subscriptions, $plugin_url);
+
+    $topic = '/mfn/s.json?type=all&.author.entity_id=' . $entity_id .  "&" . $cus_query;
+
+    if (strpos($hub_url, 'https://feed.mfn.') === 0) {
+        $topic = '/feed/' . $entity_id .  "?" . $cus_query;
     }
 
-    $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
+    if (isset($subscription['posthook_name']) && $subscription['posthook_name']) {
+        $posthook_name = $subscription['posthook_name'];
+    }
+
+    if (isset($subscription['posthook_secret']) && $subscription['posthook_secret']) {
+        $posthook_secret = $subscription['posthook_secret'];
+    }
+
+    mfn_add_subscription($subscriptions, $plugin_url, $posthook_name, $posthook_secret);
+
+    return mfn_subscribe_to_websub($plugin_url, $posthook_name, $posthook_secret, $topic, $hub_url);
+}
+
+function mfn_delete_subscription($subscriptions, $subscription) {
+    if (isset($subscriptions) && is_array($subscriptions) && isset($subscription['plugin_url'])) {
+        $result = [];
+        foreach ($subscriptions as $s) {
+            if (!isset($s['plugin_url'])) {
+                continue;
+            }
+            if ($s['plugin_url'] === $subscription['plugin_url']) {
+                continue;
+            }
+            $result[] = $s;
+        }
+        mfn_save_subscriptions($result);
+    }
+}
+
+function mfn_unsubscribe(): string {
+    $subscriptions = get_option("mfn-subscriptions");
+
+    $subscription = mfn_get_subscription_by_plugin_url($subscriptions, mfn_plugin_url());
+    $subscription_id = $subscription['subscription_id'] ?? "s";
+
+    if (strlen($subscription_id) != 36) {
+        return "There is no active subscription.";
+    }
+
+    $hub_url = mfn_fetch_hub_url();
 
     $request = $hub_url . '/verify/' . $subscription_id . "?hub.mode=unsubscribe";
     $response = wp_remote_get($request);
-    $result = wp_remote_retrieve_body($response);
+    wp_remote_retrieve_body($response);
 
-    if ($result === FALSE) {
-        return "did not work...";
-    }
-
-    unset($ops['subscription_id']);
-    update_option(MFN_PLUGIN_NAME, $ops);
+    mfn_delete_subscription($subscriptions, $subscription);
 
     return "success";
+}
+
+function mfn_add_custom_meta_box() {
+    add_meta_box(
+        'mfn-custom-meta-boxdiv',
+        MFN_SINGULAR_NAME . ' status',
+        'mfn_custom_meta_box_html',
+        MFN_POST_TYPE,
+        'side'
+    );
+}
+
+function mfn_custom_meta_box_html($post) {
+
+    $is_dirty = mfn_post_is_dirty($post->ID);
+    $is_local = mfn_post_is_local($post->ID) === null;
+    $disabled = !$is_dirty ? 'disabled' : '';
+
+    if ($is_local) {
+        echo '<div class="mfn-news-item-actions-text">' . mfn_get_text('text_mfn_news_item_status_local') . '</div><div id="mfn-news-item-actions">
+        </div>';
+    } else {
+        if ($is_dirty) {
+            echo '<div class="mfn-news-item-actions-text">' . mfn_get_text('text_mfn_news_item_status_unpure') . '</div><div id="mfn-news-item-actions">';
+        } else {
+            echo '<div class="mfn-news-item-actions-text">' . mfn_get_text('text_mfn_news_item_status_pure') . '</div><div id="mfn-news-item-actions">';
+        }
+        echo '<div id="mfn-item-restore-action"><div id="mfn-item-restore-status" style="width: 100%;">';
+        if ($is_dirty) {
+            echo '<div class="mfn-tooltip-box">
+                  <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                  <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_restore_item_info') . '</span>
+              </div>';
+        }
+        echo '</div>
+              <button
+                type="button"
+                name="mfn-item-restore-button"
+                id="mfn-item-restore-button"
+                class="button button-primary button-large mfn-restore-item-button"
+                data-mfn-post-id="' . $post->ID . '"
+                value="restore-item" ' . $disabled . '
+              >
+                ' . mfn_get_text('button_restore') . '
+              </button>
+          </div>
+	      <div class="clear"></div>
+	      </div>';
+    }
+}
+
+function mfn_metabox_order( $order ) {
+    $order['side'] = 'submitdiv,mfn-custom-meta-boxdiv,mfn-news-tagdiv,icl_div,,ml_box';
+    return $order;
+}
+
+function mfn_get_post_language($post_id)
+{
+    $lang_slug = "";
+
+    if (defined('POLYLANG_BASENAME')) {
+        $lang_slug = pll_get_post_language($post_id);
+    } else if (defined('WPML_PLUGIN_BASENAME')) {
+        $lang_slug = apply_filters('wpml_post_language_details', NULL, $post_id)["language_code"];
+    }
+
+    return $lang_slug;
+}
+
+function mfn_create_tags_by_lang_suffix($lang, $lang_suffix): array
+{
+    $lang_suffix = empty($lang_suffix) ? '' : '_' . $lang_suffix;
+    return [
+        // mfn_[lang_suffix]
+        MFN_TAG_PREFIX . $lang_suffix,
+        // mfn-tag-pr_[lang_suffix]
+        MFN_TAG_PREFIX . "-type-pr" . $lang_suffix,
+        // mfn-lang-[lang]_[lang_suffix]
+        MFN_TAG_PREFIX . "-lang-" . $lang . $lang_suffix
+    ];
+}
+
+function mfn_news_post_saved($post_id)
+{
+    // set as dirty
+    if ( is_admin() && current_user_can( 'manage_options' )  ) {
+        // skip dirty if post was added manually
+        if (mfn_post_is_local($post_id) !== null) {
+            add_post_meta($post_id, MFN_POST_TYPE . '_is_dirty', 'true', true);
+        }
+    }
+
+    // do not interfere with upsert item
+    if ( did_action('mfn_before_upsertitem') ) return;
+
+    if (get_post_meta($post_id, MFN_POST_TYPE . "_group_id", true)) return;
+
+    $lang_slug = mfn_get_post_language($post_id);
+
+    $terms = wp_get_object_terms($post_id, MFN_TAXONOMY_NAME);
+    $needle = MFN_TAG_PREFIX . '-lang-';
+
+    $needles = mfn_create_tags_by_lang_suffix('', '');
+
+    $matching_terms = array();
+    $lang_by_terms = '';
+    $has_ir = false;
+
+    foreach ($terms as $term) {
+        foreach ($needles as $needle) {
+            if (strpos($term->slug, $needle) === 0) {
+                if ($needle === 'mfn' && !($term->slug === 'mfn' || strpos($term->slug, 'mfn_') === 0)) {
+                    continue;
+                }
+                array_push($matching_terms, $term->slug);
+            }
+        }
+        if (strpos($term->slug, MFN_TAG_PREFIX . "-lang-") === 0) {
+            $lang_by_terms = explode($needle, $term->slug)[1];
+        }
+        if (strpos($term->slug, MFN_TAG_PREFIX . "-type-ir") === 0) {
+            $has_ir = true;
+        }
+    }
+
+    if (empty($lang_slug) && empty($lang_by_terms)) {
+        delete_post_meta($post_id, MFN_POST_TYPE . "_lang");
+        return;
+    }
+
+    $primary_lang = 'en'; // TODO? main WPML/polylang language that doesn't have slug lang-suffix for wp_terms
+
+    $mode_normal = empty($lang_slug) && !empty($lang_by_terms);
+
+    if ($mode_normal) {
+        $lang_slug = $lang_by_terms;
+    }
+
+    update_post_meta(
+        $post_id,
+        MFN_POST_TYPE . "_lang",
+        $lang_slug
+    );
+
+    $lang_suffix = ($mode_normal || $primary_lang === $lang_slug) ? '' : $lang_slug;
+    $tags_to_insert = mfn_create_tags_by_lang_suffix($lang_slug, $lang_suffix);
+
+    if ($has_ir) {
+        foreach($tags_to_insert as $k => $v) {
+            if (strpos($v, MFN_TAG_PREFIX . "-type-pr") === 0) {
+                array_splice($tags_to_insert, $k, 1);
+            }
+        }
+    }
+
+    wp_remove_object_terms($post_id, $matching_terms, MFN_TAXONOMY_NAME);
+    wp_set_object_terms($post_id, $tags_to_insert, MFN_TAXONOMY_NAME, true);
+}
+
+function mfn_news_edit_post_change_title_in_list() {
+    global $post_type;
+
+    if ($post_type === MFN_POST_TYPE) {
+        add_filter(
+            'the_title',
+            MFN_POST_TYPE . '_construct_new_title',
+            100,
+            2
+        );
+    }
+}
+
+function mfn_news_construct_new_title($title, $post_id) {
+    $is_dirty = mfn_post_is_dirty($post_id);
+    $is_local = mfn_post_is_local($post_id) === null;
+    $is_trash = get_post_status($post_id) === 'trash';
+    if ($is_local) {
+        $title = $title . ' ' . mfn_get_text('text_local');
+    } else if ($is_trash) {
+        $title = $title . ' ' . mfn_get_text('text_trash');
+    } else {
+        if($is_dirty) {
+            $title = $title . ' ' . mfn_get_text('text_modified');
+        }
+    }
+    return $title;
 }

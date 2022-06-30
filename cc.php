@@ -20,7 +20,7 @@ if (!isset($queries["mode"])) {
 
 $mode = $queries["mode"];
 
-function MFN_generate_random_string($length = 32): string
+function mfn_generate_random_string($length = 32): string
 {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $charactersLength = strlen($characters);
@@ -31,21 +31,36 @@ function MFN_generate_random_string($length = 32): string
     return $randomString;
 }
 
-function MFN_sync()
+function mfn_sync()
 {
     set_time_limit(300);
     $ops = get_option('mfn-wp-plugin');
+
     $queries = array();
     parse_str($_SERVER['QUERY_STRING'], $queries);
 
-    $offset = isset($queries["offset"]) ? $queries["offset"] : 0;
-    $limit = isset($queries["limit"]) ? $queries["limit"] : 48;
+    $offset = $queries["offset"] ?? 0;
+    $limit = $queries["limit"] ?? 48;
 
-    $entity_id = isset($ops['entity_id']) ? $ops['entity_id'] : "bad-entity-id";
-    $sync_url = isset($ops['sync_url']) ? $ops['sync_url'] : "";
-    $reset_cache = isset($ops['reset_cache']) ? ($ops['reset_cache'] == 'on') : false;
+    $post_id = $queries["post_id"] ?? null;
+    $news_id = null;
+    $append_news_id = '';
 
-    $cus_query = isset($ops['cus_query']) ? $ops['cus_query'] : "";
+    if ($post_id !== null) {
+        $news_id = get_post_meta($post_id)[MFN_POST_TYPE . '_news_id'][0] ?? '';
+    }
+    if ($news_id !== null && $news_id !== '') {
+        $append_news_id = '&news_id=' . $news_id;
+        if (isset($post_id) && $post_id != '') {
+            delete_post_meta($post_id, MFN_POST_TYPE . '_is_dirty');
+        }
+    }
+
+    $entity_id = $ops['entity_id'] ?? "bad-entity-id";
+    $sync_url = $ops['sync_url'] ?? "";
+
+    $reset_cache = isset($ops['reset_cache']) && $ops['reset_cache'] == 'on';
+    $cus_query = $ops['cus_query'] ?? "";
 
     if ($entity_id == "") {
         echo -1;
@@ -69,17 +84,23 @@ function MFN_sync()
     $url = $base_url . $ops['entity_id'] . $query_param_start .
         'limit=' . $limit .
         "&offset=" . $offset .
-        "&" . $cus_query;
+        "&" . $cus_query .
+        $append_news_id;
 
     $response = wp_remote_get($url);
+
     if (is_wp_error($response)) {
         die("sync-url-error:" . $response->get_error_message());
     }
+
     $json = wp_remote_retrieve_body($response);
+
     if (is_wp_error($json)) {
         die("sync-url-error:" . $json->get_error_message());
     }
+
     $obj = json_decode($json);
+
     if (is_wp_error($obj)) {
         die("sync-url-error:" . $obj->get_error_message());
     }
@@ -87,12 +108,12 @@ function MFN_sync()
     $acc = 0;
 
     if (!isset($obj) || !isset($obj->version)) {
-        die("sync-url-error:Check Sync URL");
+        die("sync-url-error:Couldn't sync, please check Sync URL.");
     }
 
     if (is_array($obj->items)) {
-        foreach ($obj->items as $i => $item) {
-            $acc += upsertItem($item, '', '', $reset_cache);
+        foreach ($obj->items as $item) {
+            $acc += mfn_upsert_item_full($item, '', '', $reset_cache);
         }
         echo sizeof($obj->items) . ' ' . $acc;
         return;
@@ -101,12 +122,11 @@ function MFN_sync()
     echo 0 . ' ' . $acc;
 }
 
-function MFN_ping_hub()
+function mfn_ping_hub()
 {
-    $ops = get_option('mfn-wp-plugin');
-    $hub_url = isset($ops['hub_url']) ? $ops['hub_url'] : "";
+    $hub_url = mfn_fetch_hub_url();
 
-    if (startsWith($hub_url, "http")) {
+    if (mfn_starts_with($hub_url, "http")) {
 
         $response = wp_remote_get($hub_url);
         $content = wp_remote_retrieve_body($response);
@@ -122,14 +142,14 @@ function MFN_ping_hub()
     die("fail, not a valid url.");
 }
 
-function MFN_clear_settings(): string
+function mfn_clear_settings(): string
 {
     update_option('mfn-wp-plugin', array());
     return "done";
 }
 
 
-function MFN_delete_attachments($post_id) {
+function mfn_delete_attachments($post_id) {
     $existing_attachments = get_posts(array(
         'post_type' => 'attachment',
         'posts_per_page' => -1,
@@ -153,43 +173,88 @@ function MFN_delete_attachments($post_id) {
     }
 }
 
-function MFN_delete_all_posts()
+function mfn_delete_all_tags(): array
 {
-    $queries = array();
-    parse_str($_SERVER['QUERY_STRING'], $queries);
-    $limit = isset($queries["limit"]) ? $queries["limit"] : -1;
-    $delete_attachments = isset(get_option(MFN_PLUGIN_NAME)['thumbnail_allow_delete']);
     $i = 0;
     $num_deleted = 0;
-    $allposts = get_posts(
-        array(
-            'post_type' => MFN_POST_TYPE,
-            'lang' => '',
-            'numberposts' => $limit
-        )
-    );
-    foreach ($allposts as $eachpost) {
-        if ($eachpost->post_type == MFN_POST_TYPE) {
-            if (get_post_meta($eachpost->ID, MFN_POST_TYPE . "_group_id", true)) {
-                if ($delete_attachments) {
-                    MFN_delete_attachments($eachpost->ID);
-                }
-                wp_delete_post( $eachpost->ID, true );
-                $num_deleted++;
-            }
-            $i++;
+    $taxonomy_name = MFN_TAXONOMY_NAME;
+    $terms = get_terms( array(
+        'taxonomy' => MFN_TAXONOMY_NAME,
+        'hide_empty' => false,
+        'lang' => ''
+    ));
+    foreach ( $terms as $term ) {
+        $deleted_term = wp_delete_term($term->term_id, $taxonomy_name);
+        if ($deleted_term) {
+            $num_deleted++;
         }
+        $i++;
     }
     return array($i, $num_deleted);
 }
 
+function mfn_delete_all_posts(): array
+{
+    $queries = array();
+    parse_str($_SERVER['QUERY_STRING'], $queries);
+    $limit = $queries["limit"] ?? -1;
+    $include_dirty = $queries["include-dirty"] ?? false;
+    $delete_attachments = isset(get_option(MFN_PLUGIN_NAME)['thumbnail_allow_delete']);
+
+    $i = 0;
+    $num_deleted = 0;
+    $num_skipped_dirty = 0;
+    $num_skipped_trash = 0;
+
+    $all_posts = get_posts(
+        array(
+            'post_type' => MFN_POST_TYPE,
+            'lang' => '',
+            'numberposts' => $limit,
+            'post_status' => 'Trash',
+        )
+    );
+
+    foreach ($all_posts as $each_post) {
+       if ($each_post->post_type == MFN_POST_TYPE) {
+           $is_dirty = mfn_post_is_dirty($each_post->ID);
+           $is_trash = $each_post->post_status === 'trash';
+           if ($is_dirty && $include_dirty == 'false')  {
+               $num_skipped_dirty++;
+           } else if ($is_trash && $include_dirty == 'false') {
+               $num_skipped_trash++;
+           } else {
+               if (get_post_meta($each_post->ID, MFN_POST_TYPE . "_group_id", true)) {
+                   if ($delete_attachments) {
+                       mfn_delete_attachments($each_post->ID);
+                   }
+                   wp_delete_post($each_post->ID, true);
+                   $num_deleted++;
+               }
+           }
+           $i++;
+         }
+    }
+
+    return array($i, $num_deleted);
+}
+
+function mfn_verify_subscription()
+{
+    $sub = mfn_get_subscription_by_plugin_url(get_option("mfn-subscriptions"), mfn_plugin_url());
+    if (!isset($sub['subscription_id'])) {
+        return '';
+    }
+    return $sub['subscription_id'];
+}
+
 switch ($mode) {
     case "sync-tax":
-        sync_mfn_taxonomy();
+        mfn_sync_taxonomy();
         die();
 
     case "sync":
-        MFN_sync();
+        mfn_sync();
         die();
 
     case "ping";
@@ -197,23 +262,39 @@ switch ($mode) {
         die();
 
     case "pinghub";
-        MFN_ping_hub();
+        mfn_ping_hub();
         die();
 
     case "subscribe":
-        echo MFN_subscribe();
+        echo mfn_subscribe();
         die();
 
     case "unsubscribe":
-        echo MFN_unsubscribe();
+        echo mfn_unsubscribe();
         die();
 
     case "clear-settings":
-        echo MFN_clear_settings();
+        echo mfn_clear_settings();
         die();
+
     case "delete-all-posts":
-        $a = MFN_delete_all_posts();
+        $a = mfn_delete_all_posts();
         echo $a[0] . ';' . $a[1];
+        die();
+
+    case "delete-all-tags":
+        $b = mfn_delete_all_tags();
+        echo $b[0] . ';' . $b[1];
+        die();
+
+    case "fetch-posts-status":
+        $a = mfn_fetch_posts_status();
+        echo $a[0] . ';' . $a[1] . ';' . $a[2];
+        die();
+
+    case "verify-subscription":
+        $a = mfn_verify_subscription();
+        echo $a;
         die();
 
     default:
