@@ -493,6 +493,7 @@ span#mfn-subscription-status p, #mfn-sync-status p {
     text-align: center;
     padding: 6px;
     opacity: 0.85;
+    font-size: 13px;
     border-radius: 4px;
     cursor: default;
     user-select: none;
@@ -582,6 +583,7 @@ span#mfn-subscription-status p, #mfn-sync-status p {
 
 .mfn-settings-table label {
     pointer-events: none;
+    margin-right: 3px;
 }
 
 .mfn-selected-radio-option {
@@ -852,4 +854,25 @@ span.mfn-modal-dialog-actions b:first-child {
 
 .mfn-checkbox-input:checked + .mfn-checkbox span:first-child svg {
     stroke-dashoffset: 0;
+}
+
+#mfn-status-container table,
+#mfn-admin-wrapper p,
+.mfn-settings-table {
+    font-size: 13px;
+}
+
+.mfn-action-heading-wrapper {
+    align-items: center;
+    display: inline-flex;
+}
+
+#mfn-rewrite-wrapper table td {
+    display: flex;
+    align-items: center;
+}
+
+#mfn-rewrite-wrapper table small {
+    position: relative;
+    top: 1px;
 }
