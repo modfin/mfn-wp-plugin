@@ -247,7 +247,7 @@ function MFN_get_reports_v2($lang, $from_year, $to_year, $offset, $limit, $gener
     return $reports;
 }
 
-function MFN_get_reports($lang = 'all', $from_year, $to_year, $offset = 0, $limit = 100, $order = 'DESC', $fiscal_year_offset = null)
+function MFN_get_reports($from_year, $to_year, $offset = 0, $limit = 100, $order = 'DESC', $fiscal_year_offset = null, $lang = 'all')
 {
     global $wpdb;
 
@@ -415,7 +415,7 @@ function MFN_get_feed_min_max_years($lang = 'all') {
 }
 
 
-function MFN_get_feed($lang = 'all', $year = "", $hasTags = array(), $hasNotTags = array(), $offset = 0, $limit = 30, $include_content)
+function MFN_get_feed($include_content, $hasTags = array(), $hasNotTags = array(), $offset = 0, $limit = 30, $lang = 'all', $year = '')
 {
 
     global $wpdb;

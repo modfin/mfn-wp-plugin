@@ -114,21 +114,26 @@ input.wide {
 .mfn-settings-table {
     width: 90%;
 }
+
 .mfn-settings-table input[readonly] {
     background: rgba(255,255,255,.5);
     border-color: rgba(220,220,222,.75);
     box-shadow: inset 0 1px 2px rgb(0 0 0 / 4%);
     color: rgba(44,51,56,.5);
 }
+
 .mfn-settings-table th {
     text-align: left;
 }
+
 .mfn-settings-table small {
     font-weight: normal;
 }
+
 .mfn-settings-table label {
     user-select: none;
 }
+
 .mfn-status-table {
     margin: 40px 0 40px 0;
     text-align: left;
@@ -156,6 +161,7 @@ input.wide {
 span.mfn-status-error {
     color: #DC3232;
 }
+
 span.mfn-status-success {
     color: green;
 }
@@ -184,6 +190,11 @@ span.mfn-status-success {
 .mfn-danger-zone-table .dashicons {
     margin: 5px 6px 0 0;
 }
+
+.mfn-status-table span.dashicons {
+    margin-top: -2px;
+}
+
 .mfn-danger-zone-table tbody {
     width: 500px;
     padding: 20px 0;
@@ -493,6 +504,7 @@ span#mfn-subscription-status p, #mfn-sync-status p {
     text-align: center;
     padding: 6px;
     opacity: 0.85;
+    font-size: 13px;
     border-radius: 4px;
     cursor: default;
     user-select: none;
@@ -582,6 +594,7 @@ span#mfn-subscription-status p, #mfn-sync-status p {
 
 .mfn-settings-table label {
     pointer-events: none;
+    margin-right: 3px;
 }
 
 .mfn-selected-radio-option {
@@ -718,7 +731,6 @@ span#mfn-subscription-status p, #mfn-sync-status p {
     background-color: #d12424;
 }
 
-
 #mfn-item-restore-confirm-button {
     background-color: #F56E28;
     border-color: #F56E28;
@@ -738,6 +750,7 @@ span#mfn-subscription-status p, #mfn-sync-status p {
     justify-content: flex-end;
     width: 100%;
 }
+
 .mfn-modal-dialog-buttons-container span {
     padding: 5px;
 }
@@ -852,4 +865,25 @@ span.mfn-modal-dialog-actions b:first-child {
 
 .mfn-checkbox-input:checked + .mfn-checkbox span:first-child svg {
     stroke-dashoffset: 0;
+}
+
+#mfn-status-container table,
+#mfn-admin-wrapper p,
+.mfn-settings-table {
+    font-size: 13px;
+}
+
+.mfn-action-heading-wrapper {
+    align-items: center;
+    display: inline-flex;
+}
+
+#mfn-rewrite-wrapper table td {
+    display: flex;
+    align-items: center;
+}
+
+#mfn-rewrite-wrapper table small {
+    position: relative;
+    top: 1px;
 }

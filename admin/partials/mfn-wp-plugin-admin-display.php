@@ -166,55 +166,57 @@ echo '
                 </tr>
             </tbody>
         </table>
-        <table class="mfn-settings-table">
-            <tbody>
-                <tr>
-                    <td>
-                    ' . mfn_parse_label('label_rewrite_post_type_slug') . '
-                    ' . mfn_parse_small('small_default_mfn_news') . '
-                    </td>
-                </tr>
-                <tr>
-                    <td class="mfn-inline-td">
-                        <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[rewrite_post_type][slug]' . '" id="' . $this->plugin_name . '-rewrite_post_type_slug"' . ' value="' . $slug . '" ' . $is_readonly . '>
-                        <div class="mfn-tooltip-box">
-                            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_slug') . '</span>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                    ' . mfn_parse_label('label_rewrite_post_type_archive_name') . '
-                    ' . mfn_parse_small('small_default_mfn_news_items') . '
-                    </td>
-                </tr>
-                <tr>
-                    <td class="mfn-inline-td">
-                        <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[rewrite_post_type][archive-name]' . '" id="' . $this->plugin_name . '-rewrite_post_type_archive_name' . '" value="' . $archive_name . '" ' . $is_readonly . '>
-                        <div class="mfn-tooltip-box">
-                            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_archive_name') . '</span>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                    ' . mfn_parse_label('label_rewrite_post_type_singular_name') . '
-                    ' . mfn_parse_small('small_default_mfn_news_item') . '
-                    </td>
-                </tr>
-                <tr>
-                    <td class="mfn-inline-td">
-                        <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[rewrite_post_type][singular-name]' . '" id="' . $this->plugin_name . '-rewrite_post_type_singular_name' . '" value="' . $singular_name . '" ' . $is_readonly . '>
-                        <div class="mfn-tooltip-box">
-                            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_singular_name') . '</span>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div id="mfn-rewrite-wrapper">
+            <table class="mfn-settings-table">
+                <tbody>
+                    <tr>
+                        <td>
+                        ' . mfn_parse_label('label_rewrite_post_type_slug') . '
+                        ' . mfn_parse_small('small_default_mfn_news') . '
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mfn-inline-td">
+                            <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[rewrite_post_type][slug]' . '" id="' . $this->plugin_name . '-rewrite_post_type_slug"' . ' value="' . $slug . '" ' . $is_readonly . '>
+                            <div class="mfn-tooltip-box">
+                                <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                                <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_slug') . '</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        ' . mfn_parse_label('label_rewrite_post_type_archive_name') . '
+                        ' . mfn_parse_small('small_default_mfn_news_items') . '
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mfn-inline-td">
+                            <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[rewrite_post_type][archive-name]' . '" id="' . $this->plugin_name . '-rewrite_post_type_archive_name' . '" value="' . $archive_name . '" ' . $is_readonly . '>
+                            <div class="mfn-tooltip-box">
+                                <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                                <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_archive_name') . '</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        ' . mfn_parse_label('label_rewrite_post_type_singular_name') . '
+                        ' . mfn_parse_small('small_default_mfn_news_item') . '
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mfn-inline-td">
+                            <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[rewrite_post_type][singular-name]' . '" id="' . $this->plugin_name . '-rewrite_post_type_singular_name' . '" value="' . $singular_name . '" ' . $is_readonly . '>
+                            <div class="mfn-tooltip-box">
+                                <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                                <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_singular_name') . '</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <table class="mfn-settings-table">
             <tbody>
                 <tr>
@@ -245,7 +247,7 @@ echo '
                     <td>
                         <div class="mfn-radio-button-container' . $append_none_radio_classes . '">
                             <input type="radio" id="' . $this->plugin_name . '-language_plugin_none" name="' . $this->plugin_name . '[language_plugin]" value="none" ' . $checked_none . ' ' . $is_readonly . '>
-                            ' . mfn_parse_label('label_language_plugin_none', 'mfn-h2-label') . '
+                            ' . mfn_parse_label('label_language_plugin_none') . '
                         <div>
                     <td>
                 </tr>
@@ -321,65 +323,69 @@ echo '
             </tbody>
         </table>
         <hr>
-        <table class="mfn-settings-table">
-            <tbody>
-                <tr>
-                    <th scope="row">
+        <div id="mfn-advanced-settings-container" class="do-fade">
+            <table class="mfn-settings-table">
+                <tbody>
+                    <tr>
+                        <th scope="row">
+                            <p>
+                                ' . mfn_parse_label('label_advanced_settings', 'mfn-h2-label') . '
+                            </p>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p>
+                                <input type="checkbox" id="' . $this->plugin_name . '-thumbnail_on" name="' . $this->plugin_name . '[thumbnail_on]" ' . checked($thumbnail_on, "on", false) . ' value="on" ' . $is_readonly . '>
+                                ' . mfn_parse_label('label_thumbnail_on') . '
+                                <br>
+                                ' . mfn_parse_small('small_thumbnail_on_description') . '
+                            </p>
+                        <td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <p>
+                                <input type="checkbox" id="' . $this->plugin_name . '-thumbnail_allow_delete" name="' . $this->plugin_name . '[thumbnail_allow_delete]" ' . checked($thumbnail_allow_delete, "on", false) . ' value="on" ' . $is_readonly . '>
+                                ' . mfn_parse_label('label_thumbnail_allow_delete') . '
+                                <br>
+                                ' . mfn_parse_small('small_thumbnail_allow_delete_description') . '
+                            </p>
+                        <td>
+                    </tr>
+                    <tr>
+                    <td>
                         <p>
-                            ' . mfn_parse_label('label_advanced_settings', 'mfn-h2-label') . '
-                        </p>
-                    </th>
-                </tr>
-                <tr>
-                    <td>
-                        <input type="checkbox" id="' . $this->plugin_name . '-thumbnail_on" name="' . $this->plugin_name . '[thumbnail_on]" ' . checked($thumbnail_on, "on", false) . ' value="on" ' . $is_readonly . '>
-                        ' . mfn_parse_label('label_thumbnail_on') . '
-                        <br>
-                        ' . mfn_parse_small('small_thumbnail_on_description') . '
-                    <td>
-                </tr>
-                <tr>
-                    <td>
-                        <p>
-                            <input type="checkbox" id="' . $this->plugin_name . '-thumbnail_allow_delete" name="' . $this->plugin_name . '[thumbnail_allow_delete]" ' . checked($thumbnail_allow_delete, "on", false) . ' value="on" ' . $is_readonly . '>
-                            ' . mfn_parse_label('label_thumbnail_allow_delete') . '
+                            <input type="checkbox" id="' . $this->plugin_name . '-verify_signature" name="' . $this->plugin_name . '[verify_signature]" ' . checked($verify_signature, "on", false) . ' value="on" ' . $is_readonly . '>
+                            ' . mfn_parse_label('label_verify_signature') . '
                             <br>
-                            ' . mfn_parse_small('small_thumbnail_allow_delete_description') . '
+                            ' . mfn_parse_small('small_verify_signature_description') . '
                         </p>
                     <td>
                 </tr>
                 <tr>
-                <td>
-                    <p>
-                        <input type="checkbox" id="' . $this->plugin_name . '-verify_signature" name="' . $this->plugin_name . '[verify_signature]" ' . checked($verify_signature, "on", false) . ' value="on" ' . $is_readonly . '>
-                        ' . mfn_parse_label('label_verify_signature') . '
-                        <br>
-                        ' . mfn_parse_small('small_verify_signature_description') . '
-                    </p>
-                <td>
-            </tr>
-            <tr>
-                <td>
-                    <p>
-                        <input type="checkbox" id="' . $this->plugin_name . '-reset_cache" name="' . $this->plugin_name . '[reset_cache]" ' . checked($reset_cache, "on", false) . ' value="on" ' . $is_readonly . '>
-                        ' . mfn_parse_label('label_reset_cache') . '
-                        <br>
-                        ' .  mfn_parse_small('small_reset_cache_description') . '
-                    </p>
-                <td>
-            </tr>
-            <tr>
-                <td>
-                    <p>
-                        <input type="checkbox" id="' . $this->plugin_name . '-enable_attachments" name="' . $this->plugin_name . '[enable_attachments]" ' . checked($enable_attachments, "on", false) . ' value="on" ' . $is_readonly . '>
-                        ' . mfn_parse_label('label_enable_attachments') . '
-                        <br>
-                        ' . mfn_parse_small('small_enable_attachments_description') . '
-                    </p>
-                <td>
-            </tr>
-            </tbody>
-        </table>
+                    <td>
+                        <p>
+                            <input type="checkbox" id="' . $this->plugin_name . '-reset_cache" name="' . $this->plugin_name . '[reset_cache]" ' . checked($reset_cache, "on", false) . ' value="on" ' . $is_readonly . '>
+                            ' . mfn_parse_label('label_reset_cache') . '
+                            <br>
+                            ' .  mfn_parse_small('small_reset_cache_description') . '
+                        </p>
+                    <td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <input type="checkbox" id="' . $this->plugin_name . '-enable_attachments" name="' . $this->plugin_name . '[enable_attachments]" ' . checked($enable_attachments, "on", false) . ' value="on" ' . $is_readonly . '>
+                            ' . mfn_parse_label('label_enable_attachments') . '
+                            <br>
+                            ' . mfn_parse_small('small_enable_attachments_description') . '
+                        </p>
+                    <td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
         <div class="mfn-save-buttons-container">
             <table>
                 <tbody>
@@ -457,10 +463,12 @@ echo '
     ' . mfn_parse_heading('heading_subscription', 'h2') . '
     <div id="mfn-status-container" class="do-fade"></div>
     ' . mfn_parse_heading('heading_actions', 'h3') . '
-    <h4 class="mfn-h4">' . mfn_get_text('heading_sync_feed') . '</h4>
-    <div class="mfn-tooltip-box">
-        <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-        <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_sync') . '</span>
+    <div class="mfn-action-heading-wrapper">
+        <h4 class="mfn-h4">' . mfn_get_text('heading_sync_feed') . '</h4>
+        <div class="mfn-tooltip-box">
+            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_sync') . '</span>
+        </div>
     </div>
     <span class="mfn-action-buttons-container">
         <button id="mfn-sync-latest" class="button mfn-button">
@@ -474,10 +482,12 @@ echo '
     </span>
     <span id="mfn-sync-status"></span>
     <div>
-        <h4 class="mfn-h4">' . mfn_get_text('heading_sync_taxonomy') . '</h4>
-        <div class="mfn-tooltip-box">
-            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_sync_taxonomy') . '</span>
+        <div class="mfn-action-heading-wrapper">
+            <h4 class="mfn-h4">' . mfn_get_text('heading_sync_taxonomy') . '</h4>
+            <div class="mfn-tooltip-box">
+                <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_sync_taxonomy') . '</span>
+            </div>
         </div>
         <div class="mfn-row-container">
             <div class="mfn-buttons-container">
@@ -489,10 +499,12 @@ echo '
             <span id="mfn-sync-tax-status"></span>
         </div>
     </div>
-    <h4 class="mfn-h4">' . mfn_get_text('heading_subscribe') . '</h4>
-    <div class="mfn-tooltip-box">
-        <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-        <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_subscribe') . '</span>
+    <div class="mfn-action-heading-wrapper">
+        <h4 class="mfn-h4">' . mfn_get_text('heading_subscribe') . '</h4>
+        <div class="mfn-tooltip-box">
+            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_subscribe') . '</span>
+        </div>
     </div>
     <div class="mfn-row-container">
         <div class="mfn-buttons-container">';
