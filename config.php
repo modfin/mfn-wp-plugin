@@ -477,7 +477,7 @@ function mfn_sync_taxonomy()
         }
     };
 
-    $upsert_pll = function ($enItem, $enTerm, $prefix = '', $pllLangMapping) {
+    $upsert_pll = function ($enItem, $enTerm, $pllLangMapping, $prefix = '') {
 
         $enParentTerm = null;
         if ($enTerm->parent > 0) {
