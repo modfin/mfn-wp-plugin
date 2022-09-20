@@ -209,7 +209,7 @@ class mfn_archive_widget extends WP_Widget
             $reports = MFN_get_reports_v2($pmlang, $from_year, $to_year, $w['offset'], $w['limit'], $w['showgenerictitle']);
             $w['showgenerictitle'] = null;
         } else {
-            $reports = MFN_get_reports($pmlang, $from_year, $to_year, $w['offset'], $w['limit'], 'DESC', $fiscal_year_offset);
+            $reports = MFN_get_reports($from_year, $to_year, $w['offset'], $w['limit'], 'DESC', $fiscal_year_offset, $pmlang);
         }
 
         if (count($reports) < 1) {
@@ -786,13 +786,13 @@ class mfn_news_feed_widget extends WP_Widget
         wp_enqueue_style( MFN_PLUGIN_NAME . '-mfn-news-list-css', plugin_dir_url( __FILE__ ) . 'widgets/mfn_news_feed/css/mfn-news-list.css', array(), MFN_PLUGIN_NAME_VERSION );
 
         $res = MFN_get_feed(
+	        $data['showpreview'],
+	        $data['hasTags'],
+	        $data['hasNotTags'],
+	        $data['offset'],
+	        $data['pagelen'],
             $data['pmlang'],
-            $data['year'],
-            $data['hasTags'],
-            $data['hasNotTags'],
-            $data['offset'],
-            $data['pagelen'],
-            $data['showpreview']
+            $data['year']
         );
 
         $news_feed = new News_feed;

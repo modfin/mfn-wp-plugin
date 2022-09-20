@@ -614,7 +614,7 @@ function mfn_sync_taxonomy()
                 $pllLangMapping[$l] = $pll_lang->slug;
             };
             pll_set_term_language($term->term_id, 'en');
-            $upsert_pll($item, $term, $prefix, $pllLangMapping);
+            $upsert_pll($item, $term, $pllLangMapping, $prefix);
         }
 
         if (isset($item['children'])) {
