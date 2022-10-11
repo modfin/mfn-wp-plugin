@@ -883,10 +883,16 @@ class mfn_news_feed_widget extends WP_Widget
             return;
         }
 
-        $tagsstr = $query_param('m-tags', "");
-        if (isset($instance['tags'])) {
-            $tagsstr = normalize_whitespace($instance['tags']);
+        $tags = array();
+        $tagsstr1 = $query_param('m-tags', "");
+        if (!empty($tagsstr1)) {
+            $tags[] = $tagsstr1;
         }
+        $tagsstr2 = normalize_whitespace($instance['tags']);
+        if (!empty($tagsstr2)) {
+            $tags[] = $tagsstr2;
+        }
+        $tagsstr = join(",",$tags);
 
         $hasTags = array();
         $hasNotTags = array();
