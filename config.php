@@ -112,9 +112,9 @@ function mfn_register_types()
     if (empty(MFN_POST_TYPE)) {
         die("MFN News Feed - The post type was empty. Please enter a post type name in consts.php.");
     } else {
-        $supports = array('title', 'editor');
+        $supports = array('title', 'editor','excerpt');
         if (isset($ops['thumbnail_on'])) {
-            $supports = array('title', 'editor', 'thumbnail');
+            $supports = array('title', 'editor', 'excerpt', 'thumbnail');
         }
 
         register_post_type(MFN_POST_TYPE,
@@ -123,6 +123,7 @@ function mfn_register_types()
                     'name' => __(MFN_ARCHIVE_NAME),
                     'singular_name' => __(MFN_SINGULAR_NAME),
                 ),
+                'show_in_rest' => true,
                 'public' => true,
                 'has_archive' => true,
                 'rewrite' => array(''),
