@@ -98,6 +98,11 @@ class News_feed {
                 }
                 if (count($onlytagsallowed) > 0) {
                     $base_tag = explode("_", $parts[1])[0];
+                    foreach($onlytagsallowed as $key => $allowed_tag) {
+                        if (strpos($allowed_tag, MFN_TAG_PREFIX . '-') !== 0) {
+                            $onlytagsallowed[$key] = MFN_TAG_PREFIX . '-' . $allowed_tag;
+                        }
+                    }
                     $key = array_search($base_tag, $onlytagsallowed, true);
                     if (!is_numeric($key)) {
                         continue;
