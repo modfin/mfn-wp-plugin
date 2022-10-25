@@ -888,7 +888,7 @@ class mfn_news_feed_widget extends WP_Widget
         if (!empty($tagsstr1)) {
             $tags[] = $tagsstr1;
         }
-        $tagsstr2 = normalize_whitespace($instance['tags']);
+        $tagsstr2 = isset($instance['tags']) && normalize_whitespace($instance['tags']);
         if (!empty($tagsstr2)) {
             $tags[] = $tagsstr2;
         }
@@ -1104,12 +1104,9 @@ class mfn_news_feed_widget extends WP_Widget
                 }
             }
             echo "</div>";
-
-            if ($showfilter || $showyears) {
-                echo '</div>';
-            }
         }
         if ($showfilter || $showyears) {
+            echo '</div>';
             echo '  <input type="hidden" id="instance_id" value="' . $instance_id . '" />';
             echo '</form>';
         }
