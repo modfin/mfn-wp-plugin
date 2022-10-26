@@ -44,14 +44,13 @@ class News_feed {
         );
     }
 
-    public function list_news_items($feed, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $skipcustomtags, $showpreview, $previewlen, $disclaimerurl, $disclaimertag) {
+    public function list_news_items($feed, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $skipcustomtags, $showpreview, $previewlen, $disclaimerurl, $disclaimertag, $showthumbnail, $thumbnailsize) {
 
         $result = '';
         $years = [];
         $group_by_year = $groupbyyear && !empty($feed);
 
         foreach ($feed as $k => $item) {
-
             $year = explode("-", $item->post_date_gmt)[0];
             if ($k === 0) {
                 $years[] = $year;
@@ -127,8 +126,27 @@ class News_feed {
                 'title' => $item->post_title,
                 'url' => $item_url,
                 'tags' => $tags,
-                'year' => $year
+                'year' => $year,
+                'thumbnail' => ''
             );
+
+            if (has_post_thumbnail($item->post_id) && $showthumbnail) {
+                $allowedSizes = ['thumbnail', 'medium', 'medium_large', 'large'];
+
+                if ($thumbnailsize === '') {
+                    $tSize = 'full_size';
+                } else {
+                    $tSize = in_array($thumbnailsize, $allowedSizes, true) ? $thumbnailsize : 'large';
+                }
+
+                $thumbnailUrl = get_the_post_thumbnail_url($item->post_id,  $tSize);
+                $thumbnailAlt = get_post(get_post_thumbnail_id($item->post_id))->post_title;
+                $templateData['thumbnail'] = '<a href="' . $item_url . '"><img src="' . $thumbnailUrl . '" loading="lazy"';
+                $templateData['thumbnail'] .= ' alt="' . $thumbnailAlt . '"';
+                $templateData['thumbnail'] .= ' class="mfn-item-thumbnail-image';
+                $templateData['thumbnail'] .= ' size-' . $tSize . ' attachment-' . $tSize;
+                $templateData['thumbnail'] .= '"></a>';
+            }
 
             $templateData['preview'] = '';
 

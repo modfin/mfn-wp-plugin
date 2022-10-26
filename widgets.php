@@ -809,7 +809,9 @@ class mfn_news_feed_widget extends WP_Widget
             $data['showpreview'],
             $data['previewlen'],
             $data['disclaimerurl'],
-            $data['disclaimertag']
+            $data['disclaimertag'],
+            $data['showthumbnail'],
+            $data['thumbnailsize']
         );
 
         return sizeof($res);
@@ -862,6 +864,9 @@ class mfn_news_feed_widget extends WP_Widget
 
         $disclaimerurl = empty($instance['disclaimerurl']) ? null : $instance['disclaimerurl'];
         $disclaimertag = empty($instance['disclaimertag']) ? null : $instance['disclaimertag'];
+
+        $showthumbnail = isset($instance['showthumbnail']) && bool_check($instance['showthumbnail']);
+        $thumbnailsize = empty($instance['thumbnailsize']) ? '' : $instance['thumbnailsize'];
 
         $lang = 'en';
         $locale = determineLocale();
@@ -954,7 +959,7 @@ class mfn_news_feed_widget extends WP_Widget
 
         $min_max_years = MFN_get_feed_min_max_years($pmlang);
 
-        $template = empty($instance['template']) ? "
+        $tmpl = "
             <div class='mfn-item'>
                 <div class='mfn-item-header'>
                     <span class='mfn-date'>[date]</span>
@@ -962,12 +967,19 @@ class mfn_news_feed_widget extends WP_Widget
                         <a href='[url]'>[title]</a>
                     </span>
                     <span class='mfn-tags'>[tags]</span>
-                </div>
+                </div>     
+        ";
+        if ($showthumbnail) {
+            $tmpl .= "<div class='mfn-item-thumbnail'>[thumbnail]</div>";
+        }
+        $tmpl .= "
                 <div class='mfn-item-body'>
                     <div class='mfn-preview'>[preview]</div>
                 </div>
-            </div>
-        " : $instance['template'];
+            </div>        
+        ";
+
+        $template = empty($instance['template']) ? $tmpl : $instance['template'];
 
         $tagtemplate = empty($instance['tagtemplate']) ? "
             <span class='mfn-tag mfn-tag-[slug]'>[tag]</span>
@@ -1132,7 +1144,9 @@ class mfn_news_feed_widget extends WP_Widget
             'showpagination' => $showpagination,
             'query' => $params,
             'disclaimerurl' => $disclaimerurl,
-            'disclaimertag' => $disclaimertag
+            'disclaimertag' => $disclaimertag,
+            'showthumbnail' => $showthumbnail,
+            'thumbnailsize' => $thumbnailsize
         ));
 
         if ($showpagination) {
@@ -1181,11 +1195,17 @@ class mfn_news_feed_widget extends WP_Widget
         // Format at https://www.php.net/manual/en/function.date.php#refsect1-function.date-parameters
         $timestampFormat = $instance['timestampFormat'] ?? 'Y-m-d H:i';
         $skipcustomtags = $instance['skipcustomtags'] ?? '0';
+        $showthumbnail = $instance['showthumbnail'] ?? 0;
+        $thumbnailsize = $instance['thumbnailsize'] ?? '';
 
         if (isset($instance['template']) && $instance['template'] !== "") {
             $template = $instance['template'];
         } else {
-            $template = "<div class='mfn-item'><div class='mfn-date'>[date]</div><div class='mfn-tags'>[tags]</div><div class='mfn-title'><a href='[url]'>[title]</a></div><div class='mfn-preview'>[preview]</div></div>";
+            $template = "<div class='mfn-item'><div class='mfn-item-header'><span class='mfn-date'>[date]</span><span class='mfn-title'><a href='[url]'>[title]</a></span><span class='mfn-tags'>[tags]</span></div>";
+            if ($showthumbnail) {
+                $template .= "<div class='mfn-item-thumbnail'>[thumbnail]</div>";
+            }
+            $template .= "<div class='mfn-item-body'><div class='mfn-preview'>[preview]</div></div></div>";
         }
 
         if (isset($instance['tagtemplate']) && $instance['tagtemplate'] !== "") {
@@ -1311,7 +1331,26 @@ class mfn_news_feed_widget extends WP_Widget
                    value="1" ' . checked('1', $showpagination, false) . ' />
             <label for="' . esc_attr($this->get_field_id('showpagination')) .  '">' . __('Show Pagination', 'text_domain') . '</label>
         </p>
+        
+        <p>
+            <input id="' . esc_attr($this->get_field_id('showthumbnail')) . '"
+                   name="' . esc_attr($this->get_field_name('showthumbnail')) . '" type="checkbox"
+                   value="1" ' . checked('1', $showthumbnail, false) . ' />
+            <label for="' . esc_attr($this->get_field_id('showthumbnail')) .  '">' . __('Show Thumbnail', 'text_domain') . '</label>
+        </p>';
 
+        if ($showthumbnail) {
+            echo '
+<div style="border: 1px solid #E0E0E0; padding: 0 10px 10px 10px;">
+            <p>
+                <label for="' . esc_attr($this->get_field_id('thumbnailsize')) . '">' . __('Thumbnail Size:', 'text_domain') . ' (<i>thumbnail</i>, <i>medium_large</i> or <i>large</i>) Leave this field empty for <i>Full size</i></label>
+                <input class="widefat" id="' . esc_attr($this->get_field_id('thumbnailsize')) . '"
+                       name="' . esc_attr($this->get_field_name('thumbnailsize')) . '" type="text"
+                       value="' . esc_attr($thumbnailsize) . '"/>
+            </p></div>';
+        }
+
+        echo '
         <p>
             <label for="' . $this->get_field_id('lang') . '">' . __('Archive Language', 'text_domain') . ':</label>
             <select name="' . $this->get_field_name('lang') .'" id="' . $this->get_field_id('lang') . '" class="widefat">';
@@ -1379,7 +1418,7 @@ class mfn_news_feed_widget extends WP_Widget
 
             if (!$showpreview && strpos($template, '[preview]') !== false) {
                 echo '
-                    <li style="border-color: #fedb75; background-color: #fff3d0; padding: 10px 20px 10px 20px; border-radius: 2px;">
+                    <li style="border-color: #fedb75; background-color: #fff3d0; padding: 10px 20px 10px 20px; border-radius: 2px; font-size: 14px;">
                         <b>Notice:</b> Please remove the [preview] section from the template if "Show preview" is not checked.
                     </li>
                 ';
@@ -1441,6 +1480,8 @@ class mfn_news_feed_widget extends WP_Widget
         $instance['yeartemplate'] = (!empty($new_instance['yeartemplate'])) ? wp_kses_post($new_instance['yeartemplate']) : '';
         $instance['onlytagsallowed'] = (!empty($new_instance['onlytagsallowed'])) ? wp_kses_post($new_instance['onlytagsallowed']) : '';
         $instance['skipcustomtags'] = (!empty($new_instance['skipcustomtags'])) ? strip_tags($new_instance['skipcustomtags']) : '';
+        $instance['showthumbnail'] = (!empty($new_instance['showthumbnail'])) ? strip_tags($new_instance['showthumbnail']) : '';
+        $instance['thumbnailsize'] = (!empty($new_instance['thumbnailsize'])) ? strip_tags($new_instance['thumbnailsize']) : 'large';
         return $instance;
     }
 } //

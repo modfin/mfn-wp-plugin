@@ -118,3 +118,8 @@
 .mfn-filter-select {
     display: block;
 }
+
+.mfn-item-thumbnail img {
+    max-width: 100%;
+    margin-bottom: 10px;
+}
