@@ -893,9 +893,8 @@ class mfn_news_feed_widget extends WP_Widget
         if (!empty($tagsstr1)) {
             $tags[] = $tagsstr1;
         }
-        $tagsstr2 = isset($instance['tags']) && normalize_whitespace($instance['tags']);
-        if (!empty($tagsstr2)) {
-            $tags[] = $tagsstr2;
+        if (isset($instance['tags']) && !empty($instance['tags'])) {
+            $tags[] = normalize_whitespace($instance['tags']);
         }
         $tagsstr = join(",",$tags);
 
