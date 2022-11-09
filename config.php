@@ -492,6 +492,10 @@ function mfn_sync_taxonomy()
 
         foreach ($enItem['i10n'] as $i10nLang => $name) {
 
+            if (!isset($pllLangMapping[$i10nLang])) {
+                continue;
+            }
+
             $lang = $pllLangMapping[$i10nLang];
 
             if (!array_key_exists($lang, $allowed)) {
