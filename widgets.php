@@ -569,6 +569,7 @@ class mfn_archive_widget extends WP_Widget
         $instance['showfilter'] = (!empty($new_instance['showfilter'])) ? strip_tags($new_instance['showfilter']) : '';
         $instance['showfilterlabel'] = (!empty($new_instance['showfilterlabel'])) ? strip_tags($new_instance['showfilterlabel']) : '';
         $instance['filtertype'] = (!empty($new_instance['filtertype'])) ? strip_tags($new_instance['filtertype']) : 'dropdown';
+        $instance['filtertags'] = (!empty($new_instance['filtertags'])) ? strip_tags($new_instance['filtertags']) : '';
         $instance['showyear'] = (!empty($new_instance['showyear'])) ? strip_tags($new_instance['showyear']) : '';
         $instance['showdate'] = (!empty($new_instance['showdate'])) ? strip_tags($new_instance['showdate']) : '';
         $instance['showgenerictitle'] = (!empty($new_instance['showgenerictitle'])) ? strip_tags($new_instance['showgenerictitle']) : '';
@@ -857,6 +858,7 @@ class mfn_news_feed_widget extends WP_Widget
         $showfilter = isset($instance['showfilter']) && bool_check($instance['showfilter']);
         $showfilterlabel = !isset($instance['showfilterlabel']) || bool_check($instance['showfilterlabel']);
         $filtertype = empty($instance['filtertype']) ? 'dropdown' : $instance['filtertype'];
+        $filtertags = empty($instance['filtertags']) ? '' : $instance['filtertags'];
 
         $groupbyyear = isset($instance['groupbyyear']) && bool_check($instance['groupbyyear']);
         $showpagination = isset($instance['showpagination']) && bool_check($instance['showpagination']);
@@ -1038,12 +1040,54 @@ class mfn_news_feed_widget extends WP_Widget
                 $all_sel = $categoryTag === '' ? 'selected' : '';
                 $regulatory_sel = $categoryTag === 'regulatory' || $categoryTag === 'mfn-regulatory' ? 'selected' : '';
                 $nonRegulatory_sel = $categoryTag === '-regulatory' || $categoryTag === '-mfn-regulatory' ? 'selected' : '';
-                echo '    <select name="mfn-category-filter" id="mfn-category-filter-' . $instance_id  . '" class="mfn-category-filter" filtertype="dropdown" onchange="filterByCategory(this);">
-                            <option value="" ' . $all_sel . '>' . $l("All", $filter_lang) . '</option>
+
+                echo '<select name="mfn-category-filter" id="mfn-category-filter-' . $instance_id  . '" class="mfn-category-filter" filtertype="dropdown" onchange="filterByCategory(this);">';
+                echo '  <option value="" ' . $all_sel . '>' . $l("All", $filter_lang) . '</option>';
+                if (isset($filtertags) && !empty($filtertags)) {
+                    $def_categories = [
+                        'all' => $l("Regulatory", $filter_lang),
+                        'regulatory' => $l("Regulatory", $filter_lang),
+                        '-regulatory' => $l("Non-Regulatory", $filter_lang),
+                    ];
+
+                    global $wpdb;
+                    $ft = explode(',', $filtertags);
+                    foreach($ft as $slug) {
+                        $name = '';
+                        if (!empty($def_categories[$slug])) {
+                            $name = $def_categories[$slug];
+                        } else {
+                            $ndl = 'mfn-';
+                            if (strpos($slug, $ndl) !== 0) {
+                                $slug = $ndl . $slug;
+                            }
+
+                            $lang = $filter_lang === 'en' ? '' : '_' . $filter_lang;
+                            $slug = $slug . $lang;
+
+                            $get_tag = $wpdb->get_results("SELECT name FROM " . $wpdb->prefix . "terms WHERE slug = '" . $slug . "' LIMIT 1");
+
+                            if(is_array($get_tag)) {
+                                if (isset($get_tag[0]) && is_object($get_tag[0])) {
+                                    $name = $get_tag[0]->name;
+                                }  else {
+                                    $name = $slug;
+                                }
+                            }
+
+                        }
+
+                        $selected =  $categoryTag === $slug ? 'selected': '';
+                        echo '  <option value="'. $slug . '" ' . $selected . '>' . $name . '</option>';
+                    }
+
+                } else {
+                    echo '
                             <option value="regulatory" ' . $regulatory_sel . '>' . $l("Regulatory", $filter_lang) . '</option>
                             <option value="-regulatory" ' . $nonRegulatory_sel . '>' . $l("Non-Regulatory", $filter_lang) . '</option>
-                          </select>
-                ';
+                    ';
+                }
+                echo ' </select>';
             } else if ($filtertype === 'buttons') {
                 $all_act = $categoryTag === '' ? ' mfn-filter-button-active' : '';
                 $regulatory_act = $categoryTag === 'regulatory' || $categoryTag === 'mfn-regulatory' ? ' mfn-filter-button-active' : '';
@@ -1186,6 +1230,7 @@ class mfn_news_feed_widget extends WP_Widget
         $showfilter = $instance['showfilter'] ?? '0';
         $showfilterlabel = $instance['showfilterlabel'] ?? '1';
         $filtertype = $instance['filtertype'] ?? 'dropdown';
+        $filtertags = $instance['filtertags'] ?? '';
         $showyears = $instance['showyears'] ?? '0';
         $showyearslabel = $instance['showyearslabel'] ?? '1';
         $showpreview = $instance['showpreview'] ?? '0';
@@ -1257,7 +1302,13 @@ class mfn_news_feed_widget extends WP_Widget
                     echo '
                     </select>
                 </p>
-            </div>';
+                                <p>
+                    <label for="' . esc_attr($this->get_field_id('filtertags')) . '">' . __('Filter Tags:', 'text_domain') . '</label>
+                    <input class="mfn-filter-tags-input widefat" id="' . esc_attr($this->get_field_id('filtertags')) . '"
+                           name="' . esc_attr($this->get_field_name('filtertags')) . '" type="text"
+                           value="' . esc_attr($filtertags) . '"/>
+                </p>';
+            echo '</div>';
         }
         echo '
         <p>
@@ -1463,8 +1514,9 @@ class mfn_news_feed_widget extends WP_Widget
         $instance['lang'] = (!empty($new_instance['lang'])) ? wp_strip_all_tags($new_instance['lang']) : '';
         $instance['showpagination'] = (!empty($new_instance['showpagination'])) ? strip_tags($new_instance['showpagination']) : '';
         $instance['showfilter'] = (!empty($new_instance['showfilter'])) ? strip_tags($new_instance['showfilter']) : '';
-        $instance['filtertype'] = (!empty($new_instance['filtertype'])) ? strip_tags($new_instance['filtertype']) : 'dropdown';
         $instance['showfilterlabel'] = (!empty($new_instance['showfilterlabel'])) ? strip_tags($new_instance['showfilterlabel']) : '';
+        $instance['filtertype'] = (!empty($new_instance['filtertype'])) ? strip_tags($new_instance['filtertype']) : 'dropdown';
+        $instance['filtertags'] = (!empty($new_instance['filtertags'])) ? strip_tags($new_instance['filtertags']) : '';
         $instance['showyears'] = (!empty($new_instance['showyears'])) ? strip_tags($new_instance['showyears']) : '';
         $instance['showyearslabel'] = (!empty($new_instance['showyearslabel'])) ? strip_tags($new_instance['showyearslabel']) : '';
         $instance['yearstype'] = (!empty($new_instance['yearstype'])) ? strip_tags($new_instance['yearstype']) : 'links';
