@@ -490,7 +490,7 @@ function mfn_sync_taxonomy()
 
         $allowed = pll_the_languages(array('raw' => true));
 
-        foreach ($enItem['i10n'] as $i10nLang => $name) {
+        foreach ($enItem['i10n'] as `>`$i10nLang => $name) {
 
             if (!isset($pllLangMapping[$i10nLang])) {
                 continue;
