@@ -818,6 +818,11 @@ class mfn_news_feed_widget extends WP_Widget
         return sizeof($res);
     }
 
+    public function MFN_clean_string($string) {
+        $string = trim($string);
+        return preg_replace('/\s/', '', $string);
+    }
+
     public function widget($args, $instance)
     {
 
@@ -1043,44 +1048,52 @@ class mfn_news_feed_widget extends WP_Widget
 
                 echo '<select name="mfn-category-filter" id="mfn-category-filter-' . $instance_id  . '" class="mfn-category-filter" filtertype="dropdown" onchange="filterByCategory(this);">';
                 echo '  <option value="" ' . $all_sel . '>' . $l("All", $filter_lang) . '</option>';
-                if (isset($filtertags) && !empty($filtertags)) {
-                    $def_categories = [
-                        'all' => $l("Regulatory", $filter_lang),
-                        'regulatory' => $l("Regulatory", $filter_lang),
-                        '-regulatory' => $l("Non-Regulatory", $filter_lang),
-                    ];
 
+                if (isset($filtertags) && !empty($filtertags) && $this->MFN_clean_string($filtertags) !== '') {
                     global $wpdb;
-                    $ft = explode(',', $filtertags);
-                    foreach($ft as $slug) {
-                        $name = '';
-                        if (!empty($def_categories[$slug])) {
-                            $name = $def_categories[$slug];
-                        } else {
-                            $ndl = 'mfn-';
-                            if (strpos($slug, $ndl) !== 0) {
-                                $slug = $ndl . $slug;
-                            }
 
+                    $mfn_prefix = MFN_TAG_PREFIX . '-';
+                    $ft = str_replace(' ', '', $filtertags);
+                    $ft = explode(',', $filtertags);
+
+                    $name = '';
+                    $local_translations = array(
+                        'regulatory' => 'Regulatory',
+                        '-regulatory' => 'Non-Regulatory',
+                    );
+
+                    foreach ($ft as $slug) {
+                        $slug = $this->MFN_clean_string($slug);
+                        $s = $slug;
+
+                       if (array_key_exists($s, $local_translations)) {
+                           $l($local_translations[$s], $filter_lang);
+                           $name = $l($local_translations[$s], $filter_lang);
+                       } else {
+                        if (substr($s, 0, 1) === '-')  {
+                            $slug = substr_replace($slug, '', 0, 1);
+                        }
+                        if (strpos($s, $mfn_prefix) === FALSE) {
+                            $slug = $mfn_prefix . $slug;
+                        }
+                        if (strpos($s, '_' . $filter_lang) === FALSE) {
                             $lang = $filter_lang === 'en' ? '' : '_' . $filter_lang;
                             $slug = $slug . $lang;
-
-                            $get_tag = $wpdb->get_results("SELECT name FROM " . $wpdb->prefix . "terms WHERE slug = '" . $slug . "' LIMIT 1");
-
-                            if(is_array($get_tag)) {
-                                if (isset($get_tag[0]) && is_object($get_tag[0])) {
-                                    $name = $get_tag[0]->name;
-                                }  else {
-                                    $name = $slug;
-                                }
-                            }
-
                         }
 
-                        $selected =  $categoryTag === $slug ? 'selected': '';
-                        echo '  <option value="'. $slug . '" ' . $selected . '>' . $name . '</option>';
-                    }
+                        $get_tag_name = $wpdb->get_results("SELECT name FROM " . $wpdb->prefix . "terms WHERE slug = '" . $slug . "' LIMIT 1");
 
+                        if (is_array($get_tag_name)) {
+                            if (isset($get_tag_name[0]) && is_object($get_tag_name[0])) {
+                                $name = $get_tag_name[0]->name;
+                            } else {
+                                $name = $s;
+                            }
+                        }
+                    }
+                        $selected =  $categoryTag === $slug ? 'selected': '';
+                        echo '  <option value="'. $s . '" ' . $selected . '>' . $name . '</option>';
+                    }
                 } else {
                     echo '
                             <option value="regulatory" ' . $regulatory_sel . '>' . $l("Regulatory", $filter_lang) . '</option>
