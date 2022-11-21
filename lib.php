@@ -262,6 +262,11 @@ function mfn_create_tags($item): array
                 $pllLangMapping[$l] = $pll_lang->slug;
             };
             foreach ($newtag as $i => $t) {
+
+                if (!isset($pllLangMapping[$lang])) {
+                    continue;
+                }
+
                 $newtag[$i] = $t . "_" . $pllLangMapping[$lang];
             }
         }
@@ -519,7 +524,10 @@ function mfn_upsert_language($post_id, $group_id, $lang)
                 $l = explode('_', $pll_lang->locale)[0];
                 $pllLangMapping[$l] = $pll_lang->slug;
             };
-            pll_set_post_language($post_id, $pllLangMapping[$lang]);
+
+            if (isset($pllLangMapping[$lang])) {
+                pll_set_post_language($post_id, $pllLangMapping[$lang]);
+            }
 
             global $wpdb;
             $q = $wpdb->prepare("
@@ -535,8 +543,13 @@ function mfn_upsert_language($post_id, $group_id, $lang)
 
             $translations = array();
             foreach ($res as $i => $post){
-                $_post_id= $post->post_id;
+                $_post_id = $post->post_id;
                 $_lang = $post->lang;
+
+                if (!isset($pllLangMapping[$_lang])) {
+                    continue;
+                }
+
                 $translations[$pllLangMapping[$_lang]] = $_post_id;
             }
             pll_save_post_translations( $translations );
