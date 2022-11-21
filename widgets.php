@@ -1091,7 +1091,7 @@ class mfn_news_feed_widget extends WP_Widget
                             }
                         }
                     }
-                        $selected =  $categoryTag === $slug ? 'selected': '';
+                        $selected =  ($categoryTag === $slug || $mfn_prefix . $categoryTag === $slug) ? 'selected': '';
                         echo '  <option value="'. $s . '" ' . $selected . '>' . $name . '</option>';
                     }
                 } else {
