@@ -818,11 +818,6 @@ class mfn_news_feed_widget extends WP_Widget
         return sizeof($res);
     }
 
-    public function MFN_clean_string($string) {
-        $string = trim($string);
-        return preg_replace('/\s/', '', $string);
-    }
-
     public function widget($args, $instance)
     {
 
@@ -863,7 +858,7 @@ class mfn_news_feed_widget extends WP_Widget
         $showfilter = isset($instance['showfilter']) && bool_check($instance['showfilter']);
         $showfilterlabel = !isset($instance['showfilterlabel']) || bool_check($instance['showfilterlabel']);
         $filtertype = empty($instance['filtertype']) ? 'dropdown' : $instance['filtertype'];
-        $filtertags = empty($instance['filtertags']) ? '' : $instance['filtertags'];
+        $filtertags = empty($instance['filtertags']) ? '' : sanitize_text_field($instance['filtertags']);
 
         $groupbyyear = isset($instance['groupbyyear']) && bool_check($instance['groupbyyear']);
         $showpagination = isset($instance['showpagination']) && bool_check($instance['showpagination']);
@@ -1049,7 +1044,7 @@ class mfn_news_feed_widget extends WP_Widget
                 echo '<select name="mfn-category-filter" id="mfn-category-filter-' . $instance_id  . '" class="mfn-category-filter" filtertype="dropdown" onchange="filterByCategory(this);">';
                 echo '  <option value="" ' . $all_sel . '>' . $l("All", $filter_lang) . '</option>';
 
-                if (isset($filtertags) && !empty($filtertags) && $this->MFN_clean_string($filtertags) !== '') {
+                if (isset($filtertags) && !empty($filtertags) && $this->$filtertags !== '') {
                     global $wpdb;
 
                     $mfn_prefix = MFN_TAG_PREFIX . '-';
@@ -1063,7 +1058,7 @@ class mfn_news_feed_widget extends WP_Widget
                     );
 
                     foreach ($ft as $slug) {
-                        $slug = $this->MFN_clean_string($slug);
+                        $slug = sanitize_text_field($slug);
                         $s = $slug;
 
                        if (array_key_exists($s, $local_translations)) {
@@ -1315,7 +1310,7 @@ class mfn_news_feed_widget extends WP_Widget
                     echo '
                     </select>
                 </p>
-                                <p>
+                <p>
                     <label for="' . esc_attr($this->get_field_id('filtertags')) . '">' . __('Filter Tags:', 'text_domain') . '</label>
                     <input class="mfn-filter-tags-input widefat" id="' . esc_attr($this->get_field_id('filtertags')) . '"
                            name="' . esc_attr($this->get_field_name('filtertags')) . '" type="text"
@@ -1529,7 +1524,7 @@ class mfn_news_feed_widget extends WP_Widget
         $instance['showfilter'] = (!empty($new_instance['showfilter'])) ? strip_tags($new_instance['showfilter']) : '';
         $instance['showfilterlabel'] = (!empty($new_instance['showfilterlabel'])) ? strip_tags($new_instance['showfilterlabel']) : '';
         $instance['filtertype'] = (!empty($new_instance['filtertype'])) ? strip_tags($new_instance['filtertype']) : 'dropdown';
-        $instance['filtertags'] = (!empty($new_instance['filtertags'])) ? strip_tags($new_instance['filtertags']) : '';
+        $instance['filtertags'] = (!empty($new_instance['filtertags'])) ? sanitize_text_field($new_instance['filtertags']) : '';
         $instance['showyears'] = (!empty($new_instance['showyears'])) ? strip_tags($new_instance['showyears']) : '';
         $instance['showyearslabel'] = (!empty($new_instance['showyearslabel'])) ? strip_tags($new_instance['showyearslabel']) : '';
         $instance['yearstype'] = (!empty($new_instance['yearstype'])) ? strip_tags($new_instance['yearstype']) : 'links';
