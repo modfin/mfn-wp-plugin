@@ -29,12 +29,22 @@
 @keyframes mfn-slide-top {
     0% {
         opacity: 0;
-
         transform: translateY(-20px);
     }
     100% {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes mfn-slide-up {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-20);
     }
 }
 
@@ -454,6 +464,12 @@ span#mfn-subscription-status p, #mfn-sync-status p {
 .mfn-do-slide-top {
     -webkit-animation: mfn-slide-top 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     animation: mfn-slide-top 0.3s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    animation-delay: 0.5s;
+}
+
+.mfn-do-slide-up {
+    -webkit-animation: mfn-slide-up 0.2s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    animation: mfn-slide-up 0.2s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
     animation-delay: 0.5s;
 }
 
@@ -893,4 +909,14 @@ span.mfn-modal-dialog-actions b:first-child {
 #mfn-rewrite-wrapper table small {
     position: relative;
     top: 1px;
+}
+
+.mfn-hide-error {
+    position: relative;
+    top: -14px;
+    cursor: pointer;
+}
+
+.mfn-hide-error:hover {
+    text-decoration: underline;
 }

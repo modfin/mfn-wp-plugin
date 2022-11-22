@@ -270,12 +270,17 @@
 
     function mfn_subscription_error(msg, id) {
         var subStatusEl = $('#' + id);
+        subStatusEl.show();
         subStatusEl.css("flex-basis", "100%");
         subStatusEl.load(statusPageUrl, function() {
             subStatusEl
-                .html('<p class="update-nag notice notice-warning inline mfn-do-slide-top"><i class="dashicons dashicons-dismiss mfn-error-icon"></i>' + msg + '</p>');
+                .html('<div id="mfn-sub-error-container" class="mfn-do-slide-top"><p class="update-nag notice notice-warning inline"><i class="dashicons dashicons-dismiss mfn-error-icon"></i>' + msg + '</p><span class="mfn-hide-error"><small>(hide)</small></span></div>');
             $('#mfn-sub-button').attr("disabled", false);
             mfn_tests();
+            $('.mfn-hide-error').click(function(e) {
+                e.preventDefault();
+                $('#mfn-sub-error-container').removeClass('mfn-do-slide-top').addClass('mfn-do-slide-up');
+            });
         });
     }
 
@@ -337,7 +342,7 @@
         $('#mfn-sub-button').attr("disabled", true);
 
         $.get(pluginUrl + '/cc.php?mode=subscribe', function (msg) {
-            subStatusEl.html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div>');
+            subStatusEl.html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div> Subscribing...');
             mfn_verify_subscription(pluginUrl, verificationRetries, msg);
         });
     }
@@ -350,7 +355,7 @@
 
         $.get(pluginUrl + '/cc.php?mode=unsubscribe', function () {
             subStatusEl
-                .html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div>');
+                .html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div> Unsubscribing...');
 
             // reload status section
             setTimeout(function () {
