@@ -1047,7 +1047,7 @@ class mfn_news_feed_widget extends WP_Widget
                 echo '<select name="mfn-category-filter" id="mfn-category-filter-' . $instance_id  . '" class="mfn-category-filter" filtertype="dropdown" onchange="filterByCategory(this);">';
                 echo '  <option value="" ' . $all_sel . '>' . $l("All", $filter_lang) . '</option>';
 
-                if (isset($filtertags) && !empty($filtertags) && $this->$filtertags !== '') {
+                if (isset($filtertags) && !empty($filtertags)) {
                     global $wpdb;
 
                     $mfn_prefix = MFN_TAG_PREFIX . '-';
@@ -1089,7 +1089,7 @@ class mfn_news_feed_widget extends WP_Widget
                             }
                         }
                     }
-                        $selected =  ($categoryTag === $slug || $mfn_prefix . $categoryTag === $slug) ? 'selected': '';
+                        $selected =  ($categoryTag === $s || $mfn_prefix . $categoryTag === $s) ? 'selected': '';
                         echo '  <option value="'. $s . '" ' . $selected . '>' . $name . '</option>';
                     }
                 } else {
