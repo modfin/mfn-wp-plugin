@@ -268,17 +268,24 @@ span.mfn-status-success {
     color: #5e6a74;
 }
 
+#mfn-sync-status p {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 430px;
+    overflow-x: auto;
+    user-select: revert !important;
+}
+
+#mfn-sync-status ::-webkit-scrollbar {
+    display: none;
+}
+
 #mfn-sync-status {
     margin-top: 5px;
     border-bottom: 1px solid #dcdcde;
     padding-bottom: 6px;
     align-items: center;
     display: inline-flex;
-    width: max-content;
-}
-
-#mfn-sync-status span {
-    user-select: none;
 }
 
 button#mfn-sync-latest.button, button#mfn-sync-tax.button {

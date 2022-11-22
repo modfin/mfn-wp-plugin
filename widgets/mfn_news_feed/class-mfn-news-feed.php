@@ -44,11 +44,16 @@ class News_feed {
         );
     }
 
-    public function list_news_items($feed, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $skipcustomtags, $showpreview, $previewlen, $disclaimerurl, $disclaimertag, $showthumbnail, $thumbnailsize) {
+    public function list_news_items($feed, $tzLocation, $timestampFormat, $onlytagsallowed, $tagtemplate, $template, $groupbyyear, $skipcustomtags, $showpreview, $previewlen, $disclaimerurl, $disclaimertag, $showthumbnail, $thumbnailsize, $shownotfound, $notfoundmsg, $pmlang): string
+    {
 
         $result = '';
         $years = [];
         $group_by_year = $groupbyyear && !empty($feed);
+
+        if (sizeof($feed) === 0 && $shownotfound) {
+            return '<div class="mfn-not-found-wrapper"><span class="mfn-not-found-msg-' . $pmlang .'">'. $notfoundmsg . '</span></div>';
+        }
 
         foreach ($feed as $k => $item) {
             $year = explode("-", $item->post_date_gmt)[0];

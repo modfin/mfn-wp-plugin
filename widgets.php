@@ -38,6 +38,7 @@ function create_mfn_wid_translate()
         'Annual Report' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
         'Regulatory' => ['sv' => "Regulatorisk", 'fi' => 'Sääntelyä'],
         'Non-Regulatory' => ['sv' => "Icke-Regulatorisk", 'fi' => 'Sääntelemätönä'],
+        'Couldn\'t find anything.' => ['sv' => "Kunde inte hitta något.", 'fi' => 'Ei löytynyt mitään.'],
     );
 
     return static function ($word, $lang) use ($l10n) {
@@ -566,10 +567,6 @@ class mfn_archive_widget extends WP_Widget
         $instance = array();
         $instance['lang'] = (!empty($new_instance['lang'])) ? strip_tags($new_instance['lang']) : '';
         $instance['showheading'] = (!empty($new_instance['showheading'])) ? strip_tags($new_instance['showheading']) : '';
-        $instance['showfilter'] = (!empty($new_instance['showfilter'])) ? strip_tags($new_instance['showfilter']) : '';
-        $instance['showfilterlabel'] = (!empty($new_instance['showfilterlabel'])) ? strip_tags($new_instance['showfilterlabel']) : '';
-        $instance['filtertype'] = (!empty($new_instance['filtertype'])) ? strip_tags($new_instance['filtertype']) : 'dropdown';
-        $instance['filtertags'] = (!empty($new_instance['filtertags'])) ? strip_tags($new_instance['filtertags']) : '';
         $instance['showyear'] = (!empty($new_instance['showyear'])) ? strip_tags($new_instance['showyear']) : '';
         $instance['showdate'] = (!empty($new_instance['showdate'])) ? strip_tags($new_instance['showdate']) : '';
         $instance['showgenerictitle'] = (!empty($new_instance['showgenerictitle'])) ? strip_tags($new_instance['showgenerictitle']) : '';
@@ -812,7 +809,10 @@ class mfn_news_feed_widget extends WP_Widget
             $data['disclaimerurl'],
             $data['disclaimertag'],
             $data['showthumbnail'],
-            $data['thumbnailsize']
+            $data['thumbnailsize'],
+            $data['shownotfound'],
+            $data['notfoundmsg'],
+            $data['pmlang']
         );
 
         return sizeof($res);
@@ -869,6 +869,7 @@ class mfn_news_feed_widget extends WP_Widget
 
         $showthumbnail = isset($instance['showthumbnail']) && bool_check($instance['showthumbnail']);
         $thumbnailsize = empty($instance['thumbnailsize']) ? '' : $instance['thumbnailsize'];
+        $shownotfound = isset($instance['shownotfound']) && bool_check($instance['shownotfound']);
 
         $lang = 'en';
         $locale = determineLocale();
@@ -889,6 +890,8 @@ class mfn_news_feed_widget extends WP_Widget
         if ($page < 0) {
             return;
         }
+
+        $notfoundmsg = $l('Couldn\'t find anything.', $lang);
 
         $tags = array();
         $tagsstr1 = $query_param('m-tags', "");
@@ -1197,7 +1200,9 @@ class mfn_news_feed_widget extends WP_Widget
             'disclaimerurl' => $disclaimerurl,
             'disclaimertag' => $disclaimertag,
             'showthumbnail' => $showthumbnail,
-            'thumbnailsize' => $thumbnailsize
+            'thumbnailsize' => $thumbnailsize,
+            'shownotfound' => $shownotfound,
+            'notfoundmsg' => $notfoundmsg
         ));
 
         if ($showpagination) {
@@ -1249,6 +1254,7 @@ class mfn_news_feed_widget extends WP_Widget
         $skipcustomtags = $instance['skipcustomtags'] ?? '0';
         $showthumbnail = $instance['showthumbnail'] ?? 0;
         $thumbnailsize = $instance['thumbnailsize'] ?? '';
+        $shownotfound = $instance['shownotfound'] ?? 0;
 
         if (isset($instance['template']) && $instance['template'] !== "") {
             $template = $instance['template'];
@@ -1312,12 +1318,19 @@ class mfn_news_feed_widget extends WP_Widget
                 </p>
                 <p>
                     <label for="' . esc_attr($this->get_field_id('filtertags')) . '">' . __('Filter Tags:', 'text_domain') . '</label>
-                    <input class="mfn-filter-tags-input widefat" id="' . esc_attr($this->get_field_id('filtertags')) . '"
+                    <input class="widefat" id="' . esc_attr($this->get_field_id('filtertags')) . '"
                            name="' . esc_attr($this->get_field_name('filtertags')) . '" type="text"
                            value="' . esc_attr($filtertags) . '"/>
                 </p>';
             echo '</div>';
-        }
+        } ?>
+        <p>
+            <input id="<?php echo esc_attr($this->get_field_id('shownotfound')); ?>"
+                   name="<?php echo esc_attr($this->get_field_name('shownotfound')); ?>" type="checkbox"
+                   value="1" <?php checked('1', $shownotfound); ?> />
+            <label for="<?php echo esc_attr($this->get_field_id('shownotfound')); ?>"><?php _e('Show Not Found', 'text_domain'); ?></label>
+        </p>
+        <?php
         echo '
         <p>
             <input id="' . esc_attr($this->get_field_id('showyears')) . '"
@@ -1541,6 +1554,7 @@ class mfn_news_feed_widget extends WP_Widget
         $instance['skipcustomtags'] = (!empty($new_instance['skipcustomtags'])) ? strip_tags($new_instance['skipcustomtags']) : '';
         $instance['showthumbnail'] = (!empty($new_instance['showthumbnail'])) ? strip_tags($new_instance['showthumbnail']) : '';
         $instance['thumbnailsize'] = (!empty($new_instance['thumbnailsize'])) ? strip_tags($new_instance['thumbnailsize']) : 'large';
+        $instance['shownotfound'] = (!empty($new_instance['shownotfound'])) ? strip_tags($new_instance['shownotfound']) : '';
         return $instance;
     }
 } //

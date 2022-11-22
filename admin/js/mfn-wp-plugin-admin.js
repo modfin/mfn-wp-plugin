@@ -429,11 +429,25 @@
         delPostsBtnEl.prop('disabled', true);
         var pluginUrl = mfn_admin_params.plugin_url;
 
-        $.get(pluginUrl + '/cc.php?mode=delete-all-posts&limit=10&include-dirty=' + includeDirty, function (data) {
+        function resetDelButtonVisState() {
+            delPostsBtnEl.prop('disabled', false);
+            delPostsBtnSpanEl.html('');
+            delPostsBtnSpanEl.addClass("dashicons dashicons-admin-post");
+        }
+
+        $.get(pluginUrl + '/cc.php?mode=delete-all-posts&limit=10&include-dirty=' + includeDirty, function (data, xhr) {
             var parts = data.split(';');
             var i = parseInt(parts[0]);
             var deleted = parseInt(parts[1]);
+            var deleteSt = parts[2];
             total += deleted;
+
+            if (deleteSt === "failed") {
+                dzStatusEl
+                    .html('<span class="mfn-status-container mfn-status-container-delete mfn-do-fade"><div class="mfn-status-container mfn-highlight-status mfn-do-slide-top"><span class=\"dashicons dashicons-no mfn-do-fade mfn-error-icon\"></span>Delete action failed!</div>');
+                resetDelButtonVisState();
+                return;
+            }
 
             if (i === 10) {
                 mfn_delay(100).then(function() {
@@ -443,7 +457,7 @@
                 return;
             }
 
-            if(total === 0 || total > 1) {
+            if (total === 0 || total > 1) {
                 dzStatusEl
                     .html('<span class="mfn-status-container mfn-status-container-delete mfn-do-fade"><div class="mfn-status-container mfn-highlight-status mfn-do-slide-top"><span class=\"dashicons dashicons-yes mfn-do-fade mfn-success-icon\"></span>Action completed!</div>&nbsp;&nbsp;<b>' + total + ' </b>&nbsp;MFN posts were deleted');
             } else {
@@ -451,9 +465,7 @@
                     .html('<span class="mfn-status-container mfn-status-container-delete mfn-do-fade"><div class="mfn-status-container mfn-highlight-status mfn-do-slide-top"><span class=\"dashicons dashicons-yes mfn-do-fade mfn-success-icon\"></span>Action completed!</div>&nbsp;&nbsp;<b>' + total + ' </b>&nbsp;MFN post was deleted');
             }
 
-            delPostsBtnEl.prop('disabled', false);
-            delPostsBtnSpanEl.html('');
-            delPostsBtnSpanEl.addClass("dashicons dashicons-admin-post");
+            resetDelButtonVisState();
         });
     }
 

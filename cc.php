@@ -202,6 +202,7 @@ function mfn_delete_all_posts(): array
     $delete_attachments = isset(get_option(MFN_PLUGIN_NAME)['thumbnail_allow_delete']);
 
     $i = 0;
+    $stat = "ok";
     $num_deleted = 0;
     $num_skipped_dirty = 0;
     $num_skipped_trash = 0;
@@ -228,7 +229,10 @@ function mfn_delete_all_posts(): array
                    if ($delete_attachments) {
                        mfn_delete_attachments($each_post->ID);
                    }
-                   wp_delete_post($each_post->ID, true);
+                   $delete_posts = wp_delete_post($each_post->ID, true);
+                   if ($delete_posts === null) {
+                       $stat = "failed";
+                   }
                    $num_deleted++;
                }
            }
@@ -236,7 +240,7 @@ function mfn_delete_all_posts(): array
          }
     }
 
-    return array($i, $num_deleted);
+    return array($i, $num_deleted, $stat);
 }
 
 function mfn_verify_subscription()
@@ -279,7 +283,7 @@ switch ($mode) {
 
     case "delete-all-posts":
         $a = mfn_delete_all_posts();
-        echo $a[0] . ';' . $a[1];
+        echo $a[0] . ';' . $a[1] . ';' . $a[2];
         die();
 
     case "delete-all-tags":

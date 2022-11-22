@@ -133,7 +133,7 @@ function mfn_get_text($key)
         /* modal */
         'modal_restore_body' => mfn_text_domain('Are you sure that you want to restore this ' . MFN_SINGULAR_NAME . '?'),
         'modal_restore_heading' => mfn_text_domain('Restore ' . MFN_SINGULAR_NAME),
-        'modal_explanation_delete_posts' => mfn_text_domain('Clicking delete will remove all MFN posts (which are listed under ' . MFN_ARCHIVE_NAME . ' but will keep manually added posts (Local).'),
+        'modal_explanation_delete_posts' => mfn_text_domain('Clicking delete will remove all MFN posts (which are listed under ' . MFN_ARCHIVE_NAME . ' but will keep manually added or modified posts (Local).'),
         'modal_explanation_delete_tags' => mfn_text_domain('Clicking delete will remove all MFN tags. This might be a good idea if you eg. imported using different language plugins and need to clear out the tags. You can then use \'Sync All\' which will re-import all tags that are associated with MFN posts.'),
         'modal_explanation_clear_settings' => mfn_text_domain('Clearing will delete all the saved settings from options. Only do this if you want to reset to the initial state of a clean installation.'),
 
@@ -142,7 +142,7 @@ function mfn_get_text($key)
         'placeholder_delete_mfn_tags' => mfn_text_domain('write \'delete\' to confirm'),
         'placeholder_delete_mfn_posts' => mfn_text_domain('write \'delete\' to confirm'),
         /* actions */
-        'action_include_modified_posts' => mfn_text_domain('<b>Include modified posts</b><br> <b style="color: #DC3232;">(Warning)</b>  This will delete <u>all posts</u> including the ones that have been modified as well as those in <i>Trash</i>. Manually added posts (Local) will however always be skipped.</b>'),
+        'action_include_modified_posts' => mfn_text_domain('<b>Include modified posts</b><br> <b style="color: #DC3232;">(Warning)</b>  This will delete <u>all posts</u> including the ones that have been modified as well as those in <i>Trash</i>. Manually added or modified posts (Local) will however always be skipped.</b>'),
         /* other text */
         'text_in' => mfn_text_domain('in'),
         'text_and' => mfn_text_domain('and'),
