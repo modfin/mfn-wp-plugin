@@ -83,8 +83,6 @@
                 .html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div> Waiting...</span>');
         }
 
-        console.log('running')
-
         $.get(mfn_admin_params.plugin_url + '/cc.php?mode=sync&limit=' + limit + '&offset=' + offset, function (data) {
             sync_condition = 'running';
             var fetched = parseInt(data.split(' ')[0]);
