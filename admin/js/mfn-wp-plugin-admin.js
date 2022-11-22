@@ -83,6 +83,8 @@
                 .html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div> Waiting...</span>');
         }
 
+        console.log('running')
+
         $.get(mfn_admin_params.plugin_url + '/cc.php?mode=sync&limit=' + limit + '&offset=' + offset, function (data) {
             sync_condition = 'running';
             var fetched = parseInt(data.split(' ')[0]);
@@ -118,6 +120,7 @@
 
             syncStatusEl.html('<span class="mfn-do-fade"><b>Result:</b></span>&nbsp;<span class="mfn-do-fade">' + (offset+fetched) + '</span>&nbsp;fetched&nbsp;<span class="mfn-do-fade"><b>' + insertedAgg + "</b></span>&nbsp;upserted");
 
+            sync_condition = 'waiting';
             disableActionButtons(false);
             syncStatusEl.append("&nbsp;&nbsp;<div class='mfn-status-container mfn-do-fade mfn-highlight-status'><span class=\"dashicons dashicons-yes do-fade mfn-success-icon\"></span>Done!</div>");
         });
