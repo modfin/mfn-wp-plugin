@@ -69,6 +69,8 @@
         });
     }
 
+    var sync_condition = 'waiting';
+
     function mfn_sync(all, limit, offset, insertedAgg) {
 
         insertedAgg = insertedAgg || 0;
@@ -76,7 +78,13 @@
         offset = offset || 0;
         offset = parseInt(offset);
 
+        if (sync_condition === 'waiting') {
+            $('#mfn-sync-status')
+                .html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div> Waiting...</span>');
+        }
+
         $.get(mfn_admin_params.plugin_url + '/cc.php?mode=sync&limit=' + limit + '&offset=' + offset, function (data) {
+            sync_condition = 'running';
             var fetched = parseInt(data.split(' ')[0]);
             var inserted = parseInt(data.split(' ')[1]);
             insertedAgg += inserted;
@@ -471,6 +479,7 @@
 
     function mfn_sync_all_click() {
         $("#mfn-sync-all").one("click", async function (e) {
+            e.stopImmediatePropagation();
             e.stopPropagation();
             disableActionButtons(true);
             // sync taxonomy first
@@ -480,8 +489,9 @@
         });
     }
     function mfn_sync_latest_click() {
-        $("#mfn-sync-latest").one("click", async function (event) {
-            event.stopPropagation();
+        $("#mfn-sync-latest").one("click", async function (e) {
+            e.stopImmediatePropagation();
+            e.stopPropagation();
             disableActionButtons(true);
             // sync taxonomy first
             await syncTax();
@@ -491,12 +501,12 @@
         });
     }
     function mfn_sync_tax_click() {
-        $("#mfn-sync-tax").click( function (e) {
+        $("#mfn-sync-tax").click(async function (e) {
+            e.stopImmediatePropagation();
             e.stopPropagation();
             disableActionButtons(true);
-            syncTax().then(function () {
-                disableActionButtons(false);
-            });
+            await syncTax();
+            disableActionButtons(false);
         });
     }
 
