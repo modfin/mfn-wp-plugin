@@ -561,7 +561,14 @@ function mfn_sync_taxonomy()
         pll_save_term_translations($translations);
     };
 
-    $getTerm = function ($slug, $lang) {
+    $getTerm = function ($slug, $lang)  use ($use_wpml, $has_wpml) {
+	    if ($has_wpml && $use_wpml) {
+		    $terms = MFN_get_terms_wpml($slug);
+			if (!$terms) {
+				return false;
+			}
+			return $terms[0];
+	    }
         $terms = get_terms(array(
             'taxonomy' => MFN_TAXONOMY_NAME,
             'hide_empty' => false,
@@ -595,12 +602,12 @@ function mfn_sync_taxonomy()
 
         $term = $getTerm($slug, 'en');
 
-        if ($term == false) {
+        if (!$term) {
             wp_insert_term($item['name'], MFN_TAXONOMY_NAME, array(
                 'slug' => $slug,
                 'parent' => $parent_id,
             ));
-            $term = $getTerm($slug, 'en');
+            $term = $getTerm($slug, 'en'); // to get term_id
         }
         if (is_object($term)) {
             wp_update_term($term->term_id, MFN_TAXONOMY_NAME, array(

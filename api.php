@@ -488,3 +488,38 @@ INNER JOIN (
 
     return $res;
 }
+
+function MFN_get_terms_wpml($slug) {
+	global $sitepress;
+	/* remove wpml filters before fetching */
+	$filter_terms_args    = remove_filter( 'get_terms_args', array( $sitepress, 'get_terms_args_filter' ) );
+	$filter_get_term      = remove_filter( 'get_term', array( $sitepress, 'get_term_adjust_id' ), 1 );
+	$filter_terms_clauses = remove_filter( 'terms_clauses', array( $sitepress, 'terms_clauses' ) );
+
+	$terms_args = array(
+		'taxonomy'   => MFN_TAXONOMY_NAME,
+		'hide_empty' => false,
+	);
+	if ( ! empty( $slug ) ) {
+		$terms_args['slug'] = $slug;
+	}
+
+	$terms = get_terms( $terms_args );
+
+	/* re-add wpml filters after fetching */
+	if ( $filter_terms_args ) {
+		add_filter( 'get_terms_args', array( $sitepress, 'get_terms_args_filter' ), 10, 2 );
+	}
+	if ( $filter_get_term ) {
+		add_filter( 'get_term', array( $sitepress, 'get_term_adjust_id' ), 1, 1 );
+	}
+	if ( $filter_terms_clauses ) {
+		add_filter( 'terms_clauses', array( $sitepress, 'terms_clauses' ), 10, 3 );
+	}
+
+	if ( sizeof( $terms ) == 0 ) {
+		return false;
+	}
+
+	return $terms;
+}

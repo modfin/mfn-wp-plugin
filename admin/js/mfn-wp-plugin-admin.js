@@ -471,12 +471,12 @@
                 return;
             }
 
-            if (total === 0 || total > 1) {
-                dzStatusEl
-                    .html('<span class="mfn-status-container mfn-status-container-delete mfn-do-fade"><div class="mfn-status-container mfn-highlight-status mfn-do-slide-top"><span class=\"dashicons dashicons-yes mfn-do-fade mfn-success-icon\"></span>Action completed!</div>&nbsp;&nbsp;<b>' + total + ' </b>&nbsp;MFN posts were deleted');
-            } else {
+            if (total <= 1) {
                 dzStatusEl
                     .html('<span class="mfn-status-container mfn-status-container-delete mfn-do-fade"><div class="mfn-status-container mfn-highlight-status mfn-do-slide-top"><span class=\"dashicons dashicons-yes mfn-do-fade mfn-success-icon\"></span>Action completed!</div>&nbsp;&nbsp;<b>' + total + ' </b>&nbsp;MFN post was deleted');
+            } else {
+                dzStatusEl
+                    .html('<span class="mfn-status-container mfn-status-container-delete mfn-do-fade"><div class="mfn-status-container mfn-highlight-status mfn-do-slide-top"><span class=\"dashicons dashicons-yes mfn-do-fade mfn-success-icon\"></span>Action completed!</div>&nbsp;&nbsp;<b>' + total + ' </b>&nbsp;MFN posts were deleted');
             }
 
             resetDelButtonVisState();

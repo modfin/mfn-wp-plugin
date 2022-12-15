@@ -1,4 +1,5 @@
 <?php
+require_once('consts.php');
 
 function mfn_post_is_dirty($post_id): bool
 {
@@ -10,16 +11,21 @@ function mfn_post_is_local($post_id) {
     return $post_meta[MFN_POST_TYPE . '_news_id'] ?? null;
 }
 
-function mfn_fetch_tags_status(): array
-{
+function mfn_fetch_tags_status(): array {
+	$options = get_option(MFN_PLUGIN_NAME);
+	if (defined('WPML_PLUGIN_BASENAME') && isset($options['language_plugin']) && $options['language_plugin'] == 'wpml') {
+		$terms = MFN_get_terms_wpml('');
+		$total = !$terms ? 0 : sizeof($terms);
+	} else {
+		$terms = get_terms(array(
+			'taxonomy'   => MFN_TAXONOMY_NAME,
+			'hide_empty' => false,
+			'lang' => ''
+		));
+		$total = is_array($terms) ? sizeof($terms): 0;
+	}
 
-    $terms = get_terms( array(
-        'taxonomy' => MFN_TAXONOMY_NAME,
-        'hide_empty' => false,
-        'lang' => ''
-    ));
-
-    return [sizeof($terms)];
+    return [$total];
 }
 
 function mfn_fetch_posts_status(): array

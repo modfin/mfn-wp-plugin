@@ -1,5 +1,6 @@
 <?php // Silence is golden
 
+require_once(dirname(__FILE__) . '/consts.php');
 require_once(dirname(__FILE__) . '/config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 
@@ -175,22 +176,58 @@ function mfn_delete_attachments($post_id) {
 
 function mfn_delete_all_tags(): array
 {
-    $i = 0;
-    $num_deleted = 0;
-    $taxonomy_name = MFN_TAXONOMY_NAME;
-    $terms = get_terms( array(
-        'taxonomy' => MFN_TAXONOMY_NAME,
-        'hide_empty' => false,
-        'lang' => ''
-    ));
-    foreach ( $terms as $term ) {
-        $deleted_term = wp_delete_term($term->term_id, $taxonomy_name);
-        if ($deleted_term) {
-            $num_deleted++;
-        }
-        $i++;
-    }
-    return array($i, $num_deleted);
+	$i             = 0;
+	$num_deleted   = 0;
+	$taxonomy_name = MFN_TAXONOMY_NAME;
+
+	$options      = get_option( "mfn-wp-plugin" );
+	$wpml_enabled = defined( 'WPML_PLUGIN_BASENAME' ) && isset( $options['language_plugin'] ) && $options['language_plugin'] == 'wpml';
+
+	if ( $wpml_enabled ) {
+		$terms = MFN_get_terms_wpml( '' );
+	} else {
+		$terms = get_terms( array(
+			'taxonomy'   => MFN_TAXONOMY_NAME,
+			'hide_empty' => false,
+		) );
+	}
+	foreach ( $terms as $term ) {
+		$deleted_term = mfn_delete_term( $wpml_enabled, $term->term_id, $taxonomy_name );
+		if ( $deleted_term ) {
+			$num_deleted ++;
+		}
+		$i ++;
+	}
+
+	return array( $i, $num_deleted );
+}
+
+function mfn_delete_term($wpml_enabled, $term_id, $taxonomy_name) {
+
+	if (!$wpml_enabled) {
+		return wp_delete_term($term_id, $taxonomy_name);
+	}
+
+	global $sitepress;
+	/* remove wpml filters before fetching */
+	$filter_terms_args = remove_filter('get_terms_args', array( $sitepress, 'get_terms_args_filter' ));
+	$filter_get_term = remove_filter('get_term', array( $sitepress, 'get_term_adjust_id' ),1);
+	$filter_terms_clauses = remove_filter('terms_clauses', array( $sitepress, 'terms_clauses' ));
+
+	$delete_term = wp_delete_term($term_id, $taxonomy_name);
+
+	/* re-add wpml filters after fetching */
+	if ($filter_terms_args) {
+		add_filter( 'get_terms_args', array( $sitepress, 'get_terms_args_filter' ), 10, 2 );
+	}
+	if ($filter_get_term) {
+		add_filter( 'get_term', array( $sitepress, 'get_term_adjust_id' ), 1, 1 );
+	}
+	if ($filter_terms_clauses) {
+		add_filter( 'terms_clauses', array( $sitepress, 'terms_clauses' ), 10, 3 );
+	}
+
+	return $delete_term;
 }
 
 function mfn_delete_all_posts(): array

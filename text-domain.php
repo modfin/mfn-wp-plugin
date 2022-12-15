@@ -159,7 +159,7 @@ function mfn_get_text($key)
         'text_trash' => mfn_text_domain('(Modified/Trash)'),
         'text_local' => mfn_text_domain('(Local)'),
         'text_mfn_news_item_status_local' => mfn_text_domain('<span style="color: limegreen;"><strong>Local:</strong></span> This news item was added manually. (It will be preserved if you use the \'Delete All MFN Posts\' option in the MFN Feed settings).'),
-        'text_mfn_news_item_status_pure' => mfn_text_domain('<span style="color: limegreen;"><strong>Unmodified:</strong></span> This news item has\'nt been updated/changed.'),
+        'text_mfn_news_item_status_pure' => mfn_text_domain('<span style="color: limegreen;"><strong>Unmodified:</strong></span> This news item hasn\'t been updated/changed.'),
         'text_mfn_news_item_status_unpure' => mfn_text_domain('<span style="color: #F56E28;"><strong>Modified:</strong></span> This news item has been updated/changed. You can restore it by clicking the button below, and this particular news item will be re-synced from the MFN feed.'),
     ];
 
