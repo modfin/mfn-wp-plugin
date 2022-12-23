@@ -36,8 +36,8 @@ function create_mfn_wid_translate()
         'Interim Report' => ['sv' => "Kvartalsrapport", 'fi' => "Osavuosikatsaukset"],
         'Year-end Report' => ['sv' => "Bokslutskommuniké", 'fi' => "Tilinpäätöstiedote"],
         'Annual Report' => ['sv' => "Årsredovisning", 'fi' => "Vuosiraportit"],
-        'Regulatory' => ['sv' => "Regulatorisk", 'fi' => 'Sääntelyä'],
-        'Non-Regulatory' => ['sv' => "Icke-Regulatorisk", 'fi' => 'Sääntelemätönä'],
+        'Regulatory' => ['sv' => "Regulatorisk", 'fi' => 'Yhtiötiedotteet'],
+        'Non-Regulatory' => ['sv' => "Icke-Regulatorisk", 'fi' => 'Lehdistötiedotteet'],
         'Couldn\'t find anything.' => ['sv' => "Kunde inte hitta något.", 'fi' => 'Ei löytynyt mitään.'],
     );
 
