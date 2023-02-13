@@ -522,6 +522,7 @@ function mfn_upsert_language($post_id, $group_id, $lang)
     $options = get_option(MFN_PLUGIN_NAME);
     $use_wpml = isset($options['language_plugin']) && $options['language_plugin'] == 'wpml';
     $use_pll = isset($options['language_plugin']) && $options['language_plugin'] == 'pll';
+    $has_wpml = defined('WPML_PLUGIN_BASENAME');
 
     if ($use_pll) {
         if (function_exists('pll_languages_list')) {
@@ -562,16 +563,7 @@ function mfn_upsert_language($post_id, $group_id, $lang)
         }
     }
 
-    if ($use_wpml) {
-        // This since WPML has some sort of race condition when creating a multiple posts at once
-        // It should really be done in the call wp_insert_post
-        do_action( 'wpml_set_element_language_details', array(
-            'element_id'    => $post_id,
-            'element_type'  => 'post_' . MFN_POST_TYPE,
-            'trid'   => false,
-            'language_code'   => $lang
-        ));
-
+    if ($use_wpml && $has_wpml) {
         global $wpdb;
         $tableName = $wpdb->prefix . 'icl_translations';
 
@@ -585,14 +577,12 @@ function mfn_upsert_language($post_id, $group_id, $lang)
       ", $group_id);
         $trid = $wpdb->get_var($q);
 
-        // $wpdb->update($tableName, array('language_code' => $lang, 'trid' => $trid), array('element_id' => $post_id));
         do_action( 'wpml_set_element_language_details', array(
             'element_id'    => $post_id,
             'element_type'  => 'post_' . MFN_POST_TYPE,
             'trid'   => $trid,
             'language_code'   => $lang
         ));
-
     }
 }
 
@@ -655,6 +645,14 @@ function mfn_upsert_item_full($item, $signature = '', $raw_data = '', $reset_cac
         $html = '';
     }
 
+    $options = get_option(MFN_PLUGIN_NAME);
+    $wpml = defined('WPML_PLUGIN_BASENAME') && isset($options['language_plugin']) && $options['language_plugin'] == 'wpml';
+    if ($wpml) {
+        global $sitepress;
+        // with WPML this inserts the posts in the correct language, also it prevents duplicate slugs (post_name) somehow.
+        $sitepress->switch_lang($lang, false);
+    }
+
     if ($post_id) {
         $post = get_post($post_id);
         if ($post !== null && $post->post_type === MFN_POST_TYPE) {
@@ -676,6 +674,11 @@ function mfn_upsert_item_full($item, $signature = '', $raw_data = '', $reset_cac
             'post_type' => MFN_POST_TYPE,
             'post_date_gmt' => $publish_date,
         ));
+    }
+
+    if ($wpml) {
+        global $sitepress;
+        $sitepress->switch_lang(null, false);
     }
 
     if ($post_id != 0) {
