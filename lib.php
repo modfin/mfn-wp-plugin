@@ -630,7 +630,15 @@ function mfn_upsert_item_full($item, $signature = '', $raw_data = '', $reset_cac
             wp_cache_flush();
         }
 
+        $options = get_option(MFN_PLUGIN_NAME);
+        if (defined('WPML_PLUGIN_BASENAME') && isset($options['language_plugin']) && $options['language_plugin'] == 'wpml') {
+            global $sitepress;
+            $switch_lang = new WPML_Temporary_Switch_Language($sitepress, $lang);
+        }
         wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
+        if (isset($switch_lang)) {
+            $switch_lang->restore_lang();
+        }
         mfn_upsert_language($post_id, $group_id, $lang);
         mfn_upsert_news_meta($post_id, $news_id, $slug);
         mfn_upsert_attachments($post_id, $attachments);
@@ -650,7 +658,7 @@ function mfn_upsert_item_full($item, $signature = '', $raw_data = '', $reset_cac
     if ($wpml) {
         global $sitepress;
         // with WPML this inserts the posts in the correct language, also it prevents duplicate slugs (post_name) somehow.
-        $sitepress->switch_lang($lang, false);
+        $switch_lang = new WPML_Temporary_Switch_Language($sitepress, $lang);
     }
 
     if ($post_id) {
@@ -676,9 +684,8 @@ function mfn_upsert_item_full($item, $signature = '', $raw_data = '', $reset_cac
         ));
     }
 
-    if ($wpml) {
-        global $sitepress;
-        $sitepress->switch_lang(null, false);
+    if (isset($switch_lang)) {
+        $switch_lang->restore_lang();
     }
 
     if ($post_id != 0) {
