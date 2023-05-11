@@ -1164,9 +1164,21 @@ class mfn_news_feed_widget extends WP_Widget
                         $html = str_replace("[active]", $append_active, $yeartemplate);
                         $html = str_replace(array("[url]", "[year]", "[mfn-year-selected]"), array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
                         $html = str_replace(array("{{url}}", "{{year}}", "{{mfn-year-selected}}"), array($url, $i, $i === $year ? 'mfn-year-selected' : ''), $html);
-
+                        
                         echo $html;
                     }
+
+										file_put_contents('php://stdout', print_r("\n===========HEJ" . $current_year . "\n", TRUE));
+
+                    $paramsCpy = $_GET;
+                    unset($paramsCpy["m-year"]);
+                    $url = $baseurl .  "?" . http_build_query($paramsCpy);
+				            $html = "<span class='mfn-year-header mfn-year mfn-year-header-all" . (!isset($current_year) || $current_year == "" ? " mfn-filter-year-active" : '') . "'>" .
+				                "<a href='[url]' class='mfn-year-header-link mfn-year-header-link-all'>" . $l('All', $filter_lang) . "</a>
+				            </span>";
+				            $html = str_replace("[url]", $url, $html);
+       
+                    echo $html;
                 }
             }
             echo "</div>";
