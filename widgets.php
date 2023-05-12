@@ -871,6 +871,8 @@ class mfn_news_feed_widget extends WP_Widget
         $thumbnailsize = empty($instance['thumbnailsize']) ? '' : $instance['thumbnailsize'];
         $shownotfound = isset($instance['shownotfound']) && bool_check($instance['shownotfound']);
 
+        $forcelang = empty($instance['forcelang']) ? null : $instance['forcelang'];
+
         $lang = 'en';
         $locale = determineLocale();
         if (is_string($locale)) {
@@ -884,6 +886,10 @@ class mfn_news_feed_widget extends WP_Widget
         $pmlang = empty($instance['lang']) ? 'all' : $instance['lang'];
         if ($pmlang === 'auto') {
             $pmlang = $lang;
+        }
+        if(isset($forcelang)) {
+	        $l10nlang = $forcelang;
+	        $pmlang = $forcelang;
         }
 
         $page = $query_param('m-page', 0);
