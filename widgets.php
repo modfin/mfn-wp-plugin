@@ -872,6 +872,7 @@ class mfn_news_feed_widget extends WP_Widget
         $shownotfound = isset($instance['shownotfound']) && bool_check($instance['shownotfound']);
 
         $forcelang = empty($instance['forcelang']) ? null : $instance['forcelang'];
+        $fromyear = empty($instance['fromyear']) ? null : $instance['fromyear'];
 
         $lang = 'en';
         $locale = determineLocale();
@@ -968,6 +969,10 @@ class mfn_news_feed_widget extends WP_Widget
         }
 
         $min_max_years = MFN_get_feed_min_max_years($pmlang);
+
+        if (isset($fromyear) && $fromyear > $min_max_years->min_year) {
+	        $min_max_years->min_year = $fromyear;
+        }
 
         $tmpl = "
             <div class='mfn-item'>
@@ -1174,7 +1179,6 @@ class mfn_news_feed_widget extends WP_Widget
                         echo $html;
                     }
 
-										file_put_contents('php://stdout', print_r("\n===========HEJ" . $current_year . "\n", TRUE));
 
                     $paramsCpy = $_GET;
                     unset($paramsCpy["m-year"]);
