@@ -790,7 +790,9 @@ class mfn_news_feed_widget extends WP_Widget
 	        $data['offset'],
 	        $data['pagelen'],
             $data['pmlang'],
-            $data['year']
+            $data['year'],
+            $data['fromyear']
+
         );
 
         $news_feed = new News_feed;
@@ -1224,7 +1226,8 @@ class mfn_news_feed_widget extends WP_Widget
             'showthumbnail' => $showthumbnail,
             'thumbnailsize' => $thumbnailsize,
             'shownotfound' => $shownotfound,
-            'notfoundmsg' => $notfoundmsg
+            'notfoundmsg' => $notfoundmsg,
+            'fromyear' => $fromyear
         ));
 
         if ($showpagination) {
