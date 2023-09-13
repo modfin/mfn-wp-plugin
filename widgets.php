@@ -1028,6 +1028,7 @@ class mfn_news_feed_widget extends WP_Widget
             $categoryTag = $_GET['m-tags'] ?? '';
             $q = $_GET;
             unset($q['m-tags']);
+            unset($q["m-page"]);
             echo '<div class="mfn-newsfeed-category-selector">';
             echo '<script>
                     function filterByCategory(e)
@@ -1137,6 +1138,7 @@ class mfn_news_feed_widget extends WP_Widget
                 if ($yearstype === 'dropdown') {
                     $q = $_GET;
                     unset($q['m-year']);
+                    unset($q["m-page"]);
                     echo '<script>
                         function filterByYear(e)
                         {                           
@@ -1183,6 +1185,7 @@ class mfn_news_feed_widget extends WP_Widget
 
                     $paramsCpy = $_GET;
                     unset($paramsCpy["m-year"]);
+                    unset($paramsCpy["m-page"]);
                     $url = $baseurl .  "?" . http_build_query($paramsCpy);
 				            $html = "<span class='mfn-year-header mfn-year mfn-year-header-all" . (!isset($current_year) || $current_year == "" ? " mfn-filter-year-active" : '') . "'>" .
 				                "<a href='[url]' class='mfn-year-header-link mfn-year-header-link-all'>" . $l('All', $filter_lang) . "</a>
