@@ -225,59 +225,126 @@ function mfn_starts_with($haystack, $needle): bool
     return (substr($haystack, 0, $length) === $needle);
 }
 
-function mfn_create_tags($item): array
+function mfn_trim_prefix($str, $prefix): string
+{
+    $length = strlen($prefix);
+    if (substr($str, 0, $length) === $prefix) {
+        return substr($str, $length);
+    }
+    return $str;
+}
+
+function mfn_create_tags($item, $prefix, $drop_custom_tag_prefix): array
 {
     $tags = $item->properties->tags ?? array();
-    $lang = $item->properties->lang ?? 'xx';
-    $type = $item->properties->type ?? 'ir';
+    $lang = $item->properties->lang ?? '';
+    $type = $item->properties->type ?? '';
 
-    $newtag = array();
+    if (empty($lang) || empty($type)) {
+        return array();
+    }
 
-    $slug_prefix = (MFN_TAG_PREFIX !== '' && MFN_TAG_PREFIX !== null ? MFN_TAG_PREFIX . '-' : '');
+    $prefix = empty($prefix) ? '' : ($prefix . '-');
 
-    $newtag[] = MFN_TAG_PREFIX;
-    $newtag[] = $slug_prefix . 'lang-' . $lang;
-    $newtag[] = $slug_prefix . 'type-' . $type;
+    $wp_tags = array();
+
+    if ($prefix !== '') {
+        $wp_tags[] = MFN_TAG_PREFIX;
+    }
+    $wp_tags[] = $prefix . 'lang-' . $lang;
+    $wp_tags[] = $prefix . 'type-' . $type;
+
+    $skipped_tags = [
+        'sub:ci:gm:notice:extra',
+        'sub:ci:gm:info:extra'
+    ];
 
     foreach ($tags as $tag) {
         if (mfn_starts_with($tag, ':correction')) {
-            $newtag[] = $slug_prefix . '-correction';
+            $wp_tags[] = $prefix . 'correction';
+            continue;
+        }
+        // don't include ext tags (or future unknown tags)
+        if (strpos($tag, 'sub:') !== 0 && strpos($tag, 'cus:') !== 0 && strpos($tag, ':regulatory') !== 0) {
+            continue;
+        }
+        if (in_array($tag, $skipped_tags, true)) {
+            continue;
+        }
+        // skip potential cus tags that could conflict with mfn tags when dropping the cus prefix
+        if ($drop_custom_tag_prefix && strpos($tag, 'cus:ci-') !== 0 && strpos($tag, 'cus:ca-') !== 0 && strpos($tag, 'cus:regulatory-') && strpos($tag, 'cus:report-') !== 0) {
             continue;
         }
 
-        $tag = str_replace('sub:', '', $tag);
+        $tag = mfn_trim_prefix($tag, 'sub:');
         $tag = trim($tag, ' :');
         $tag = str_replace(':', '-', $tag);
-        $tag = $slug_prefix . $tag;
-        $newtag[] = $tag;
+
+        if ($drop_custom_tag_prefix && strpos($tag, 'cus-') === 0) {
+            $tag = str_replace('cus-', '', $tag);
+            if (strlen($tag) < 2) {
+                continue;
+            }
+        } else {
+            $tag = $prefix . $tag;
+        }
+        $wp_tags[] = $tag;
+    }
+    return $wp_tags;
+}
+
+function mfn_upsert_tags($post_id, $item)
+{
+    $lang = $item->properties->lang ?? '';
+    if (empty($lang)) {
+        return;
     }
 
     $options = get_option(MFN_PLUGIN_NAME);
-    $use_wpml = isset($options['language_plugin']) && $options['language_plugin'] == 'wpml';
-    $use_pll = isset($options['language_plugin']) && $options['language_plugin'] == 'pll';
-    if ($use_wpml && $lang != 'en') {
-        foreach ($newtag as $i => $t) {
-            $newtag[$i] = $t . "_" . $lang;
+    $use_wpml = isset($options['language_plugin']) && $options['language_plugin'] == 'wpml'
+        && defined('WPML_PLUGIN_BASENAME') ;
+    $use_pll = isset($options['language_plugin']) && $options['language_plugin'] == 'pll'
+        && function_exists('pll_languages_list')
+        && function_exists('pll_is_translated_taxonomy')
+        && function_exists('pll_is_translated_post_type')
+        && pll_is_translated_taxonomy(MFN_TAXONOMY_NAME)
+        && pll_is_translated_post_type(MFN_POST_TYPE);
+    $drop_custom_tag_prefix = isset($options['taxonomy_disable_cus_prefix']) && $options['taxonomy_disable_cus_prefix']  === 'on';
+
+    $tags = mfn_create_tags($item, MFN_TAG_PREFIX, $drop_custom_tag_prefix);
+
+    if ($use_pll) {
+        $pllLangMapping = array();
+        foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
+            $l = explode('_', $pll_lang->locale)[0];
+            $pllLangMapping[$l] = $pll_lang->slug;
         }
-    }
-    if ($use_pll && $lang != 'en') {
-        if (function_exists('pll_languages_list')) {
-            $pllLangMapping = array();
-            foreach (pll_languages_list(array('fields' => array())) as $pll_lang) {
-                $l = explode('_', $pll_lang->locale)[0];
-                $pllLangMapping[$l] = $pll_lang->slug;
-            };
-            foreach ($newtag as $i => $t) {
-
-                if (!isset($pllLangMapping[$lang])) {
-                    continue;
-                }
-
-                $newtag[$i] = $t . "_" . $pllLangMapping[$lang];
+        if (!isset($pllLangMapping[$lang])) {
+            return;
+        }
+        if ($lang != 'en') {
+            foreach ($tags as $i => $t) {
+                $tags[$i] = $t . "_" . $pllLangMapping[$lang];
             }
         }
     }
-    return $newtag;
+
+    if ($use_wpml && $lang != 'en') {
+        foreach ($tags as $i => $t) {
+            $tags[$i] = $t . "_" . $lang;
+        }
+    }
+
+    if ($use_wpml) {
+        global $sitepress;
+        $switch_lang = new WPML_Temporary_Switch_Language($sitepress, $lang);
+    }
+
+    wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
+
+    if (isset($switch_lang)) {
+        $switch_lang->restore_lang();
+    }
 }
 
 function mfn_get_storage_url()
@@ -312,7 +379,14 @@ function mfn_list_post_attachments(): string
             $icon = '<span class="mfn-attachment-icon"><img src="' . $preview_url. '"></span>';
         }
         $link = '<a class="mfn-attachment-link" href="' . $url . '">' . $icon . $attachment->file_title . '</a>';
-        $attachments_content .= '<div class="mfn-attachment">' . $link . '</div>';
+        $classes = array("mfn-attachment");
+        if (isset($attachment->tags) && in_array(':primary', $attachment->tags)) {
+            $classes[] = "mfn-primary";
+        }
+        if (isset($attachment->tags) && in_array('image:primary', $attachment->tags)) {
+            $classes[] = "mfn-image-primary";
+        }
+        $attachments_content .=  '<div class="' . join(" ", $classes) . '">' . $link . '</div>';
     }
     $attachments_content .= '</div>';
     return $attachments_content;
@@ -623,24 +697,14 @@ function mfn_upsert_item_full($item, $signature = '', $raw_data = '', $reset_cac
 
     do_action('mfn_before_upsertitem', $item);
 
-    $tags = mfn_create_tags($item);
-
-    $outro = function ($post_id) use ($reset_cache, $group_id, $news_id, $lang, $slug, $attachments, $tags) {
+    $outro = function ($post_id) use ($reset_cache, $group_id, $news_id, $lang, $slug, $attachments, $item) {
         if ($reset_cache) {
             wp_cache_flush();
         }
 
-        $options = get_option(MFN_PLUGIN_NAME);
-        if (defined('WPML_PLUGIN_BASENAME') && isset($options['language_plugin']) && $options['language_plugin'] == 'wpml') {
-            global $sitepress;
-            $switch_lang = new WPML_Temporary_Switch_Language($sitepress, $lang);
-        }
-        wp_set_object_terms($post_id, $tags, MFN_TAXONOMY_NAME, false);
-        if (isset($switch_lang)) {
-            $switch_lang->restore_lang();
-        }
         mfn_upsert_language($post_id, $group_id, $lang);
         mfn_upsert_news_meta($post_id, $news_id, $slug);
+        mfn_upsert_tags($post_id, $item);
         mfn_upsert_attachments($post_id, $attachments);
 
         if ($reset_cache) {
@@ -652,6 +716,17 @@ function mfn_upsert_item_full($item, $signature = '', $raw_data = '', $reset_cac
     if (empty($html)) {
         $html = '';
     }
+
+    // wordpress removes p tags when user edits a post for some reason
+    // unless they have some attribute: so we add a placeholder class
+    $dom = new DomDocument();
+    $encoding = '<?xml encoding="utf-8" ?>';
+    @$dom->loadHTML($encoding . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    foreach ($dom->getElementsByTagName('p') as $p) {
+        $class = trim($p->getAttribute('class'));
+        $p->setAttribute('class', (empty($class) ? '' : ' ') . 'mfn-wp-retain');
+    }
+    $html = mfn_trim_prefix($dom->saveHTML(), $encoding);
 
     $options = get_option(MFN_PLUGIN_NAME);
     $wpml = defined('WPML_PLUGIN_BASENAME') && isset($options['language_plugin']) && $options['language_plugin'] == 'wpml';

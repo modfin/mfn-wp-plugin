@@ -1,6 +1,13 @@
 <?php
 require_once('../../../config.php');
 
+$is_admin = current_user_can('manage_options');
+
+if (!$is_admin) {
+    echo "you are not admin";
+    die();
+}
+
 $queries = array();
 parse_str($_SERVER['QUERY_STRING'], $queries);
 

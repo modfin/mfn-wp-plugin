@@ -182,9 +182,16 @@ function mfn_delete_all_tags(): array
 
 	$options      = get_option( "mfn-wp-plugin" );
 	$wpml_enabled = defined( 'WPML_PLUGIN_BASENAME' ) && isset( $options['language_plugin'] ) && $options['language_plugin'] == 'wpml';
+	$pll_enabled = isset($options['language_plugin']) && $options['language_plugin'] == 'pll';
 
 	if ( $wpml_enabled ) {
 		$terms = MFN_get_terms_wpml( '' );
+	} else if ( $pll_enabled ) {
+		$terms = get_terms( array(
+			'taxonomy'   => MFN_TAXONOMY_NAME,
+			'hide_empty' => false,
+			'lang' => '',
+		) );
 	} else {
 		$terms = get_terms( array(
 			'taxonomy'   => MFN_TAXONOMY_NAME,

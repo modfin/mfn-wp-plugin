@@ -47,8 +47,12 @@
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
+    function no_cache_param(p) {
+        return p + 'no-cache='+Math.round((Math.random()*1000000));
+    }
+
     function mfn_sync_single_item(post_id) {
-        $.get(mfn_admin_params.plugin_url + '/cc.php?mode=sync&limit=1&offset=0&post_id=' + post_id)
+        $.get(mfn_admin_params.plugin_url + '/cc.php?mode=sync&limit=1&offset=0&post_id=' + post_id + no_cache_param('&'))
             .done(function () {
             if (post_id !== null) {
                 $('#mfn-item-restore-status').html('');
@@ -83,7 +87,7 @@
                 .html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div> Waiting...</span>');
         }
 
-        $.get(mfn_admin_params.plugin_url + '/cc.php?mode=sync&limit=' + limit + '&offset=' + offset, function (data) {
+        $.get(mfn_admin_params.plugin_url + '/cc.php?mode=sync&limit=' + limit + '&offset=' + offset + no_cache_param('&'), function (data) {
             sync_condition = 'running';
             var fetched = parseInt(data.split(' ')[0]);
             var inserted = parseInt(data.split(' ')[1]);
@@ -127,7 +131,7 @@
 
     async function syncTax() {
         $('#mfn-sync-tax-status').html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div>');
-        await $.get(mfn_admin_params.plugin_url + '/cc.php?mode=sync-tax', function () {
+        await $.get(mfn_admin_params.plugin_url + '/cc.php?mode=sync-tax' + no_cache_param('&'), function () {
             $('#mfn-sync-tax-status')
                 .html("<div class='mfn-status-container mfn-highlight-status mfn-do-slide-top'><span class=\"dashicons dashicons-yes mfn-success-icon mfn-do-fade\"></span>Done!</div>");
         });
@@ -246,7 +250,7 @@
             return;
         }
 
-        $.get(pluginUrl + '/cc.php?mode=ping', function (data) {
+        $.get(pluginUrl + '/cc.php?mode=ping' + no_cache_param('&'), function (data) {
             if (data === 'pong') {
                 pluginUrlTestEl
                     .html("<span class=\"dashicons dashicons-yes mfn-success-icon mfn-do-fade\"></span><span style='cursor:default;' title='" + mfn_admin_params.plugin_url  + "'><strong>Current:</strong> (" + mfn_admin_params.plugin_url + ")</span>");
@@ -301,7 +305,7 @@
         var subStatusEl = $('#mfn-subscription-status');
         var subStatusContainerEl = $('#mfn-status-container');
 
-        $.get(pluginUrl + '/cc.php?mode=verify-subscription').done(function (res) {
+        $.get(pluginUrl + '/cc.php?mode=verify-subscription' + no_cache_param('&')).done(function (res) {
             // got error from websub verification
             if (msg !== '') {
                 mfn_subscription_error(msg, 'mfn-subscription-status');
@@ -341,7 +345,7 @@
         var subStatusEl = $('#mfn-subscription-status');
         $('#mfn-sub-button').attr("disabled", true);
 
-        $.get(pluginUrl + '/cc.php?mode=subscribe', function (msg) {
+        $.get(pluginUrl + '/cc.php?mode=subscribe' + no_cache_param('&'), function (msg) {
             subStatusEl.html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div> Subscribing...');
             mfn_verify_subscription(pluginUrl, verificationRetries, msg);
         });
@@ -353,7 +357,7 @@
         $('#mfn-unsub-button').attr("disabled", true);
         $('#save-submit-btn').prop("disabled", false);
 
-        $.get(pluginUrl + '/cc.php?mode=unsubscribe', function () {
+        $.get(pluginUrl + '/cc.php?mode=unsubscribe' + no_cache_param('&'), function () {
             subStatusEl
                 .html('<div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div> Unsubscribing...');
 
@@ -377,7 +381,7 @@
     function mfn_clear_settings(){
         var pluginUrl = mfn_admin_params.plugin_url;
 
-        $.get(pluginUrl + '/cc.php?mode=clear-settings', function () {
+        $.get(pluginUrl + '/cc.php?mode=clear-settings' + no_cache_param('&'), function () {
             setTimeout(function () {
                 location.reload();
             }, 100);
@@ -399,7 +403,7 @@
             .html('<span class="mfn-status-container mfn-status-container-delete mfn-do-fade"><div class=\'mfn-do-fade mfn-spinner-container\'><span class=\'mfn-spinner\'></span></div> <b>Deleting tags...</b></span>');
         delTagsBtnSpanEl.removeClass("dashicons dashicons-tag");
         delTagsBtnSpanEl.html('<div class=\'mfn-do-fade\'><span class=\'mfn-spinner\'></span></div>');
-        $.get(pluginUrl + '/cc.php?mode=delete-all-tags&limit=10', function (data) {
+        $.get(pluginUrl + '/cc.php?mode=delete-all-tags&limit=10' + no_cache_param('&'), function (data) {
             var parts = data.split(';');
             var i = parseInt(parts[0]);
             var deleted = parseInt(parts[1]);
@@ -422,7 +426,7 @@
         if (acceptedTypes.includes(type)) {
 
             var modalUrl = mfn_admin_params.plugin_url + '/admin/partials/modals/mfn-modal-' + type + '.php';
-            await $.get(modalUrl, function (data) {
+            await $.get(modalUrl + no_cache_param('?'), function (data) {
                 $('body').append(data);
                 // modal main events
                 $('.mfn-close-modal').click(function() {
@@ -449,7 +453,7 @@
             delPostsBtnSpanEl.addClass("dashicons dashicons-admin-post");
         }
 
-        $.get(pluginUrl + '/cc.php?mode=delete-all-posts&limit=10&include-dirty=' + includeDirty, function (data, xhr) {
+        $.get(pluginUrl + '/cc.php?mode=delete-all-posts&limit=10&include-dirty=' + includeDirty + no_cache_param('&'), function (data, xhr) {
             var parts = data.split(';');
             var i = parseInt(parts[0]);
             var deleted = parseInt(parts[1]);

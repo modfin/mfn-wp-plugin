@@ -38,7 +38,7 @@ $wp_name = $queries["wp-name"];
 
 if ($posthook_name != $wp_name) {
     http_response_code(400);
-    die("post hook name must be the same as in options " . $posthook_name . " " . $wp_name);
+    die("post hook name must be the same as in settings");
 }
 
 // Verifying intent

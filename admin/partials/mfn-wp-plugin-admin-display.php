@@ -70,12 +70,14 @@ $thumbnail_allow_delete = $options['thumbnail_allow_delete'] ?? 'off';
 $verify_signature = $options['verify_signature'] ?? 'off';
 $reset_cache = $options['reset_cache'] ?? 'on';
 $enable_attachments = $options['enable_attachments'] ?? 'off';
+$taxonomy_disable_cus_prefix = $options['taxonomy_disable_cus_prefix'] ?? "off";
 
 // Rewrite settings
 $rewrite = isset($options['rewrite_post_type']) ? unserialize($options['rewrite_post_type']) : null;
 $slug = (isset($rewrite['slug']) && $rewrite['slug'] !== '' ? $rewrite['slug'] : MFN_POST_TYPE);
 $archive_name = (isset($rewrite['archive-name']) && $rewrite['archive-name'] !== '' ? $rewrite['archive-name'] : MFN_ARCHIVE_NAME);
 $singular_name = (isset($rewrite['singular-name']) && $rewrite['singular-name'] !== '' ? $rewrite['singular-name'] : MFN_SINGULAR_NAME);
+$taxonomy_rewrite_slug = $options['taxonomy_rewrite_slug'] ?? '';
 
 // HTML
 echo '
@@ -181,6 +183,21 @@ echo '
                             <div class="mfn-tooltip-box">
                                 <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
                                 <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_slug') . '</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                        ' . mfn_parse_label('label_rewrite_taxonomy_slug') . '
+                        ' . mfn_parse_small('small_mfn-news-tag') . '
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="mfn-inline-td">
+                            <input type="text" class="regular-text wide" pattern="\S+" name="' . $this->plugin_name . '[taxonomy_rewrite_slug]' . '" id="' . $this->plugin_name . '-taxonomy_rewrite_slug"' . ' value="' . $taxonomy_rewrite_slug . '" ' . $is_readonly . ' placeholder="' . MFN_TAXONOMY_NAME . '">
+                            <div class="mfn-tooltip-box">
+                                <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                                <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_taxonomy_rewrite_slug') . '</span>
                             </div>
                         </td>
                     </tr>
@@ -380,6 +397,16 @@ echo '
                             ' . mfn_parse_label('label_enable_attachments') . '
                             <br>
                             ' . mfn_parse_small('small_enable_attachments_description') . '
+                        </p>
+                    <td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <input type="checkbox" id="' . $this->plugin_name . '-taxonomy_disable_cus_prefix" name="' . $this->plugin_name . '[taxonomy_disable_cus_prefix]" ' . checked($taxonomy_disable_cus_prefix, "on", false) . ' value="on" ' . $is_readonly . '>
+                            ' . mfn_parse_label('label_taxonomy_disable_cus_prefix') . '
+                            <br>
+                            ' . mfn_parse_small('small_taxonomy_disable_cus_prefix_description') . '
                         </p>
                     <td>
                 </tr>
