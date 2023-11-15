@@ -1,6 +1,13 @@
 <?php
 require_once('../../../config.php');
 
+$is_admin = current_user_can('manage_options');
+
+if (!$is_admin) {
+    echo "you are not admin";
+    die();
+}
+
 $subscriptions = get_option("mfn-subscriptions");
 $subscription = mfn_get_subscription_by_plugin_url($subscriptions, mfn_plugin_url());
 $subscription_id = $subscription['subscription_id'] ?? "";

@@ -35,6 +35,7 @@ function mfn_get_text($key)
         'label_custom_singular_name'  => mfn_text_domain('Custom Singular Name'),
         'label_disable_archive'  => mfn_text_domain('Disable Archive'),
         'label_rewrite_post_type_slug' => mfn_text_domain('Custom Post Type Slug'),
+        'label_rewrite_taxonomy_slug' => mfn_text_domain('Custom Taxonomy Slug'),
         'label_rewrite_post_type_archive_name' => mfn_text_domain('Custom Archive Name'),
         'label_rewrite_post_type_singular_name' => mfn_text_domain('Custom Singular Name'),
         'label_language_plugin_none' => mfn_text_domain('No language plugin'),
@@ -45,9 +46,11 @@ function mfn_get_text($key)
         'label_verify_signature' => mfn_text_domain('Verify Signature'),
         'label_reset_cache' => mfn_text_domain('Reset Cache'),
         'label_enable_attachments' => mfn_text_domain('Enable Attachments Widget'),
+        'label_taxonomy_disable_cus_prefix' => mfn_text_domain('Drop Custom Tag Prefix'),
         'label_meta_box_news_item_status' => mfn_text_domain(MFN_SINGULAR_NAME . ' Status'),
         /* small */
         'small_default_mfn_news' => mfn_text_domain('(Default: ' . MFN_POST_TYPE . ')'),
+        'small_mfn-news-tag' => mfn_text_domain('(Default: ' . MFN_TAXONOMY_NAME . ')'),
         'small_default_mfn_news_item' => mfn_text_domain('(Default: ' . MFN_SINGULAR_NAME . ')'),
         'small_default_mfn_news_items' => mfn_text_domain('(Default: ' . MFN_ARCHIVE_NAME . ')'),
         'small_probably_feed_mfn_se'  => mfn_text_domain('(Probably: https://feed.mfn.se/v1)'),
@@ -70,6 +73,9 @@ function mfn_get_text($key)
         ),
         'small_enable_attachments_description' => mfn_text_domain(
             '(If enabled, our plugin will handle the listing of attachments and will bypass the default mfn-attachment footer) <strong>(Enabled by default)</strong>'
+        ),
+        'small_taxonomy_disable_cus_prefix_description' => mfn_text_domain(
+            '(If enabled, when custom tags are inserted their slug will not have the "mfn-cus-" prefix)'
         ),
         /* buttons */
         'button_unlock' => mfn_text_domain('Unlock'),
@@ -97,6 +103,9 @@ function mfn_get_text($key)
         ),
         'tooltip_rewrite_post_type_slug' => mfn_text_domain(
             'Rewrite the slug (' . MFN_POST_TYPE . ') in the URL - eg. "press-releases".'
+        ),
+        'tooltip_taxonomy_rewrite_slug' => mfn_text_domain(
+            'Rewrite the taxonomy slug (' . MFN_TAXONOMY_NAME . ') in the URL'
         ),
         'tooltip_rewrite_post_type_archive_name' => mfn_text_domain(
             'Set a custom name of the news archive page  - eg. "Press Releases".'

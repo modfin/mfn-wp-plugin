@@ -132,6 +132,10 @@ input.wide {
     color: rgba(44,51,56,.5);
 }
 
+.mfn-settings-table input::placeholder {
+    color: rgba(44,51,56,.5);
+}
+
 .mfn-settings-table th {
     text-align: left;
 }

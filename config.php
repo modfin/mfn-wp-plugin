@@ -151,6 +151,11 @@ function mfn_register_types()
         'menu_name' => __('News Tags'),
     );
 
+    $taxonomy_rewrite_slug = '';
+    if (isset(get_option(MFN_PLUGIN_NAME)['taxonomy_rewrite_slug'])) {
+        $taxonomy_rewrite_slug = get_option(MFN_PLUGIN_NAME)['taxonomy_rewrite_slug'];
+    }
+
     register_taxonomy(MFN_TAXONOMY_NAME, array(MFN_POST_TYPE), array(
         'hierarchical' => true,
         'labels' => $labels,
@@ -158,7 +163,7 @@ function mfn_register_types()
         'show_admin_column' => true,
         'show_in_menu' => true,
         'query_var' => true,
-        'rewrite' => array('slug' => MFN_TAXONOMY_NAME),
+        'rewrite' => array('slug' => empty($taxonomy_rewrite_slug) ? MFN_TAXONOMY_NAME : $taxonomy_rewrite_slug),
     ));
 
 }
@@ -168,7 +173,7 @@ function mfn_sync_taxonomy()
     $tax = [
         "slug" => MFN_TAG_PREFIX,
         "name" => "News",
-        "i10n" => ["sv" => "Nyheter"],
+        "i10n" => ["sv" => "Nyheter", "fi" => "Uutiset"],
         "children" => [
             [
                 "slug" => "type-ir",
@@ -196,6 +201,16 @@ function mfn_sync_taxonomy()
                 "i10n" => ["sv" => "Finska", 'fi' => "Suomi"]
             ],
             [
+                "slug" => "lang-no",
+                "name" => "Norwegian",
+                "i10n" => ["sv" => "Norska"]
+            ],
+            [
+                "slug" => "lang-zh",
+                "name" => "Chinese",
+                "i10n" => ["sv" => "Kinesiska"]
+            ],
+            [
                 "slug" => "correction",
                 "name" => "Correction",
                 "i10n" => ["sv" => "Korrektion", 'fi' => "Korjaaminen"],
@@ -221,11 +236,20 @@ function mfn_sync_taxonomy()
                         "i10n" => ["sv" => "LHFI"]
                     ],
                     [
+                        "slug" => "nsta",
+                        "name" => "NSTA",
+                        "i10n" => ["sv" => "NSTA"]
+                    ],
+                    [
+                        "slug" => "dcma",
+                        "name" => "DCMA",
+                        "i10n" => ["sv" => "DCMA"]
+                    ],
+                    [
                         "slug" => "listing",
                         "name" => "Listing Regulation",
                         "i10n" => ["sv" => "Noteringskrav", 'fi' => "Listausvaatimukset"]
                     ],
-
                 ]
             ],
             [
@@ -263,7 +287,6 @@ function mfn_sync_taxonomy()
                                 "name" => "Yearend",
                                 "i10n" => ["sv" => "Bokslutskommuniké", 'fi' => "Vuoden loppu"]
                             ],
-
                         ]
                     ],
                 ]
@@ -294,6 +317,36 @@ function mfn_sync_taxonomy()
                         "i10n" => ["sv" => "Prospekt", 'fi' => "Esite"]
                     ],
                     [
+                        "slug" => "aoa",
+                        "name" => "Articles of association",
+                        "i10n" => ["sv" => "Bolagsordning", 'fi' => "Yhtiöjärjestys"]
+                    ],
+                    [
+                        "slug" => "bid",
+                        "name" => "Tender offer",
+                        "i10n" => ["sv" => "Offentligt uppköpserbjudande", 'fi' => "Julkinen ostotarjous"]
+                    ],
+                    [
+                        "slug" => "member-state",
+                        "name" => "Member state",
+                        "i10n" => ["sv" => "Hemstat", 'fi' => "Jäsenvaltio"]
+                    ],
+                    [
+                        "slug" => "nav",
+                        "name" => "Net Asset Value",
+                        "i10n" => ["sv" => "NAV kurs", 'fi' => "Substanssiarvo"]
+                    ],
+                    [
+                        "slug" => "description",
+                        "name" => "Company Description",
+                        "i10n" => ["sv" => "Företagsbeskrivning", 'fi' => "Yrityksen kuvaus"]
+                    ],
+                    [
+                        "slug" => "exdate",
+                        "name" => "Ex date",
+                        "i10n" => ["sv" => "X-datum"]
+                    ],
+                    [
                         "slug" => "shares",
                         "name" => "Shares",
                         "i10n" => ["sv" => "Aktie", 'fi' => "Osakkeet"],
@@ -313,7 +366,6 @@ function mfn_sync_taxonomy()
                                 "name" => "Rights Change",
                                 "i10n" => ["sv" => "Rättighetsförändring", 'fi' => "Oikeuksien muutos"]
                             ]
-
                         ]
                     ]
                 ]
@@ -361,6 +413,16 @@ function mfn_sync_taxonomy()
                         "i10n" => ["sv" => "Valberedning", "fi" => "Nimityskomitea"]
                     ],
                     [
+                        "slug" => "insider",
+                        "name" => "Insider Transaction",
+                        "i10n" => ["sv" => "Insynstransaktion", "fi" => "Johdon liiketoimet"]
+                    ],
+                    [
+                        "slug" => "shareholder-announcement",
+                        "name" => "Shareholder announcement",
+                        "i10n" => ["sv" => "Flaggning", "fi" => "Liputusilmoitukset"]
+                    ],
+                    [
                         "slug" => "sales",
                         "name" => "Sales",
                         "i10n" => ["sv" => "Försäljning", "fi" => "Myynti"],
@@ -375,14 +437,7 @@ function mfn_sync_taxonomy()
                     [
                         "slug" => "staff",
                         "name" => "Staff change",
-                        "i10n" => ["sv" => "Personalförändring", "fi" => "Henkilöstön muutokset"],
-                        "children" => [
-                            [
-                                "slug" => "xxo",
-                                "name" => "Executive staff changes",
-                                "i10n" => ["sv" => "Exekutiva personalförändringar", "fi" => "Johtava henkilöstö muuttuu"],
-                            ]
-                        ]
+                        "i10n" => ["sv" => "Personalförändring", "fi" => "Henkilöstön muutokset"]
                     ]
                 ]
             ]

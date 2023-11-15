@@ -93,7 +93,9 @@ class News_feed {
                         $is_disclaimer = true;
                     }
                 }
-                if ($skipcustomtags && strpos($parts[0], 'mfn-cus-') !== false) {
+                if ($skipcustomtags
+                    && (strpos($parts[1], MFN_TAG_PREFIX . '-cus-') === 0
+                        || !(strpos($parts[1], MFN_TAG_PREFIX) === 0))) {
                     continue;
                 }
                 // always skip 'pll_' slug tags
