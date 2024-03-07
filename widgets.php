@@ -787,6 +787,7 @@ class mfn_news_feed_widget extends WP_Widget
 	        $data['showpreview'],
 	        $data['hasTags'],
 	        $data['hasNotTags'],
+	        $data['orTags'],
 	        $data['offset'],
 	        $data['pagelen'],
             $data['pmlang'],
@@ -935,6 +936,21 @@ class mfn_news_feed_widget extends WP_Widget
 
             $hasTags[] = $tag;
         }
+
+        if (!empty($instance['ortags'])) {
+            $ortags = normalize_whitespace($instance['ortags']);
+        }
+
+        foreach (explode(",", $ortags) as $tag) {
+            if ($tag === "") {
+                continue;
+            }
+            if (strpos($tag, MFN_TAG_PREFIX . '-') !== 0) {
+                $tag = MFN_TAG_PREFIX . '-' . $tag;
+            }
+            $orTags[] = $tag;
+        }
+
 
         $year = $query_param('m-year', "");
 
@@ -1210,6 +1226,7 @@ class mfn_news_feed_widget extends WP_Widget
             'offset' => $page * $pagelen,
             'hasNotTags' => $hasNotTags,
             'hasTags' => $hasTags,
+            'orTags' => $orTags,
             'year' => $year,
             'pmlang' => $pmlang,
             'tzLocation' => $tzLocation,
