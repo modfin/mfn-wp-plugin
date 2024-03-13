@@ -943,10 +943,12 @@ class mfn_news_feed_widget extends WP_Widget
             $hasTags[] = $tag;
         }
 
+        $ortags = "";
         if (!empty($instance['ortags'])) {
             $ortags = normalize_whitespace($instance['ortags']);
         }
 
+        $orTags = array();
         foreach (explode(",", $ortags) as $tag) {
             if ($tag === "") {
                 continue;
