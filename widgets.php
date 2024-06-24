@@ -912,8 +912,10 @@ class mfn_news_feed_widget extends WP_Widget
         }
         $tagsstr = join(",",$tags);
 
+        $ortags = '';
         $hasTags = array();
         $hasNotTags = array();
+        $orTags = array();
 
         foreach (explode(",", $tagsstr) as $tag) {
             if ($tag === "") {
@@ -1091,36 +1093,46 @@ class mfn_news_feed_widget extends WP_Widget
 
                     foreach ($ft as $slug) {
                         $slug = sanitize_text_field($slug);
-                        $s = $slug;
+                        $slug_dsl_parts = explode('|', $slug);
+                        $s = $slug_dsl_parts[0];
 
-                       if (array_key_exists($s, $local_translations)) {
-                           $l($local_translations[$s], $filter_lang);
-                           $name = $l($local_translations[$s], $filter_lang);
-                       } else {
-                        if (substr($s, 0, 1) === '-')  {
-                            $slug = substr_replace($slug, '', 0, 1);
-                        }
-                        if (strpos($s, $mfn_prefix) === FALSE) {
-                            $slug = $mfn_prefix . $slug;
-                        }
-                        if (strpos($s, '_' . $filter_lang) === FALSE) {
-                            $lang = $filter_lang === 'en' ? '' : '_' . $filter_lang;
-                            $slug = $slug . $lang;
-                        }
+                        if (array_key_exists($s, $local_translations)) {
+                            $l($local_translations[$s], $filter_lang);
+                            $name = $l($local_translations[$s], $filter_lang);
+                        } else {
+                            if (substr($s, 0, 1) === '-')  {
+                                $slug = substr_replace($slug, '', 0, 1);
+                            }
+                            if (strpos($s, $mfn_prefix) === FALSE) {
+                                $slug = $mfn_prefix . $slug;
+                            }
+                            if (strpos($s, '_' . $filter_lang) === FALSE) {
+                                $lang = $filter_lang === 'en' ? '' : '_' . $filter_lang;
+                                $slug = $slug . $lang;
+                            }
 
-                        $get_tag_name = $wpdb->get_results("SELECT name FROM " . $wpdb->prefix . "terms WHERE slug = '" . $slug . "' LIMIT 1");
+                            $get_tag_name = $wpdb->get_results("SELECT name FROM " . $wpdb->prefix . "terms WHERE slug = '" . $slug . "' LIMIT 1");
 
-                        if (is_array($get_tag_name)) {
-                            if (isset($get_tag_name[0]) && is_object($get_tag_name[0])) {
-                                $name = $get_tag_name[0]->name;
-                            } else {
-                                $name = $s;
+                            if (is_array($get_tag_name)) {
+                                if (isset($get_tag_name[0]) && is_object($get_tag_name[0])) {
+                                    $name = $get_tag_name[0]->name;
+                                } else {
+                                    $name = $s;
+                                }
                             }
                         }
-                    }
+
+                        // override with manual configuration like filtertags=regulatory|sv|Regulatoriska pm
+                        for ($i = 1; $i < count($slug_dsl_parts); $i = $i+2) {
+                            if (isset($slug_dsl_parts[$i]) && isset($slug_dsl_parts[$i+1]) && $slug_dsl_parts[$i] == $filter_lang) {
+                                $name = $slug_dsl_parts[$i+1];
+                            }
+                        }
+
                         $selected =  ($categoryTag === $s || $mfn_prefix . $categoryTag === $s) ? 'selected': '';
                         echo '  <option value="'. $s . '" ' . $selected . '>' . $name . '</option>';
                     }
+
                 } else {
                     echo '
                             <option value="regulatory" ' . $regulatory_sel . '>' . $l("Regulatory", $filter_lang) . '</option>
