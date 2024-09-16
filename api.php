@@ -422,7 +422,7 @@ function MFN_get_feed($include_content, $hasTags = array(), $hasNotTags = array(
     $params = array();
 
     $query = "
-SELECT post_date_gmt, p.post_title, tags, lang.meta_value lang, post_id, post_name" . ($include_content ? ', post_content' : '' ) . "
+SELECT post_date_gmt, p.post_title, tags, lang.meta_value lang, post_id, post_name" . ($include_content ? ', post_content, post_excerpt' : '' ) . "
 FROM $wpdb->posts p
 INNER JOIN $wpdb->postmeta lang
 ON p.ID = lang.post_id
