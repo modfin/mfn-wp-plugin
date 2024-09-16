@@ -174,18 +174,44 @@ class News_feed {
                 @$dom->loadHTML($encoding . $post_content);
                 $preview = '';
 
-                foreach ($dom->getElementsByTagName('p') as $node) {
-                    if (!$node->textContent) {
-                        continue;
+                $disclaimer_node = NULL;
+                $preamble_node = NULL;
+                foreach ($dom->getElementsByTagName('div') as $node) {
+                    // check if we have a disclaimer
+                    if ($node->getAttribute("class") === 'mfn-disclaimer') {
+                        $disclaimer_node = $node;
                     }
-                    $value = str_replace('&nbsp;', ' ', htmlentities($node->textContent));
-                    if (trim($value) === '') {
-                        continue;
+                    // potentially use the preamble instead of general start of content
+                    if ($node->getAttribute("class") === 'mfn-preamble') {
+                        $preamble_node = $node;
                     }
-                    $preview .= trim($value) . ' ';
-                    if ($previewlen !== '' && strlen($preview) > $previewlen) {
-                        $appendEllipsis = true;
-                        break;
+                }
+                // preamble separated to it's own field
+                if (isset($item->post_excerpt) && $item->post_excerpt !== '') {
+                    $preambleDom = new DomDocument();
+                    @$preambleDom->loadHTML($encoding . $item->post_excerpt);
+                    $preamble_node = $preambleDom;
+                }
+
+                if (!is_null($disclaimer_node)) {
+                    $preview = $this->iterateDomNodes($disclaimer_node, $preview);
+                } else if (!is_null($preamble_node)) {
+                    $preview = $this->iterateDomNodes($preamble_node, $preview);
+                } else {
+                    foreach ($dom->getElementsByTagName('p') as $node) {
+
+                        if (!$node->textContent) {
+                            continue;
+                        }
+                        $value = $node->textContent;
+                        if (trim($value) === '') {
+                            continue;
+                        }
+                        $preview .= trim($value) . ' ';
+                        if ($previewlen !== '' && strlen($preview) > $previewlen) {
+                            $appendEllipsis = true;
+                            break;
+                        }
                     }
                 }
 
@@ -206,6 +232,11 @@ class News_feed {
                 // append ellipsis
                 if ($appendEllipsis) {
                     $preview = rtrim($preview, '.,:;!');
+                }
+
+                $preview = str_replace('&nbsp;', ' ', htmlentities($preview));
+
+                if ($appendEllipsis) {
                     $preview .= '<span class="mfn-ellipsis">...</span>';
                 }
 
@@ -224,4 +255,16 @@ class News_feed {
 
         return $result;
     }
+
+    function iterateDomNodes($node, $preview) {
+        $value = $node->textContent;
+        $preview .= trim($value) . ' ';
+        if ($node->childNodes) {
+            foreach($node->childNodes as $child){
+                $this->iterateDomNodes($child, $preview);
+            }
+        }
+        return $preview;
+    }
 }
+
