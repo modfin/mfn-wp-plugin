@@ -13,7 +13,31 @@ $subscription = mfn_get_subscription_by_plugin_url($subscriptions, mfn_plugin_ur
 $subscription_id = $subscription['subscription_id'] ?? "";
 $subscription_msg = $subscription_id;
 
-if ($subscription_id == "") {
+function mfn_verify_hub_subscription($subscription_id)
+{
+    $hub_url = mfn_fetch_hub_url();
+
+    if (mfn_starts_with($hub_url, "http")) {
+
+        $response = wp_remote_get($hub_url . '/verify/' . $subscription_id . "/status");
+
+        if ( !is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) == 200 ) {
+            $content = wp_remote_retrieve_body($response);
+
+            if (strstr($content, 'subscription verified')) {
+                return "success";
+            }
+        }
+
+        echo '<span class="mfn-status-error"><strong>Could not validate server side subscription, try to resubscribe</strong></span>';
+        return "error";
+    }
+    die("fail, not a valid url.");
+}
+
+$server_verified_subscription = mfn_verify_hub_subscription($subscription_id);
+
+if ($subscription_id == "" || $server_verified_subscription == "error") {
     $subscription_msg = '<strong>' . $subscription_id . '</strong>';
     $subscription_msg .= ' <span class="mfn-status-error"><strong>' . mfn_get_text('status_not_subscribed') . '</strong></span>';
 } else {

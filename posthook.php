@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
     }
     $mode = $queries["hub_mode"];
 
-    if ($mode != 'subscribe' && $mode != 'unsubscribe') {
+    if ($mode != 'subscribe' && $mode != 'unsubscribe' && $mode != 'status') {
         http_response_code(400);
         die("mode must be subscribe or unsubscribe");
     }
@@ -67,7 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
     }
     $topic = $queries["hub_topic"];
 
-    mfn_update_challenge_by_plugin_url($subscriptions, $plugin_url, $challenge);
+    if ($mode != 'status') {
+        // status should not write anything, just a healthcheck
+        mfn_update_challenge_by_plugin_url($subscriptions, $plugin_url, $challenge);
+    }
 
     http_response_code(200);
     echo $challenge;
