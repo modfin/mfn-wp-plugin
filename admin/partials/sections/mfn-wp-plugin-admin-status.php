@@ -20,15 +20,17 @@ function mfn_verify_hub_subscription($subscription_id)
     if (mfn_starts_with($hub_url, "http")) {
 
         $response = wp_remote_get($hub_url . '/verify/' . $subscription_id . "/status");
-        $content = wp_remote_retrieve_body($response);
 
-        if (strstr($content, 'subscription could not be verified')) {
-            echo '<span class="mfn-status-error"><strong>Could not validate server side subscription, try to resubscribe</strong></span>';
-            return "error";
+        if ( !is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) == 200 ) {
+            $content = wp_remote_retrieve_body($response);
+
+            if (strstr($content, 'subscription verified')) {
+                return "success";
+            }
         }
 
-        //echo "fail, endpoint does not contain WebSub info.";
-        return "success";
+        echo '<span class="mfn-status-error"><strong>Could not validate server side subscription, try to resubscribe</strong></span>';
+        return "error";
     }
     die("fail, not a valid url.");
 }
