@@ -549,6 +549,7 @@ function mfn_upsert_thumbnails($post_id, $attachments)
             }
             add_post_meta($attachment_id, MFN_POST_TYPE . "_attachment_url", $a->url);
             add_post_meta($attachment_id, MFN_POST_TYPE . "_attachment_proxied_url", $a->proxied_url);
+            add_post_meta($attachment_id, '_wp_attachment_image_alt', $file_title);
         }
         if ($thumbnail_attachment_id === 0) {
             $thumbnail_attachment_id = $attachment_id;
