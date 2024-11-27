@@ -415,7 +415,7 @@ function MFN_get_feed_min_max_years($lang = 'all') {
 }
 
 
-function MFN_get_feed($include_content, $hasTags = array(), $hasNotTags = array(), $orTags = array(), $offset = 0, $limit = 30, $lang = 'all', $year = '', $fromyear = '')
+function MFN_get_feed($include_content, $hasTags = array(), $hasNotTags = array(), $orTags = array(), $offset = 0, $limit = 30, $lang = 'all', $year = '', $fromyear = '', $todate = '')
 {
 
     global $wpdb;
@@ -485,6 +485,11 @@ INNER JOIN (
     if ($fromyear != "") {
         $query .= " AND YEAR(p.post_date_gmt) >= %s ";
         array_push($params, $fromyear);
+    }
+
+    if ($todate != "") {
+        $query .= " AND DATE(p.post_date_gmt) <= %s ";
+        array_push($params, $todate);
     }
 
     $query .= " ORDER BY p.post_date_gmt DESC ";

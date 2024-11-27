@@ -792,7 +792,8 @@ class mfn_news_feed_widget extends WP_Widget
 	        $data['pagelen'],
             $data['pmlang'],
             $data['year'],
-            $data['fromyear']
+            $data['fromyear'],
+            $data['todate']
 
         );
 
@@ -876,6 +877,7 @@ class mfn_news_feed_widget extends WP_Widget
 
         $forcelocale = empty($instance['forcelocale']) ? null : $instance['forcelocale'];
         $fromyear = empty($instance['fromyear']) ? null : $instance['fromyear'];
+        $todate = empty($instance['todate']) ? null : $instance['todate'];
 
         $lang = 'en';
         $locale = determineLocale();
@@ -991,6 +993,13 @@ class mfn_news_feed_widget extends WP_Widget
 
         if (isset($fromyear) && $fromyear > $min_max_years->min_year) {
 	        $min_max_years->min_year = $fromyear;
+        }
+
+        if (isset($todate)) {
+            $toyear = explode('-', $todate)[0];
+            if ($toyear < $min_max_years->max_year) {
+                $min_max_years->max_year = $toyear;
+            }
         }
 
         $tmpl = "
@@ -1258,7 +1267,8 @@ class mfn_news_feed_widget extends WP_Widget
             'thumbnailsize' => $thumbnailsize,
             'shownotfound' => $shownotfound,
             'notfoundmsg' => $notfoundmsg,
-            'fromyear' => $fromyear
+            'fromyear' => $fromyear,
+            'todate' => $todate
         ));
 
         if ($showpagination) {
