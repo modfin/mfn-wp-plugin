@@ -442,9 +442,9 @@ function mfn_sync_taxonomy()
                 ]
             ],
             [
-                "slug" => "uk",
+                "slug" => "gb",
                 "name" => "United Kingdom",
-                "i10n" => [],
+                "i10n" => [], // todo för pll?
                 "children" => [
                     [
                         "slug" => "hl",
@@ -467,28 +467,13 @@ function mfn_sync_taxonomy()
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "not",
-                                "name" => "Official List Notice (FCA use only)",
-                                "i10n" => []
-                            ],
-                            [
                                 "slug" => "lis",
                                 "name" => "Initial admission to the Official List",
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "nra",
-                                "name" => "Non Regulatory Announcement",
-                                "i10n" => []
-                            ],
-                            [
                                 "slug" => "msc",
                                 "name" => "Miscellaneous",
-                                "i10n" => []
-                            ],
-                            [
-                                "slug" => "mscu",
-                                "name" => "Miscellaneous – Urgent Priority",
                                 "i10n" => []
                             ],
                             [
@@ -592,11 +577,6 @@ function mfn_sync_taxonomy()
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "mer",
-                                "name" => "Merger Update(CMA use only)",
-                                "i10n" => []
-                            ],
-                            [
                                 "slug" => "ofb",
                                 "name" => "Offer by [add offeror’s name]",
                                 "i10n" => []
@@ -624,11 +604,6 @@ function mfn_sync_taxonomy()
                             [
                                 "slug" => "oup",
                                 "name" => "Offer Update",
-                                "i10n" => []
-                            ],
-                            [
-                                "slug" => "pnm",
-                                "name" => "Prior Notice of Merger (CMA use only)",
                                 "i10n" => []
                             ],
                             [
@@ -722,11 +697,6 @@ function mfn_sync_taxonomy()
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "stc",
-                                "name" => "Statement re (insert appropriate text) (CMA use only)",
-                                "i10n" => []
-                            ],
-                            [
                                 "slug" => "ofd",
                                 "name" => "Statement re Possible Offer",
                                 "i10n" => []
@@ -763,7 +733,7 @@ function mfn_sync_taxonomy()
                             ],
                             [
                                 "slug" => "pos",
-                                "name" => "Transaction in Own Shares*",
+                                "name" => "Transaction in Own Shares",
                                 "i10n" => []
                             ],
                             [
@@ -779,11 +749,6 @@ function mfn_sync_taxonomy()
                             [
                                 "slug" => "irs",
                                 "name" => "Industry Regulator Statement",
-                                "i10n" => []
-                            ],
-                            [
-                                "slug" => "msch",
-                                "name" => "Miscellaneous – High Priority",
                                 "i10n" => []
                             ],
                             [
@@ -803,7 +768,7 @@ function mfn_sync_taxonomy()
                             ],
                             [
                                 "slug" => "blr",
-                                "name" => "Block listing Interim Review*",
+                                "name" => "Block listing Interim Review",
                                 "i10n" => []
                             ],
                             [
@@ -818,7 +783,7 @@ function mfn_sync_taxonomy()
                             ],
                             [
                                 "slug" => "dsh",
-                                "name" => "Director/PDMR Shareholding*",
+                                "name" => "Director/PDMR Shareholding",
                                 "i10n" => []
                             ],
                             [
@@ -843,7 +808,7 @@ function mfn_sync_taxonomy()
                             ],
                             [
                                 "slug" => "hol",
-                                "name" => "Holding(s) in Company*",
+                                "name" => "Holding(s) in Company",
                                 "i10n" => []
                             ],
                             [
@@ -892,11 +857,6 @@ function mfn_sync_taxonomy()
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "mscm",
-                                "name" => "Miscellaneous – Medium Priority",
-                                "i10n" => []
-                            ],
-                            [
                                 "slug" => "can",
                                 "name" => "Change of Name",
                                 "i10n" => []
@@ -918,7 +878,7 @@ function mfn_sync_taxonomy()
                             ],
                             [
                                 "slug" => "doc",
-                                "name" => "Doc re. [insert appropriate document title]",
+                                "name" => "Doc re. [insert appropriate document title]", // TODO research the impact of these
                                 "i10n" => []
                             ],
                             [
@@ -946,16 +906,6 @@ function mfn_sync_taxonomy()
                                 "name" => "Offer Document Posted",
                                 "i10n" => []
                             ],
-                            [
-                                "slug" => "mscl",
-                                "name" => "Miscellaneous – Low Priority",
-                                "i10n" => []
-                            ],
-                            [
-                                "slug" => "tsm",
-                                "name" => "Test Message",
-                                "i10n" => []
-                            ]
                         ]
                     ],
                     [
@@ -964,47 +914,47 @@ function mfn_sync_taxonomy()
                         "i10n" => [],
                         "children" => [
                             [
-                                "slug" => "1.1",
+                                "slug" => "1-1",
                                 "name" => "Annual financial and audit reports",
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "1.2",
+                                "slug" => "1-2",
                                 "name" => "Half yearly financial reports and audit reports/limited reviews",
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "1.3",
+                                "slug" => "1-3",
                                 "name" => "Payment to government",
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "2.2",
+                                "slug" => "2-2",
                                 "name" => "Inside information",
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "2.3",
+                                "slug" => "2-3",
                                 "name" => "Major shareholding notifications",
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "2.4",
+                                "slug" => "2-4",
                                 "name" => "Acquisition or disposal of the issuer’s own shares",
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "2.5",
+                                "slug" => "2-5",
                                 "name" => "Total number of voting rights and capital",
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "2.6",
+                                "slug" => "2-6",
                                 "name" => "Changes in the rights attaching to the classes of shares or securities",
                                 "i10n" => []
                             ],
                             [
-                                "slug" => "3.1",
+                                "slug" => "3-1",
                                 "name" => "Additional regulated information required to be disclosed under the laws of the United Kingdom",
                                 "i10n" => []
                             ]

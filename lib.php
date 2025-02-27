@@ -234,6 +234,34 @@ function mfn_trim_prefix($str, $prefix): string
     return $str;
 }
 
+function mfn_uk_tag_align($tag): string
+{
+    // aligns MFN's UK tags to the expected taxonomy format. Does not account for $prefix
+    // - ext:nsm:XYZ into $prefix-gb-hl-XYZ.         Example: ext:nsm:hol -> gb-hl-hol
+    // - uk-classification-X.Y to $prefix-gb-cl-X-Y. Example: uk-classification-1.1 -> gb-cl-1-1
+    if (!mfn_starts_with($tag, 'ext:nsm') && !mfn_starts_with($tag, 'uk-classification')) {
+        write_log('skip aligning ' . $tag);
+        return $tag;
+    }
+    write_log('aligning ' . $tag);
+
+    if (mfn_starts_with($tag, 'uk-classification')) {
+        $parts = explode('-', $tag);
+        $suffix = end($parts);
+        $numbers = explode('.', $suffix);
+        if (count($numbers) !== 2) { // unknown tag
+            return 'gb-cl';
+        }
+        return 'gb-cl-' . $numbers[0] . '-' . $numbers[1];
+    }
+
+    if ($tag === 'ext:nsm') {
+        return 'gb-hl';
+    }
+    $code = explode(':', $tag);
+    return 'gb-hl-' . end($code);
+}
+
 function mfn_create_tags($item, $prefix, $drop_custom_tag_prefix): array
 {
     $tags = $item->properties->tags ?? array();
@@ -264,16 +292,22 @@ function mfn_create_tags($item, $prefix, $drop_custom_tag_prefix): array
             $wp_tags[] = $prefix . 'correction';
             continue;
         }
-        // don't include ext tags (or future unknown tags)
-        if (strpos($tag, 'sub:') !== 0 && strpos($tag, 'cus:') !== 0 && strpos($tag, ':regulatory') !== 0) {
+        // don't include ext tags (or future unknown tags), except for 'ext:nsm:...'
+        if (strpos($tag, 'sub:') !== 0 && strpos($tag, 'cus:') !== 0 && strpos($tag, ':regulatory') !== 0
+            && strpos($tag, 'ext:nsm') !== 0 && strpos($tag, 'uk-classification') !== 0) {
             continue;
         }
         if (in_array($tag, $skipped_tags, true)) {
             continue;
         }
         // skip potential cus tags that could conflict with mfn tags when dropping the cus prefix
-        if ($drop_custom_tag_prefix && strpos($tag, 'cus:ci-') !== 0 && strpos($tag, 'cus:ca-') !== 0 && strpos($tag, 'cus:regulatory-') && strpos($tag, 'cus:report-') !== 0) {
+        if ($drop_custom_tag_prefix && strpos($tag, 'cus:ci-') !== 0 && strpos($tag, 'cus:ca-') !== 0 && strpos($tag, 'cus:regulatory-') && strpos($tag, 'cus:report-') !== 0
+            && strpos($tag, 'cus:ext:nsm') !== 0 && strpos($tag, 'cus:uk-classification') !== 0) {
             continue;
+        }
+
+        if (mfn_starts_with($tag, 'ext:nsm') || mfn_starts_with($tag, 'uk-classification')) {
+            $tag = mfn_uk_tag_align($tag);
         }
 
         $tag = mfn_trim_prefix($tag, 'sub:');
