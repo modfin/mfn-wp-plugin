@@ -440,6 +440,527 @@ function mfn_sync_taxonomy()
                         "i10n" => ["sv" => "Personalförändring", "fi" => "Henkilöstön muutokset"]
                     ]
                 ]
+            ],
+            [
+                "slug" => "gb",
+                "name" => "United Kingdom",
+                "i10n" => [], // todo för pll?
+                "children" => [
+                    [
+                        "slug" => "hl",
+                        "name" => "Headline",
+                        "i10n" => [],
+                        "children" => [
+                            [
+                                "slug" => "sus",
+                                "name" => "Temporary Suspension",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "srs",
+                                "name" => "Statement re. Suspension",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ren",
+                                "name" => "Restoration of Listing",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "lis",
+                                "name" => "Initial admission to the Official List",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "msc",
+                                "name" => "Miscellaneous",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "qrf",
+                                "name" => "1st Quarter Results",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "qrt",
+                                "name" => "3rd Quarter Results",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "acq",
+                                "name" => "Acquisition",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "agm",
+                                "name" => "AGM Statement",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "acs",
+                                "name" => "Annual Financial Report",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "car",
+                                "name" => "Capital Reorganisation",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "con",
+                                "name" => "Conversion of Securities",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "tab",
+                                "name" => "Disclosure Table (POTAM use only)",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "dis",
+                                "name" => "Disposal",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "drl",
+                                "name" => "Drilling/Production Report",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "gms",
+                                "name" => "GM Statement",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "fr",
+                                "name" => "Final Results",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "fee",
+                                "name" => "Form 8 (OPD) [Insert name of offeree or offeror]",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "feo",
+                                "name" => "Form 8.5 (EPT/NON-RI)",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "fer",
+                                "name" => "Form 8.5 (EPT/RI)",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "fur",
+                                "name" => "Further re (insert appropriate text)",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ir",
+                                "name" => "Half-year Report",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "iod",
+                                "name" => "Issue of Debt",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ioe",
+                                "name" => "Issue of Equity",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "loi",
+                                "name" => "Letter of Intent Signed",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ofb",
+                                "name" => "Offer by [add offeror’s name]",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "off",
+                                "name" => "Offer for [add offeree’s name]",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ola",
+                                "name" => "Offer Lapsed",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ore",
+                                "name" => "Offer Rejection",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ott",
+                                "name" => "Offer Talks Terminated",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "oup",
+                                "name" => "Offer Update",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "prl",
+                                "name" => "Product Launch",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "agr",
+                                "name" => "Agreement",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "all",
+                                "name" => "Alliance",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "cnt",
+                                "name" => "Contract",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "jve",
+                                "name" => "Joint Venture",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "rap",
+                                "name" => "Regulatory Application",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "rea",
+                                "name" => "Regulatory Approval",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "res",
+                                "name" => "Research Update",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "rsp",
+                                "name" => "Response to (insert appropriate text)",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "rep",
+                                "name" => "Restructure Proposals",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "rag",
+                                "name" => "Result of AGM",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "roi",
+                                "name" => "Result of Equity Issue",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "rom",
+                                "name" => "Result of Meeting",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "rte",
+                                "name" => "Result of Tender Offer",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "dcc",
+                                "name" => "Form 8 (DD) - [Insert name of offeree or offeror]",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ret",
+                                "name" => "Form 8.3 - [Insert name of offeree or offeror]",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "soa",
+                                "name" => "Scheme of Arrangement",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "str",
+                                "name" => "Statement re (insert appropriate text)",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ofd",
+                                "name" => "Statement re Possible Offer",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "spc",
+                                "name" => "Statement re Press Comment",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "spm",
+                                "name" => "Statement re Share Price Movement",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "syr",
+                                "name" => "Syndicate Results",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ten",
+                                "name" => "Tender Offer",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "tvr",
+                                "name" => "Total Voting Rights",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "tst",
+                                "name" => "Trading Statement",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "pos",
+                                "name" => "Transaction in Own Shares",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "pgr",
+                                "name" => "Report on Payments to Governments",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "upd",
+                                "name" => "Strategy/Company/ Operations Update",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "irs",
+                                "name" => "Industry Regulator Statement",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "ari",
+                                "name" => "Announcement re: Rights Issue",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "als",
+                                "name" => "Additional Listing",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "brc",
+                                "name" => "Base Rate Change",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "blr",
+                                "name" => "Block listing Interim Review",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "cmc",
+                                "name" => "Compliance with Model Code",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "cas",
+                                "name" => "Compulsory Acquisition of Shares",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "dsh",
+                                "name" => "Director/PDMR Shareholding",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "boa",
+                                "name" => "Directorate change",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "div",
+                                "name" => "Dividend Declaration",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "rc",
+                                "name" => "FRN Variable Rate Fix",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "geo",
+                                "name" => "Geographical Distribution",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "hol",
+                                "name" => "Holding(s) in Company",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "nav",
+                                "name" => "Net Asset Value(s)",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "pfu",
+                                "name" => "Portfolio Update",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "pdi",
+                                "name" => "Publication of a Prospectus",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "psp",
+                                "name" => "Publication of a Supplementary Prospectus",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "pft",
+                                "name" => "Publication of Final Terms",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "rtt",
+                                "name" => "Rule 2.10 Announcement",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "tav",
+                                "name" => "Total Assets Value",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "trs",
+                                "name" => "Treasury Stock",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "itf",
+                                "name" => "Intention to Float",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "can",
+                                "name" => "Change of Name",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "cir",
+                                "name" => "Circ re. [insert appropriate document title]",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "cos",
+                                "name" => "Company Secretary Change",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "rdn",
+                                "name" => "Director Declaration",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "doc",
+                                "name" => "Doc re. [insert appropriate document title]", // TODO research the impact of these
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "nar",
+                                "name" => "New Accounting Ref Date",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "noa",
+                                "name" => "Notice of AGM",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "nog",
+                                "name" => "Notice of GM",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "nor",
+                                "name" => "Notice of Results",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "odp",
+                                "name" => "Offer Document Posted",
+                                "i10n" => []
+                            ],
+                        ]
+                    ],
+                    [
+                        "slug" => "cl",
+                        "name" => "Classification",
+                        "i10n" => [],
+                        "children" => [
+                            [
+                                "slug" => "1-1",
+                                "name" => "Annual financial and audit reports",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "1-2",
+                                "name" => "Half yearly financial reports and audit reports/limited reviews",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "1-3",
+                                "name" => "Payment to government",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "2-2",
+                                "name" => "Inside information",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "2-3",
+                                "name" => "Major shareholding notifications",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "2-4",
+                                "name" => "Acquisition or disposal of the issuer’s own shares",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "2-5",
+                                "name" => "Total number of voting rights and capital",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "2-6",
+                                "name" => "Changes in the rights attaching to the classes of shares or securities",
+                                "i10n" => []
+                            ],
+                            [
+                                "slug" => "3-1",
+                                "name" => "Additional regulated information required to be disclosed under the laws of the United Kingdom",
+                                "i10n" => []
+                            ]
+                        ]
+                    ],
+                ]
             ]
         ]
     ];
