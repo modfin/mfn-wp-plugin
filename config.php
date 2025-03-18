@@ -53,7 +53,8 @@ if (isset(get_option(MFN_PLUGIN_NAME)['enable_attachments'])
 
 function mfn_enable_attachments($content): string
 {
-    if (get_post()->post_type === MFN_POST_TYPE) {
+    $post = get_post();
+    if (!is_null($post) && $post->post_type === MFN_POST_TYPE) {
         $content .= mfn_remove_regular_attachment_footer();
         $content .= mfn_list_post_attachments();
     }
