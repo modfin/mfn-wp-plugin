@@ -241,6 +241,7 @@ function mfn_delete_all_posts(): array
 {
     $queries = array();
     parse_str($_SERVER['QUERY_STRING'], $queries);
+    $offset = $queries["offset"] ?? -1;
     $limit = $queries["limit"] ?? -1;
     $include_dirty = $queries["include-dirty"] ?? false;
     $delete_attachments = isset(get_option(MFN_PLUGIN_NAME)['thumbnail_allow_delete']);
@@ -248,40 +249,42 @@ function mfn_delete_all_posts(): array
     $i = 0;
     $stat = "ok";
     $num_deleted = 0;
-    $num_skipped_dirty = 0;
-    $num_skipped_trash = 0;
 
     $all_posts = get_posts(
         array(
             'post_type' => MFN_POST_TYPE,
             'lang' => '',
             'numberposts' => $limit,
-            'post_status' => 'Trash',
+            'offset' => $offset,
+            'post_status' => array('any', 'trash'),
         )
     );
 
     foreach ($all_posts as $each_post) {
-       if ($each_post->post_type == MFN_POST_TYPE) {
-           $is_dirty = mfn_post_is_dirty($each_post->ID);
-           $is_trash = $each_post->post_status === 'trash';
-           if ($is_dirty && $include_dirty == 'false')  {
-               $num_skipped_dirty++;
-           } else if ($is_trash && $include_dirty == 'false') {
-               $num_skipped_trash++;
-           } else {
-               if (get_post_meta($each_post->ID, MFN_POST_TYPE . "_group_id", true)) {
-                   if ($delete_attachments) {
-                       mfn_delete_attachments($each_post->ID);
-                   }
-                   $delete_posts = wp_delete_post($each_post->ID, true);
-                   if ($delete_posts === null) {
-                       $stat = "failed";
-                   }
-                   $num_deleted++;
-               }
-           }
-           $i++;
-         }
+        if ($each_post->post_type == MFN_POST_TYPE) {
+            $i++;
+            $is_dirty = mfn_post_is_dirty($each_post->ID);
+            $is_trash = $each_post->post_status === 'trash';
+
+            if ($is_dirty && $include_dirty == 'false') {
+                continue;
+            }
+
+            if ($is_trash && $include_dirty == 'false') {
+                continue;
+            }
+
+            if (get_post_meta($each_post->ID, MFN_POST_TYPE . "_group_id", true)) {
+                if ($delete_attachments) {
+                    mfn_delete_attachments($each_post->ID);
+                }
+                $delete_posts = wp_delete_post($each_post->ID, true);
+                if ($delete_posts === null) {
+                    $stat = "failed";
+                }
+                $num_deleted++;
+            }
+        }
     }
 
     return array($i, $num_deleted, $stat);

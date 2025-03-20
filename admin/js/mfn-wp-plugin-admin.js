@@ -436,8 +436,10 @@
         }
     }
 
-    function mfn_delete_posts(total, includeDirty) {
+    function mfn_delete_posts(total, offset, includeDirty) {
+
         total = total || 0;
+        offset = offset || 0;
         includeDirty = includeDirty || false;
 
         var dzStatusEl = $('#mfn-danger-zone-status');
@@ -453,12 +455,14 @@
             delPostsBtnSpanEl.addClass("dashicons dashicons-admin-post");
         }
 
-        $.get(pluginUrl + '/cc.php?mode=delete-all-posts&limit=10&include-dirty=' + includeDirty + no_cache_param('&'), function (data, xhr) {
+        $.get(pluginUrl + '/cc.php?mode=delete-all-posts&limit=10&include-dirty=' + includeDirty + "&offset=" + offset + no_cache_param('&'), function (data, xhr) {
             var parts = data.split(';');
             var i = parseInt(parts[0]);
             var deleted = parseInt(parts[1]);
             var deleteSt = parts[2];
             total += deleted;
+
+            offset += + (i - deleted);
 
             if (deleteSt === "failed") {
                 dzStatusEl
@@ -470,7 +474,7 @@
             if (i === 10) {
                 mfn_delay(100).then(function() {
                     dzStatusEl.html('<b>Deleting...</b>&nbsp;<span class="mfn-status-container mfn-status-container-delete mfn-do-fade">' + total + ' posts ' + '</span>');
-                    mfn_delete_posts(total, includeDirty);
+                    mfn_delete_posts(total, offset, includeDirty);
                 });
                 return;
             }
@@ -612,7 +616,7 @@
                 $(".mfn-modal").remove();
                 delPostsBtnSpan.removeClass("dashicons dashicons-admin-post");
                 delPostsBtnSpan.html('<div class=\'mfn-do-fade\'><span class=\'mfn-spinner\'></span></div>');
-                mfn_delete_posts(total, includeDirty);
+                mfn_delete_posts(total, 0, includeDirty);
 
             });
         });
