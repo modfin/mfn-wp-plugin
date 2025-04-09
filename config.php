@@ -163,6 +163,7 @@ function mfn_register_types()
         'show_ui' => true,
         'show_admin_column' => true,
         'show_in_menu' => true,
+        'show_in_rest' => true,
         'query_var' => true,
         'rewrite' => array('slug' => empty($taxonomy_rewrite_slug) ? MFN_TAXONOMY_NAME : $taxonomy_rewrite_slug),
     ));
