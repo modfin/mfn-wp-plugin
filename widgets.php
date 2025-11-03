@@ -1046,7 +1046,7 @@ class mfn_news_feed_widget extends WP_Widget
         " : $instance['yeartemplate'];
 
         $onlytagsallowed = array();
-        $onlytagsallowedstr = empty($instance['onlytagsallowed']) ? "" : $instance['onlytagsallowed'];
+        $onlytagsallowedstr = empty($instance['onlytagsallowed']) ? "mfn-regulatory" : $instance['onlytagsallowed'];
         if ($onlytagsallowedstr !== "") {
             $onlytagsallowed = explode(",", $onlytagsallowedstr);
         }

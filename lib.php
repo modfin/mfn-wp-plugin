@@ -366,25 +366,74 @@ function mfn_get_proxied_url($url, $vanityFileName): string
         : $url . "?size=w-2560";
 }
 
+/**
+ * Map content type to a file type
+ *
+ * @param string $content_type The MIME type of the file
+ * @return string The mapped file type
+ */
+function mfn_get_file_type($content_type) {
+    if (empty($content_type)) {
+        return 'file';
+    }
+    
+    switch ($content_type) {
+        case 'application/pdf':
+            return 'pdf';
+        case 'image/jpeg':
+        case 'image/jpg':
+        case 'image/png':
+        case 'image/gif':
+        case 'image/webp':
+            return 'image';
+        case 'application/zip':
+        case 'application/zip-compressed':
+        case 'application/x-zip-compressed':
+        case 'application/x-rar-compressed':
+        case 'application/x-7z-compressed':
+            return 'archive';
+        case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        case 'application/msword':
+        case 'application/vnd.ms-word':
+            return 'word';
+        case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+        case 'application/vnd.ms-excel':
+            return 'excel';
+        case 'application/vnd.ms-powerpoint':
+        case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+            return 'powerpoint';
+        case 'application/xhtml+xml':
+        case 'text/html':
+            return 'alt';
+        default:
+            return 'file';
+    }
+}
+
 function mfn_list_post_attachments(): string
 {
     $attachments_content = '<div class="mfn-attachments-container">';
     foreach (mfn_fetch_post_attachments() as $attachment) {
-        $icon_type_slug = empty($attachment->content_type) ? 'admin-links' : 'media-default';
+        $content_type = $attachment->content_type ?? '';
+        $file_type = mfn_get_file_type($content_type);
+        $icon_type_slug = empty($content_type) ? 'admin-links' : 'media-default';
 
-        list ($url, $preview_url) = mfn_get_proxied_preview_url($attachment->url, $attachment->file_title, $attachment->content_type);
+        list ($url, $preview_url) = mfn_get_proxied_preview_url($attachment->url, $attachment->file_title, $content_type);
         if (empty($preview_url)) {
             $icon = '<span class="mfn-attachment-icon"><span class="dash dashicons dashicons-' . $icon_type_slug . '"></span></span>';
         } else {
             $icon = '<span class="mfn-attachment-icon"><img src="' . $preview_url. '"></span>';
         }
-        $link = '<a class="mfn-attachment-link" href="' . $url . '">' . $icon . $attachment->file_title . '</a>';
-        $classes = array("mfn-attachment");
-        if (isset($attachment->tags) && in_array(':primary', $attachment->tags)) {
-            $classes[] = "mfn-primary";
-        }
-        if (isset($attachment->tags) && in_array('image:primary', $attachment->tags)) {
-            $classes[] = "mfn-image-primary";
+        $link = '<a class="mfn-attachment-link" target="_blank" href="' . $url . '">' . $icon . $attachment->file_title . '</a>';
+        $classes = ["mfn-attachment", "mfn-file-type-{$file_type}"];
+        
+        if (isset($attachment->tags)) {
+            if (in_array(':primary', $attachment->tags)) {
+                $classes[] = "mfn-primary";
+            }
+            if (in_array('image:primary', $attachment->tags)) {
+                $classes[] = "mfn-image-primary";
+            }
         }
         $attachments_content .=  '<div class="' . join(" ", $classes) . '">' . $link . '</div>';
     }
