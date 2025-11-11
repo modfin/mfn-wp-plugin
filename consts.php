@@ -14,4 +14,4 @@ const MFN_POST_TYPE = 'mfn_news';
 const MFN_ARCHIVE_NAME = 'MFN News Items';
 const MFN_SINGULAR_NAME = 'MFN News Item';
 const DATABLOCKS_LOADER_URL = 'https://widget.datablocks.se/api/rose';
-const DATABLOOCKS_LOADER_VERSION = 'v4';
+const DATABLOCKS_LOADER_VERSION = 'v4';
