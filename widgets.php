@@ -69,40 +69,42 @@ function yearClass($year): string
 
 function load_datablocks_widget($widget_id, $widget_type, $lang) {
 
-    // Enqueue the loader script properly
-    wp_enqueue_script(
-            'datablocks-loader',
-            DATABLOCKS_LOADER_URL . '/assets/js/loader-' . DATABLOCKS_LOADER_VERSION . '.js',
-            array(),
-            DATABLOCKS_LOADER_VERSION,
-            true
-    );
-
+    $loaderURL = DATABLOCKS_LOADER_URL;
     $instance_id = random_int(1, time());
-    $q = $widget_type . '-wrapper-' . $instance_id;
 
-    $widget = array(
-            'query' => '#' . $q,
-            'widget' => $widget_type,
-            'token' => $widget_id,
-            'locale' => $lang
-    );
+    $widget = new stdClass();
+    $q =  $widget_type . '-wrapper-' . $instance_id;
+    $widget->query = '#' . $q;
+    $widget->widget = $widget_type ?? '';
+    $widget->token = $widget_id ?? '';
+    $widget->locale = $lang;
 
-    if($widget_id !== '' && $q !== '') {
-        // Add inline script to initialize widget
-        wp_add_inline_script(
-                'datablocks-loader',
-                '
-            window._MF = window._MF || {
-                data: [],
-                url: "' . DATABLOCKS_LOADER_URL . '",
-                ready: false,
-                render: function() { this.ready = true; },
-                push: function(conf) { this.data.push(conf); }
-            };
-            window._MF.push(' . json_encode($widget) . ');
-            '
-        );
+    if($widget->token !== '' && $widget->query !== '') {
+        // inject Datablocks widget
+        echo '
+            <script>        
+                if(!window._MF) {
+                    let b = document.createElement("script");
+                    b.type = "text/javascript";
+                    b.async = true;
+                    b.src =  "' . DATABLOCKS_LOADER_URL . '/assets/js/loader-' . DATABLOOCKS_LOADER_VERSION . '.js' . '";
+                    document.getElementsByTagName("body")[0].appendChild(b);
+    
+                    window._MF = window._MF || {
+                        data: [],
+                        url: "' . $loaderURL . '",
+                        ready: !!0,
+                        render: function() {
+                            window._MF.ready = !0
+                        },
+                        push: function(conf) {
+                            this.data.push(conf);
+                        }
+                    }
+                }
+                window._MF.push(' . json_encode($widget) . ')
+            </script>
+            ';
 
         echo '<div id="' . $q . '" class="mfn-' . $widget_type . '"></div>';
     }
