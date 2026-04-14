@@ -354,13 +354,13 @@ echo '
                     </th>
                 </tr>
                 <tr>
-                    <td class="mfn-inline-td"><input type="text" class="regular-text wide"
-                               name="' . $this->plugin_name . '[mfdb_widget_options][loader_version_option]' . '"
-                               id="' . $this->plugin_name . '-loader_version_option' . '" value="' . $loaderVersion . '" ' .
-                    $is_readonly . '>
+                    <td class="mfn-inline-td">
+                        <input type="text" class="regular-text wide"
+                               name="' . $this->plugin_name . '[loader_version_option]' . '"
+                               id="' . $this->plugin_name . '-loader_version_option' . '" value="' . $loaderVersion . '" ' . $is_readonly . '>
                         <div class="mfn-tooltip-box">
                             <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_archive_name') . '</span>
+                            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_loader_version') . '</span>
                         </div>
         
                     </td>

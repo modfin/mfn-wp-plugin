@@ -117,6 +117,9 @@ function mfn_get_text($key)
         'tooltip_clear_mfn_settings' => mfn_text_domain(
             'Clears all the MFN settings from the options.'
         ),
+        'tooltip_loader_version' => mfn_text_domain(
+          'Here you can update the JS Loader Version.'
+        ),
         'tooltip_delete_mfn_tags' => mfn_text_domain(
             'Deletes all the MFN tags.'
         ),
