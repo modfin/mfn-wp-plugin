@@ -344,14 +344,29 @@ echo '
         </table>
         <hr>
         <div id="mfn-widget-wrapper">
-        <p>
-                ' . mfn_parse_label('label_widget_settings', 'mfn-h2-label') . '
-            </p>
-            <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[mfdb_widget_options][loader_version_option]' . '" id="' . $this->plugin_name . '-loader_version_option' . '" value="' . $loaderVersion . '" ' . $is_readonly . '>
-            <div class="mfn-tooltip-box">
-                <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
-                <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_archive_name') . '</span>
-            </div>
+            <table>
+                <tbody>
+                <tr>
+                    <th scope="row">
+                        <p>
+                            ' . mfn_parse_label('label_widget_settings', 'mfn-h2-label') . '
+                        </p>
+                    </th>
+                </tr>
+                <tr>
+                    <td><input type="text" class="regular-text wide"
+                               name="' . $this->plugin_name . '[mfdb_widget_options][loader_version_option]' . '"
+                               id="' . $this->plugin_name . '-loader_version_option' . '" value="' . $loaderVersion . '" ' .
+                    $is_readonly . '>
+                        <div class="mfn-tooltip-box">
+                            <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                            <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_archive_name') . '</span>
+                        </div>
+        
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
         <hr>
         <div id="mfn-advanced-settings-container" class="do-fade">
