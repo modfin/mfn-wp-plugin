@@ -68,13 +68,16 @@ function yearClass($year): string
 }
 
 function load_datablocks_widget($widget_id, $widget_type, $lang) {
+    $loaderVersionOption = get_option('mfdb_widget_options')['loader_version_option'] ?? '';
+
+    $loaderVersion = isset($loaderVersionOption) && !empty($loaderVersionOption) ? $loaderVersionOption : DATABLOCKS_LOADER_VERSION;
 
     // Enqueue the loader script properly
     wp_enqueue_script(
             'datablocks-loader',
-            DATABLOCKS_LOADER_URL . '/assets/js/loader-' . DATABLOCKS_LOADER_VERSION . '.js',
+            DATABLOCKS_LOADER_URL . '/assets/js/loader-' . $loaderVersion . '.js',
             array(),
-            DATABLOCKS_LOADER_VERSION,
+            $loaderVersion,
             true
     );
 

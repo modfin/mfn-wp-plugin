@@ -29,6 +29,7 @@ function mfn_get_text($key)
         'label_cus_query'  => mfn_text_domain('Custom Query'),
         'label_rewrite_settings'  => mfn_text_domain('Rewrite Settings'),
         'label_language_settings' => mfn_text_domain('Language Settings'),
+        'label_widget_settings'  => mfn_text_domain('Widget Settings'),
         'label_advanced_settings' => mfn_text_domain('Advanced Settings'),
         'label_custom_post_type_slug'  => mfn_text_domain('Custom Post Type URL'),
         'label_custom_archive_name'  => mfn_text_domain('Custom Archive Name'),

@@ -79,6 +79,9 @@ $archive_name = (isset($rewrite['archive-name']) && $rewrite['archive-name'] !==
 $singular_name = (isset($rewrite['singular-name']) && $rewrite['singular-name'] !== '' ? $rewrite['singular-name'] : MFN_SINGULAR_NAME);
 $taxonomy_rewrite_slug = $options['taxonomy_rewrite_slug'] ?? '';
 
+// Widget settings
+$loaderVersion = isset($options['loader_version_option']) && !empty($options['loader_version_option']) ? $options['loader_version_option'] : DATABLOCKS_LOADER_VERSION;
+
 // HTML
 echo '
 <div class="wrap" id="mfn-admin-wrapper">
@@ -339,6 +342,17 @@ echo '
         echo '
             </tbody>
         </table>
+        <hr>
+        <div id="mfn-widget-wrapper">
+        <p>
+                ' . mfn_parse_label('label_widget_settings', 'mfn-h2-label') . '
+            </p>
+            <input type="text" class="regular-text wide" name="' . $this->plugin_name . '[mfdb_widget_options][loader_version_option]' . '" id="' . $this->plugin_name . '-loader_version_option' . '" value="' . $loaderVersion . '" ' . $is_readonly . '>
+            <div class="mfn-tooltip-box">
+                <span class="mfn-info-icon-wrapper"><i class="dashicons dashicons-info-outline"></i></span>
+                <span class="mfn-tooltip-text">' . mfn_get_text('tooltip_rewrite_post_type_archive_name') . '</span>
+            </div>
+        </div>
         <hr>
         <div id="mfn-advanced-settings-container" class="do-fade">
             <table class="mfn-settings-table">
