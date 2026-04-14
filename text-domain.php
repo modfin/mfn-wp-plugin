@@ -29,6 +29,7 @@ function mfn_get_text($key)
         'label_cus_query'  => mfn_text_domain('Custom Query'),
         'label_rewrite_settings'  => mfn_text_domain('Rewrite Settings'),
         'label_language_settings' => mfn_text_domain('Language Settings'),
+        'label_widget_settings'  => mfn_text_domain('Widget Settings'),
         'label_advanced_settings' => mfn_text_domain('Advanced Settings'),
         'label_custom_post_type_slug'  => mfn_text_domain('Custom Post Type URL'),
         'label_custom_archive_name'  => mfn_text_domain('Custom Archive Name'),
@@ -115,6 +116,9 @@ function mfn_get_text($key)
         ),
         'tooltip_clear_mfn_settings' => mfn_text_domain(
             'Clears all the MFN settings from the options.'
+        ),
+        'tooltip_loader_version' => mfn_text_domain(
+          'Here you can update the JS Loader Version.'
         ),
         'tooltip_delete_mfn_tags' => mfn_text_domain(
             'Deletes all the MFN tags.'
