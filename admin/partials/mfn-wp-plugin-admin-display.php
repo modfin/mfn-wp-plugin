@@ -354,7 +354,7 @@ echo '
                     </th>
                 </tr>
                 <tr>
-                    <td><input type="text" class="regular-text wide"
+                    <td class="mfn-inline-td"><input type="text" class="regular-text wide"
                                name="' . $this->plugin_name . '[mfdb_widget_options][loader_version_option]' . '"
                                id="' . $this->plugin_name . '-loader_version_option' . '" value="' . $loaderVersion . '" ' .
                     $is_readonly . '>
