@@ -344,7 +344,7 @@ echo '
         </table>
         <hr>
         <div id="mfn-widget-wrapper">
-            <table>
+            <table class="mfn-settings-table">
                 <tbody>
                 <tr>
                     <th scope="row">
