@@ -68,7 +68,7 @@ function yearClass($year): string
 }
 
 function load_datablocks_widget($widget_id, $widget_type, $lang) {
-    $loaderVersionOption = get_option('mfdb_widget_options')['loader_version_option'] ?? '';
+    $loaderVersionOption = get_option(MFN_PLUGIN_NAME)['loader_version_option'] ?? '';
 
     $loaderVersion = isset($loaderVersionOption) && !empty($loaderVersionOption) ? $loaderVersionOption : DATABLOCKS_LOADER_VERSION;
 
@@ -107,7 +107,7 @@ function load_datablocks_widget($widget_id, $widget_type, $lang) {
                 ', 'before'
         );
 
-        echo '<div id="' . $q . '" class="mfn-' . $widget_type . '"></div>';
+        echo '<div id="' . $q . '" class="mfn-' . $widget_type . '" title="'. DATABLOCKS_LOADER_URL . '/assets/js/loader-' . $loaderVersion . '.js' . '"></div>';
     }
 }
 
