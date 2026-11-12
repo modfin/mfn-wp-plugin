@@ -455,32 +455,40 @@ function mfn_sync_taxonomy()
     $upsert_wpml = function ($enItem, $enTerm, $prefix = '') {
         global $wpdb;
         $tbmlTranslations = $wpdb->prefix . 'icl_translations';
+        $tbmlTerms = $wpdb->prefix . 'terms';
+        $tbmlTermsTax = $wpdb->prefix . 'term_taxonomy';
+        $elementType = 'tax_' . MFN_TAXONOMY_NAME;
+
+        // WPML keys term translations on term_taxonomy_id, not term_id
         $wpdb->update(
             $tbmlTranslations,
             array('language_code' => 'en', 'source_language_code' => null),
-            array('element_id' => $enTerm->term_id, 'element_type' => 'tax_' . MFN_TAXONOMY_NAME)
+            array('element_id' => $enTerm->term_taxonomy_id, 'element_type' => $elementType)
         );
 
         $q = $wpdb->prepare("
             SELECT trid
             FROM $tbmlTranslations
-            WHERE element_id = %s
-        ", $enTerm->term_id);
+            WHERE element_id = %d AND element_type = %s
+        ", $enTerm->term_taxonomy_id, $elementType);
         $trid = $wpdb->get_var($q);
 
-        $enParentTerm = null;
+        // Not get_term(): WPML filters it to the current language
+        $enParentSlug = null;
         if ($enTerm->parent > 0) {
-            $enParentTerm = get_term($enTerm->parent, MFN_TAXONOMY_NAME);
+            $q = $wpdb->prepare("
+            SELECT slug
+            FROM $tbmlTerms
+            WHERE term_id = %d
+        ", $enTerm->parent);
+            $enParentSlug = $wpdb->get_var($q);
         }
-
-        $tbmlTerms = $wpdb->prefix . 'terms';
-        $tbmlTermsTax = $wpdb->prefix . 'term_taxonomy';
 
         foreach ($enItem['i10n'] as $lang => $val) {
 
             $l_parent_term_id = 0;
-            if ($enParentTerm != null) {
-                $l_parent_slug = $enParentTerm->slug . '_' . $lang;
+            if ($enParentSlug != null) {
+                $l_parent_slug = $enParentSlug . '_' . $lang;
                 $q = $wpdb->prepare("
             SELECT term_id
             FROM $tbmlTerms
@@ -513,10 +521,15 @@ function mfn_sync_taxonomy()
                     );
                 }
 
+                $l_term_tt_id = $wpdb->get_var($wpdb->prepare("
+            SELECT term_taxonomy_id
+            FROM $tbmlTermsTax
+            WHERE term_id = %d AND taxonomy = %s
+        ", $l_term_id, MFN_TAXONOMY_NAME));
                 $wpdb->update(
                     $tbmlTranslations,
                     array('source_language_code' => 'en', 'language_code' => $lang, 'trid' => $trid),
-                    array('element_id' => $tbmlTerms, 'element_type' => 'tax_' . MFN_TAXONOMY_NAME)
+                    array('element_id' => $l_term_tt_id, 'element_type' => $elementType)
                 );
             }
 
@@ -529,7 +542,7 @@ function mfn_sync_taxonomy()
                 $wpdb->update(
                     $tbmlTranslations,
                     array('source_language_code' => 'en', 'language_code' => $lang, 'trid' => $trid),
-                    array('element_id' => $l_term->term_id, 'element_type' => 'tax_' . MFN_TAXONOMY_NAME)
+                    array('element_id' => $l_term->term_taxonomy_id, 'element_type' => $elementType)
                 );
             }
         }
