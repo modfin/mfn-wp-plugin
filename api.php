@@ -519,13 +519,31 @@ INNER JOIN (
     return $res;
 }
 
-function MFN_get_terms_wpml($slug) {
+/* runs $fn without the wpml filters that swap terms for their translation in the current language */
+function MFN_without_wpml_term_filters($fn) {
 	global $sitepress;
-	/* remove wpml filters before fetching */
+	/* remove wpml filters before running */
 	$filter_terms_args    = remove_filter( 'get_terms_args', array( $sitepress, 'get_terms_args_filter' ) );
 	$filter_get_term      = remove_filter( 'get_term', array( $sitepress, 'get_term_adjust_id' ), 1 );
 	$filter_terms_clauses = remove_filter( 'terms_clauses', array( $sitepress, 'terms_clauses' ) );
 
+	try {
+		return $fn();
+	} finally {
+		/* re-add wpml filters after running */
+		if ( $filter_terms_args ) {
+			add_filter( 'get_terms_args', array( $sitepress, 'get_terms_args_filter' ), 10, 2 );
+		}
+		if ( $filter_get_term ) {
+			add_filter( 'get_term', array( $sitepress, 'get_term_adjust_id' ), 1, 1 );
+		}
+		if ( $filter_terms_clauses ) {
+			add_filter( 'terms_clauses', array( $sitepress, 'terms_clauses' ), 10, 3 );
+		}
+	}
+}
+
+function MFN_get_terms_wpml($slug) {
 	$terms_args = array(
 		'taxonomy'   => MFN_TAXONOMY_NAME,
 		'hide_empty' => false,
@@ -534,18 +552,9 @@ function MFN_get_terms_wpml($slug) {
 		$terms_args['slug'] = $slug;
 	}
 
-	$terms = get_terms( $terms_args );
-
-	/* re-add wpml filters after fetching */
-	if ( $filter_terms_args ) {
-		add_filter( 'get_terms_args', array( $sitepress, 'get_terms_args_filter' ), 10, 2 );
-	}
-	if ( $filter_get_term ) {
-		add_filter( 'get_term', array( $sitepress, 'get_term_adjust_id' ), 1, 1 );
-	}
-	if ( $filter_terms_clauses ) {
-		add_filter( 'terms_clauses', array( $sitepress, 'terms_clauses' ), 10, 3 );
-	}
+	$terms = MFN_without_wpml_term_filters( function () use ( $terms_args ) {
+		return get_terms( $terms_args );
+	} );
 
 	if ( sizeof( $terms ) == 0 ) {
 		return false;
