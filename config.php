@@ -452,86 +452,230 @@ function mfn_sync_taxonomy()
     $has_wpml = defined('WPML_PLUGIN_BASENAME');
     $has_pll = defined('POLYLANG_BASENAME');
 
-    $upsert_wpml = function ($enItem, $enTerm, $prefix = '') {
+    // Terms changed with raw SQL in $upsert_wpml, their caches are cleaned after the sync
+    $wpmlTouchedTermIds = array();
+    // Set when $upsert_wpml changes icl_translations
+    $wpmlChanged = false;
+
+    // Slugs of the terms the sync owns, English and translated, with their language. Other terms in
+    // their translation groups were added by hand in WPML and are left alone.
+    $managedSlugs = array();
+    $collectSlugs = function ($item, $prefix = '') use (&$collectSlugs, &$managedSlugs) {
+        $slug = $prefix . $item['slug'];
+        $managedSlugs[$slug] = 'en';
+        foreach ($item['i10n'] as $lang => $val) {
+            $managedSlugs[$slug . '_' . $lang] = $lang;
+        }
+        if (isset($item['children'])) {
+            foreach ($item['children'] as $val) {
+                $collectSlugs($val, $slug . '-');
+            }
+        }
+    };
+    $collectSlugs($tax);
+
+    $upsert_wpml = function ($enItem, $enTerm, $prefix = '') use (&$wpmlTouchedTermIds, &$wpmlChanged, $managedSlugs) {
         global $wpdb;
         $tbmlTranslations = $wpdb->prefix . 'icl_translations';
-        $wpdb->update(
-            $tbmlTranslations,
-            array('language_code' => 'en', 'source_language_code' => null),
-            array('element_id' => $enTerm->term_id, 'element_type' => 'tax_' . MFN_TAXONOMY_NAME)
-        );
-
-        $q = $wpdb->prepare("
-            SELECT trid
-            FROM $tbmlTranslations
-            WHERE element_id = %s
-        ", $enTerm->term_id);
-        $trid = $wpdb->get_var($q);
-
-        $enParentTerm = null;
-        if ($enTerm->parent > 0) {
-            $enParentTerm = get_term($enTerm->parent, MFN_TAXONOMY_NAME);
-        }
-
         $tbmlTerms = $wpdb->prefix . 'terms';
         $tbmlTermsTax = $wpdb->prefix . 'term_taxonomy';
+        $elementType = 'tax_' . MFN_TAXONOMY_NAME;
+
+        // WPML keys term translations on term_taxonomy_id, not term_id
+        $getRow = function ($ttId) use ($wpdb, $tbmlTranslations, $elementType) {
+            $q = $wpdb->prepare("
+            SELECT trid, language_code, source_language_code
+            FROM $tbmlTranslations
+            WHERE element_id = %d AND element_type = %s
+        ", $ttId, $elementType);
+            return $wpdb->get_row($q);
+        };
+
+        // Inserts the row when missing, e.g. for terms created before the taxonomy was made translatable in WPML
+        $setRow = function ($ttId, $trid, $lang, $sourceLang) use ($wpdb, $tbmlTranslations, $elementType, $getRow, &$wpmlChanged) {
+            $data = array('trid' => $trid, 'language_code' => $lang, 'source_language_code' => $sourceLang);
+            $where = array('element_id' => $ttId, 'element_type' => $elementType);
+            if ($getRow($ttId) == null) {
+                $wpdb->insert($tbmlTranslations, array_merge($where, $data));
+            } else {
+                $wpdb->update($tbmlTranslations, $data, $where);
+            }
+            $wpmlChanged = true;
+        };
+
+        $newTrid = function () use ($wpdb, $tbmlTranslations) {
+            return (int)$wpdb->get_var("SELECT MAX(trid) FROM $tbmlTranslations") + 1;
+        };
+
+        // The element holding a language in a translation group, with its term when it is a term of this taxonomy
+        $getSlot = function ($trid, $lang) use ($wpdb, $tbmlTranslations, $tbmlTerms, $tbmlTermsTax, $elementType, &$wpmlChanged) {
+            $q = $wpdb->prepare("
+            SELECT tr.element_id, tr.element_type, t.term_id, t.slug
+            FROM $tbmlTranslations tr
+            LEFT JOIN $tbmlTermsTax tt ON tt.term_taxonomy_id = tr.element_id AND tr.element_type = %s
+            LEFT JOIN $tbmlTerms t ON t.term_id = tt.term_id
+            WHERE tr.trid = %d AND tr.language_code = %s
+        ", $elementType, $trid, $lang);
+            foreach ($wpdb->get_results($q) as $slot) {
+                // Left behind by a deleted term, WPML doesn't always remove the row
+                if ($slot->element_type == $elementType && $slot->slug === null) {
+                    $wpdb->delete($tbmlTranslations, array('element_id' => $slot->element_id, 'element_type' => $elementType));
+                    $wpmlChanged = true;
+                    continue;
+                }
+                return $slot;
+            }
+            return null;
+        };
+
+        $isManaged = function ($slot) use ($managedSlugs, $elementType) {
+            return $slot->element_type == $elementType && isset($managedSlugs[$slot->slug]);
+        };
+
+        // A group with a term the sync doesn't own was put together by hand in WPML
+        $isHandMade = function ($trid) use ($wpdb, $tbmlTranslations, $tbmlTerms, $tbmlTermsTax, $elementType, $managedSlugs) {
+            $q = $wpdb->prepare("
+            SELECT t.slug
+            FROM $tbmlTranslations tr
+            INNER JOIN $tbmlTermsTax tt ON tt.term_taxonomy_id = tr.element_id
+            INNER JOIN $tbmlTerms t ON t.term_id = tt.term_id
+            WHERE tr.trid = %d AND tr.element_type = %s
+        ", $trid, $elementType);
+            foreach ($wpdb->get_col($q) as $slug) {
+                if (!isset($managedSlugs[$slug])) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // Earlier versions of the sync looked up groups by term_id without element_type, which could
+        // put terms in a post's group
+        $hasOtherTypes = function ($trid) use ($wpdb, $tbmlTranslations, $elementType) {
+            $q = $wpdb->prepare("
+            SELECT COUNT(*)
+            FROM $tbmlTranslations
+            WHERE trid = %d AND element_type != %s
+        ", $trid, $elementType);
+            return $wpdb->get_var($q) > 0;
+        };
+
+        $enTtId = $enTerm->term_taxonomy_id;
+        $enRow = $getRow($enTtId);
+        $trid = $enRow != null ? $enRow->trid : null;
+        if ($trid != null && $hasOtherTypes($trid)) {
+            $trid = null;
+        }
+
+        if ($trid == null) {
+            $trid = $newTrid();
+        } else {
+            $slot = $getSlot($trid, 'en');
+            if ($slot != null && $slot->element_id != $enTtId) {
+                // The English term was added to a group made by hand
+                if (!$isManaged($slot)) {
+                    return;
+                }
+                // Left by an earlier version of the sync, which mixed up term_id and term_taxonomy_id.
+                // A group held by another English term stays with it.
+                if ($managedSlugs[$slot->slug] == 'en') {
+                    $trid = $newTrid();
+                } else {
+                    $setRow($slot->element_id, $newTrid(), $managedSlugs[$slot->slug], null);
+                }
+            }
+        }
+
+        if ($enRow == null || $enRow->trid != $trid || $enRow->language_code != 'en' || $enRow->source_language_code != null) {
+            $setRow($enTtId, $trid, 'en', null);
+        }
+
+        // Parents are synced before their children, so the parent's group is already repaired
+        $enParent = null;
+        if ($enTerm->parent > 0) {
+            $q = $wpdb->prepare("
+            SELECT t.slug, tr.trid
+            FROM $tbmlTerms t
+            INNER JOIN $tbmlTermsTax tt ON tt.term_id = t.term_id AND tt.taxonomy = %s
+            LEFT JOIN $tbmlTranslations tr ON tr.element_id = tt.term_taxonomy_id AND tr.element_type = %s
+            WHERE t.term_id = %d
+        ", MFN_TAXONOMY_NAME, $elementType, $enTerm->parent);
+            $enParent = $wpdb->get_row($q);
+        }
 
         foreach ($enItem['i10n'] as $lang => $val) {
 
             $l_parent_term_id = 0;
-            if ($enParentTerm != null) {
-                $l_parent_slug = $enParentTerm->slug . '_' . $lang;
-                $q = $wpdb->prepare("
-            SELECT term_id
-            FROM $tbmlTerms
-            WHERE slug = %s
-        ", $l_parent_slug);
-                $l_parent_term_id = $wpdb->get_var($q);
+            if ($enParent != null) {
+                // The parent's translation can be a term made by hand in WPML, with a slug the sync doesn't know
+                $parentSlot = $enParent->trid != null ? $getSlot($enParent->trid, $lang) : null;
+                if ($parentSlot != null && $parentSlot->term_id != null) {
+                    $l_parent_term_id = $parentSlot->term_id;
+                } else {
+                    $l_parent_terms = MFN_get_terms_wpml($enParent->slug . '_' . $lang);
+                    if ($l_parent_terms) {
+                        $l_parent_term_id = $l_parent_terms[0]->term_id;
+                    }
+                }
             }
 
             $l_slug = $enTerm->slug . '_' . $lang;
+            $l_terms = MFN_get_terms_wpml($l_slug);
+            $l_term = $l_terms ? $l_terms[0] : null;
 
-            $q = $wpdb->prepare("
-            SELECT term_id
-            FROM $tbmlTerms
-            WHERE slug = %s
-        ", $l_slug);
-            $l_term_id = $wpdb->get_var($q);
+            $slot = $getSlot($trid, $lang);
+            if ($slot != null && ($l_term == null || $slot->element_id != $l_term->term_taxonomy_id)) {
+                // A translation made by hand in WPML, keep it and add no term for the language
+                if (!$isManaged($slot)) {
+                    continue;
+                }
+                // Left by an earlier version of the sync, which mixed up term_id and term_taxonomy_id
+                $setRow($slot->element_id, $newTrid(), $managedSlugs[$slot->slug], null);
+            }
 
-            if ($l_term_id != null) {
+            if ($l_term != null) {
+                // Sanitized like wp_insert_term does it, which stores e.g. "M&A" as "M&amp;A"
                 $wpdb->update(
                     $tbmlTerms,
-                    array('name' => $val),
-                    array('term_id' => $l_term_id)
+                    array('name' => wp_unslash(sanitize_term_field('name', $val, $l_term->term_id, MFN_TAXONOMY_NAME, 'db'))),
+                    array('term_id' => $l_term->term_id)
                 );
 
                 if ($l_parent_term_id != 0) {
                     $wpdb->update(
                         $tbmlTermsTax,
                         array('parent' => $l_parent_term_id),
-                        array('term_id' => $l_term_id)
+                        array('term_taxonomy_id' => $l_term->term_taxonomy_id)
                     );
                 }
 
-                $wpdb->update(
-                    $tbmlTranslations,
-                    array('source_language_code' => 'en', 'language_code' => $lang, 'trid' => $trid),
-                    array('element_id' => $tbmlTerms, 'element_type' => 'tax_' . MFN_TAXONOMY_NAME)
-                );
-            }
-
-            if ($l_term_id == null) {
-                wp_insert_term($val, MFN_TAXONOMY_NAME, array(
+                $wpmlTouchedTermIds[] = $l_term->term_id;
+                $l_term_tt_id = $l_term->term_taxonomy_id;
+            } else {
+                $ids = wp_insert_term($val, MFN_TAXONOMY_NAME, array(
                     'slug' => $l_slug,
                     'parent' => $l_parent_term_id
                 ));
-                $l_term = get_term_by('slug', $l_slug, MFN_TAXONOMY_NAME);
-                $wpdb->update(
-                    $tbmlTranslations,
-                    array('source_language_code' => 'en', 'language_code' => $lang, 'trid' => $trid),
-                    array('element_id' => $l_term->term_id, 'element_type' => 'tax_' . MFN_TAXONOMY_NAME)
-                );
+                if (is_wp_error($ids)) {
+                    error_log("[MFN Sync taxonomy]: could not create term " . $l_slug . ": " . $ids->get_error_message());
+                    continue;
+                }
+                $l_term_tt_id = $ids['term_taxonomy_id'];
             }
+
+            $l_row = $getRow($l_term_tt_id);
+            if ($l_row != null && $l_row->trid == $trid) {
+                // Already in the group. A language that isn't synced was set by hand in WPML, e.g. a custom language code
+                $inPlace = $l_row->language_code == $lang && $l_row->source_language_code == 'en';
+                if ($inPlace || !in_array($l_row->language_code, $managedSlugs, true)) {
+                    continue;
+                }
+            } else if ($l_row != null && $isHandMade($l_row->trid)) {
+                // Linked by hand to another group in WPML
+                continue;
+            }
+
+            $setRow($l_term_tt_id, $trid, $lang, 'en');
         }
     };
 
@@ -667,10 +811,22 @@ function mfn_sync_taxonomy()
             $term = $getTerm($slug, 'en'); // to get term_id
         }
         if (is_object($term)) {
-            wp_update_term($term->term_id, MFN_TAXONOMY_NAME, array(
+            $fields = array(
                 'name' => $item['name'],
                 'slug' => $slug,
-            ));
+            );
+            if ($has_wpml && $use_wpml) {
+                // wp_update_term reads the term with get_term(), which WPML swaps for its translation in the
+                // current language (e.g. Swedish in admin), and then saves the translation's parent. The parent
+                // is set explicitly to repair terms earlier syncs saved that way.
+                $fields['parent'] = (int)$parent_id;
+                $term->parent = $fields['parent'];
+                MFN_without_wpml_term_filters(function () use ($term, $fields) {
+                    wp_update_term($term->term_id, MFN_TAXONOMY_NAME, $fields);
+                });
+            } else {
+                wp_update_term($term->term_id, MFN_TAXONOMY_NAME, $fields);
+            }
         }
 
         if ($has_wpml && $use_wpml) {
@@ -694,4 +850,13 @@ function mfn_sync_taxonomy()
     };
 
     $upsert($tax);
+
+    if ($has_wpml && $use_wpml) {
+        // Also drops the cached hierarchy (mfn-news-tag_children)
+        clean_term_cache($wpmlTouchedTermIds, MFN_TAXONOMY_NAME);
+        // WPML caches term translations in the object cache, which the raw updates bypass
+        if ($wpmlChanged && wp_using_ext_object_cache()) {
+            wp_cache_flush();
+        }
+    }
 }
